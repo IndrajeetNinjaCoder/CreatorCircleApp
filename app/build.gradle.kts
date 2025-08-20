@@ -2,18 +2,20 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+//    id("com.android.application")
+//    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.cc.creatorcircleapp"
+    namespace = "com.cc.creatorcircle"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.cc.creatorcircleapp"
+        applicationId = "com.cc.creatorcircle"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,6 +42,48 @@ android {
 }
 
 dependencies {
+
+
+
+    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
+    implementation("com.google.firebase:firebase-analytics")
+
+
+    implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+
+
+
+
+    // WebView support
+    implementation("androidx.webkit:webkit:1.9.0")
+
+    // Navigation (if you want to add multiple screens later)
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+
+    // System UI Controller for status bar
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
+
+    implementation("androidx.activity:activity-compose:1.8.0")
+    implementation("androidx.compose.ui:ui:1.6.0")
+    implementation("androidx.compose.material:material:1.6.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
+
+
+    implementation("androidx.compose.foundation:foundation:1.6.0")
+
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -105,6 +149,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

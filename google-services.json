@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "965728963593",
+    "project_id": "creator-circle-86827",
+    "storage_bucket": "creator-circle-86827.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:965728963593:android:6b385d3604111d70e1fcd8",
+        "android_client_info": {
+          "package_name": "com.cc.creatorcircle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "965728963593-3t165qme99clokomsbr8akl5klqrr3tl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cc.creatorcircle",
+            "certificate_hash": "3d02ec0fe75186a9e526634fbbdb4a1cedec7013"
+          }
+        },
+        {
+          "client_id": "965728963593-73o2kl524t3jhrsvgahfkrqhhmpoqdcf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqitge7kbudRCoNK4CdJzwU7zHo6jO4Tk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "965728963593-73o2kl524t3jhrsvgahfkrqhhmpoqdcf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
