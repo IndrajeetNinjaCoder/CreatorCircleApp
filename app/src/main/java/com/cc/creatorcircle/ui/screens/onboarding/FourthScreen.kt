@@ -67,7 +67,7 @@ fun FourthScreen(onFinish: () -> Unit) {
                     .size(180.dp, 240.dp)
                     .graphicsLayer(rotationZ = 0f)
                     .align(Alignment.TopCenter)
-                    .offset(x = 60.dp, y = 50.dp)
+                    .offset(x = 60.dp, y = 2.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.DarkGray)
             ) {
@@ -114,7 +114,7 @@ fun FourthScreen(onFinish: () -> Unit) {
                     .size(180.dp, 240.dp)
                     .graphicsLayer(rotationZ = 0f)
                     .align(Alignment.TopCenter)
-                    .offset(x = -60.dp, y = 260.dp)
+                    .offset(x = -60.dp, y = 212.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.DarkGray)
             ) {
@@ -162,14 +162,14 @@ fun FourthScreen(onFinish: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 20.dp, vertical = 80.dp),
+                    .padding(horizontal = 12.dp, vertical = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Your AI partner in growth — from ideation to monetization with viral strategies and brand collabs",
+                    text = "Your AI partner in growth\n— from ideation to\nmonetization with viral\nstrategies and brand\ncollabs",
                     textAlign = TextAlign.Center,
-                    fontSize = 26.sp,
-                    lineHeight = 22.sp,
+                    fontSize = 22.sp,
+                    lineHeight = 28.sp,
                     color = Color.White,
                     fontFamily = FontFamily(
                         Font(R.font.font_lexend)

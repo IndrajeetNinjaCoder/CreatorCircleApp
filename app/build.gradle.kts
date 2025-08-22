@@ -6,6 +6,7 @@ plugins {
 //    id("com.google.gms.google-services")
 }
 
+
 android {
     namespace = "com.cc.creatorcircle"
     compileSdk = 36
@@ -14,8 +15,8 @@ android {
         applicationId = "com.cc.creatorcircle"
         minSdk = 29
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.3"
+        versionCode = 4
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,6 +44,11 @@ android {
 
 dependencies {
 
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.compose.ui:ui-viewbinding:1.9.0")
+
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("org.json:json:20230227")
 
 
     implementation(platform("com.google.firebase:firebase-bom:34.1.0"))

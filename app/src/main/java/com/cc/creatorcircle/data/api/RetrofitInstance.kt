@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    private const val BASE_URL = "https://crazycontent.in/api/"
+    private const val BASE_URL = "https://creatorcircle.in/api/"
 
     val api: ApiService by lazy {
         Retrofit.Builder()

@@ -1,5 +1,5 @@
 package com.cc.creatorcircle.utils
 
 object Constants {
-    const val GOOGLE_CLIENT_ID = "384802735119-2d1juctutnr1skrncm1ipdk41n7jaedh.apps.googleusercontent.com"
+    const val GOOGLE_CLIENT_ID = "965728963593-73o2kl524t3jhrsvgahfkrqhhmpoqdcf.apps.googleusercontent.com"
 }

@@ -128,14 +128,16 @@ fun FirstScreen(pagerState: PagerState) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 24.dp, vertical = 80.dp),
+                    .padding(horizontal = 12.dp, vertical = 60.dp),
+//                    .padding(bottom = 30.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            )
+            {
                 Text(
-                    text = "Connect with fellow creators and influencers to collaborate, share ideas, and grow together",
+                    text = "Connect with fellow\ncreators and influencers\nto collaborate, share\nideas, and grow together",
                     textAlign = TextAlign.Center,
-                    fontSize = 13.sp,
-                    lineHeight = 22.sp,
+                    fontSize = 24.sp,
+                    lineHeight = 28.sp,
                     color = Color.White,
                     fontFamily = FontFamily(
                         Font(R.font.font_lexend)
@@ -143,6 +145,7 @@ fun FirstScreen(pagerState: PagerState) {
                     modifier = Modifier
                         .fillMaxWidth()
 //                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 24.dp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -213,9 +216,8 @@ fun FirstScreen(pagerState: PagerState) {
                 elevation = ButtonDefaults.buttonElevation(6.dp)
             ) {
                 Text(
-                    text = "Next →",
+                    text = "Next",
                     fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.font_lexend))
                 )
             }
         }

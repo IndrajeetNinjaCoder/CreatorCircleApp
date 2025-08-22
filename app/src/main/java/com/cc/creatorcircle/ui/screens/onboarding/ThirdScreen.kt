@@ -71,7 +71,7 @@ fun ThirdScreen(pagerState: PagerState) {
                     .size(180.dp, 240.dp)
                     .graphicsLayer(rotationZ = 0f)
                     .align(Alignment.TopCenter)
-                    .offset(x = 60.dp, y = 260.dp)
+                    .offset(x = 60.dp, y = 220.dp)
                     .clip(RoundedCornerShape(10.dp))
             ) {
                 // Background Image
@@ -151,7 +151,7 @@ fun ThirdScreen(pagerState: PagerState) {
                     .size(180.dp, 240.dp)
                     .graphicsLayer(rotationZ = 0f)
                     .align(Alignment.TopCenter)
-                    .offset(x = -60.dp, y = 50.dp)
+                    .offset(x = -60.dp, y = 10.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.DarkGray)
             ) {
@@ -198,14 +198,14 @@ fun ThirdScreen(pagerState: PagerState) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 20.dp, vertical = 80.dp),
+                    .padding(horizontal = 12.dp, vertical = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Turn ideas into high-engagement reels in seconds with AI — from text to video instantly",
+                    text = "Turn ideas into high\n-engagement reels in\nseconds with AI — from\ntext to video instantly",
                     textAlign = TextAlign.Center,
-                    fontSize = 13.sp,
-                    lineHeight = 22.sp,
+                    fontSize = 22.sp,
+                    lineHeight = 28.sp,
                     color = Color.White,
                     fontFamily = FontFamily(
                         Font(R.font.font_lexend)
@@ -284,9 +284,8 @@ fun ThirdScreen(pagerState: PagerState) {
                 elevation = ButtonDefaults.buttonElevation(6.dp)
             ) {
                 Text(
-                    text = "Next →",
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.font_lexend))
+                    text = "Next",
+                    fontSize = 14.sp
                 )
             }
         }

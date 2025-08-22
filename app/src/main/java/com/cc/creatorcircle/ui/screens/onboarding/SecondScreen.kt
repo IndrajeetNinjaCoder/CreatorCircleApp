@@ -68,7 +68,7 @@ fun SecondScreen(pagerState: PagerState) {
                     .size(180.dp, 240.dp)
                     .graphicsLayer(rotationZ = 0f)
                     .align(Alignment.TopCenter)
-                    .offset(x = -60.dp, y = 260.dp)
+                    .offset(x = -60.dp, y = 220.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.DarkGray)
             ) {
@@ -114,7 +114,7 @@ fun SecondScreen(pagerState: PagerState) {
                     .size(180.dp, 240.dp)
                     .graphicsLayer(rotationZ = 0f)
                     .align(Alignment.TopCenter)
-                    .offset(x = 60.dp, y = 50.dp)
+                    .offset(x = 60.dp, y = 10.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.DarkGray)
             ) {
@@ -163,14 +163,14 @@ fun SecondScreen(pagerState: PagerState) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 20.dp, vertical = 80.dp),
+                    .padding(horizontal = 12.dp, vertical = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Get personalized advice, real feedback, and one-on-one guidance from top influencers ",
+                    text = "Get personalized advice,\nreal feedback, and one\n-on-one guidance from\ntop influencers ",
                     textAlign = TextAlign.Center,
-                    fontSize = 13.sp,
-                    lineHeight = 22.sp,
+                    fontSize = 22.sp,
+                    lineHeight = 28.sp,
                     color = Color.White,
                     fontFamily = FontFamily(
                         Font(R.font.font_lexend)
@@ -248,9 +248,8 @@ fun SecondScreen(pagerState: PagerState) {
                 elevation = ButtonDefaults.buttonElevation(6.dp)
             ) {
                 Text(
-                    text = "Next →",
+                    text = "Next",
                     fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.font_lexend))
                 )
             }
         }

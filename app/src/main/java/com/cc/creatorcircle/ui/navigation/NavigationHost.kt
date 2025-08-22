@@ -58,6 +58,5 @@ fun NavigationHost(navController: NavHostController) {
             context.startActivity(Intent(context, MainActivity2::class.java))
         }
 
-
     }
 }

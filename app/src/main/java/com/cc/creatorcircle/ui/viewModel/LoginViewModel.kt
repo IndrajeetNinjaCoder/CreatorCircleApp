@@ -19,6 +19,7 @@ class LoginViewModel : ViewModel() {
 
     fun login(username: String, password: String, context: Context) {
         viewModelScope.launch {
+            loginState = null
             isLoading = true
             try {
                 println("LoginViewModel: Making API call to login with username: $username")
@@ -35,7 +36,7 @@ class LoginViewModel : ViewModel() {
                     println("LoginViewModel: LoginResponse JSON: $loginResponseJson")
 
                     // Save authentication data to SharedPreferences
-                    val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                    val sharedPrefs = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
                     sharedPrefs.edit().apply {
                         // Save the complete login response as JSON (MainActivity2 expects this)
                         putString("login_response", loginResponseJson)
@@ -94,13 +95,13 @@ class LoginViewModel : ViewModel() {
 
     // Helper function to get saved access token
     fun getAccessToken(context: Context): String? {
-        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val sharedPrefs = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
         return sharedPrefs.getString("access_token", null)
     }
 
     // Helper function to check if user is logged in
     fun isUserLoggedIn(context: Context): Boolean {
-        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val sharedPrefs = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
         val isLoggedIn = sharedPrefs.getBoolean("is_logged_in", false)
         val hasAccessToken = !sharedPrefs.getString("access_token", null).isNullOrEmpty()
         println("LoginViewModel: User logged in status - isLoggedIn: $isLoggedIn, hasAccessToken: $hasAccessToken")
@@ -109,13 +110,13 @@ class LoginViewModel : ViewModel() {
 
     // Helper function to get login response JSON
     fun getLoginResponseJson(context: Context): String? {
-        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val sharedPrefs = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
         return sharedPrefs.getString("login_response", null)
     }
 
     // Helper function to logout and clear all data
     fun logout(context: Context) {
-        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val sharedPrefs = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
         sharedPrefs.edit().clear().apply()
         loginState = null
         println("LoginViewModel: User logged out, all data cleared")
@@ -123,7 +124,7 @@ class LoginViewModel : ViewModel() {
 
     // Helper function to debug stored data
     fun debugStoredData(context: Context) {
-        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val sharedPrefs = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
         println("LoginViewModel: === DEBUGGING STORED DATA ===")
         println("LoginViewModel: is_logged_in: ${sharedPrefs.getBoolean("is_logged_in", false)}")
         println("LoginViewModel: access_token exists: ${!sharedPrefs.getString("access_token", "").isNullOrEmpty()}")

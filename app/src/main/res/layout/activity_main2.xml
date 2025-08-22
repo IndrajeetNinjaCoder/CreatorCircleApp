@@ -3,9 +3,7 @@
     android:id="@+id/rootLayout"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:paddingTop="?attr/actionBarSize"> <!-- fallback padding -->
+    android:layout_height="match_parent">
 
     <WebView
         android:id="@+id/webview"

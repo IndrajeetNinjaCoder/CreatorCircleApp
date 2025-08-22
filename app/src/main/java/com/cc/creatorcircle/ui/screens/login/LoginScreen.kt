@@ -1,4 +1,3 @@
-
 @file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.cc.creatorcircleapp.ui.screens.login
@@ -26,7 +25,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -44,6 +42,15 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
+
 
 @Composable
 fun LoginScreen(
@@ -63,9 +70,7 @@ fun LoginScreen(
 
     // Google Sign-In client
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//        .requestIdToken("384802735119-2d1juctutnr1skrncm1ipdk41n7jaedh.apps.googleusercontent.com")
         .requestIdToken("965728963593-73o2kl524t3jhrsvgahfkrqhhmpoqdcf.apps.googleusercontent.com")
-//        .requestIdToken("384802735119-bvs8oib450vhh8slh9qpssblcbh4ogi5.apps.googleusercontent.com")
         .requestEmail()
         .build()
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
@@ -77,27 +82,71 @@ fun LoginScreen(
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         handleGoogleSignInResult(
             task,
-            onSuccess = { token ->
-
+            onSuccess = { googleIdToken ->
                 val sharedPref = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
                 sharedPref.edit().putBoolean("isLoggedIn", true).apply()
 
                 Toast.makeText(context, "Google Login Success", Toast.LENGTH_SHORT).show()
-                // TODO: Send token to backend and navigate
+
+                Log.d("AUTH-TOKEN-GOOGLE", "LoginScreen: $googleIdToken")
+
                 try {
-                    val activity = context as Activity
-                    val intent = Intent(activity, MainActivity2::class.java)
+                    // --- POST request to your backend using OkHttp --- //
+                    val client = OkHttpClient()
+                    val mediaType = "application/json; charset=utf-8".toMediaType()
 
-//                    Log.d("AUTH-TOKEN-GOOGLE", "LoginScreen: " + token)
-//                    val accessToken = token.access_token  // ✅ extract only access_token
-//                    val accessToken = token  // ✅ extract only access_token
+                    val jsonBody = JSONObject().apply {
+                        put("token", googleIdToken)   // <- id_token from google login
+                        put("config", "firebase")
+                    }
 
+                    val requestBody = jsonBody.toString().toRequestBody(mediaType)
 
-                    Log.d("AUTH-TOKEN-GOOGLE-NEW", "LoginScreen: $token")
-                    intent.putExtra("token", token)
-                    activity.startActivity(intent)
+                    val request = Request.Builder()
+                        .url("https://crazycontent.in/api/auth/google")
+                        .post(requestBody)
+                        .build()
+
+                    client.newCall(request).enqueue(object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.e("AUTH", "POST failed: ${e.message}")
+                        }
+
+                        override fun onResponse(call: Call, response: okhttp3.Response) {
+                            val responseBody = response.body?.string()
+                            Log.d("AUTH_RESPONSE", responseBody ?: "")
+
+                            try {
+                                val jsonObj = JSONObject(responseBody ?: "")
+
+                                // Safely check if key exists
+                                val accessToken = if (jsonObj.has("access_token")) {
+                                    jsonObj.getString("access_token")
+                                } else {
+                                    // → if server sends inside a nested "data" object or something else, handle it here.
+                                    val userObj = jsonObj.getJSONObject("user")
+                                    userObj.getString("access_token")    // modify according to actual response
+                                }
+
+                                sharedPref.edit().putString("access_token", accessToken).apply()
+
+                                Log.d("ACCESS-TOKEN", accessToken)
+
+                                val activity = context as Activity
+                                val intent = Intent(activity, MainActivity2::class.java)
+                                intent.putExtra("token", accessToken)
+                                activity.startActivity(intent)
+                                activity.finish()
+
+                            } catch (e: Exception) {
+                                Log.e("AUTH_PARSE_ERROR", e.toString())
+                            }
+                        }
+
+                    })
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Context casting failed", Toast.LENGTH_SHORT).show()
+                    e.printStackTrace()
+                    Toast.makeText(context, "Error while sending token", Toast.LENGTH_SHORT).show()
                 }
             },
             onError = { error ->
@@ -105,6 +154,14 @@ fun LoginScreen(
             }
         )
     }
+
+
+
+
+
+
+
+
 
 
 
@@ -124,6 +181,7 @@ fun LoginScreen(
                 Log.d("AUTH-TOKEN", "LoginScreen: $accessToken")
 //                intent.putExtra("token", accessToken)
                 activity.startActivity(intent)
+                activity.finish()
             } catch (e: Exception) {
                 Toast.makeText(context, "Context casting failed", Toast.LENGTH_SHORT).show()
             }
@@ -400,7 +458,76 @@ fun LoginScreen(
             }
         }
     }
+
+
 }
+
+//
+//// Function 2: Exchange Google ID Token for Access Token
+//fun exchangeGoogleTokenForAccessToken(
+//    googleIdToken: String?,
+//    context: Context,
+//    onSuccess: (String) -> Unit,
+//    onError: (String) -> Unit
+//) {
+//    try {
+//        val client = OkHttpClient()
+//        val mediaType = "application/json; charset=utf-8".toMediaType()
+//
+//        val jsonBody = JSONObject().apply {
+//            put("token", googleIdToken)
+//            put("config", "firebase")
+//        }
+//
+//        val requestBody = jsonBody.toString().toRequestBody(mediaType)
+//
+//        val request = Request.Builder()
+//            .url("https://crazycontent.in/api/auth/google")
+//            .post(requestBody)
+//            .build()
+//
+//        client.newCall(request).enqueue(object : Callback {
+//            override fun onFailure(call: Call, e: IOException) {
+//                Log.e("AUTH", "POST failed: ${e.message}")
+//                onError("Network error: ${e.message}")
+//            }
+//
+//            override fun onResponse(call: Call, response: okhttp3.Response) {
+//                val responseBody = response.body?.string()
+//                Log.d("AUTH_RESPONSE", responseBody ?: "")
+//
+//                if (!response.isSuccessful) {
+//                    onError("Server error: ${response.code}")
+//                    return
+//                }
+//
+//                try {
+//                    val jsonObj = JSONObject(responseBody ?: "")
+//
+//                    // Safely extract access token
+//                    val accessToken = if (jsonObj.has("access_token")) {
+//                        jsonObj.getString("access_token")
+//                    } else {
+//                        // Handle nested structure if needed
+//                        val userObj = jsonObj.getJSONObject("user")
+//                        userObj.getString("access_token")
+//                    }
+//
+//                    Log.d("ACCESS-TOKEN", accessToken)
+//                    onSuccess(accessToken)
+//
+//                } catch (e: Exception) {
+//                    Log.e("AUTH_PARSE_ERROR", e.toString())
+//                    onError("Failed to parse response: ${e.message}")
+//                }
+//            }
+//        })
+//    } catch (e: Exception) {
+//        Log.e("AUTH_ERROR", e.toString())
+//        onError("Error while sending token: ${e.message}")
+//    }
+//}
+
 
 fun handleGoogleSignInResult(
     task: Task<GoogleSignInAccount>,
@@ -415,25 +542,6 @@ fun handleGoogleSignInResult(
         onError("Google sign-in failed: ${e.statusCode}")
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /*
