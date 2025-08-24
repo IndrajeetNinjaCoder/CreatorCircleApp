@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Alignment
+
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import kotlinx.coroutines.launch
@@ -91,16 +92,17 @@ fun SecondScreen(pagerState: PagerState) {
                     )
 
                     Text(
-                        text = "Get Genuine tips from\nthe Influencers",
+                        text = "Get Feedback &\nAdvice",
                         color = Color.White,
-                        fontSize = 12.sp,
+                        fontSize = 20.sp,
                         fontFamily = FontFamily(
                             Font(R.font.font_lexend)
                         ),
+                        textAlign = TextAlign.Center,
 //                        fontWeight = FontWeight.Thin,
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 12.dp, bottom = 24.dp)
-                            .align(Alignment.BottomStart)
+                            .padding(start = 8.dp, end = 8.dp, bottom = 24.dp)
+                            .align(Alignment.BottomCenter)
 
                     )
                 }
@@ -139,16 +141,17 @@ fun SecondScreen(pagerState: PagerState) {
 
 
                     Text(
-                        text = "One on one guidance\nfrom Influencers",
+                        text = "One on one\nguidance",
                         color = Color.White,
-                        fontSize = 12.sp,
+                        fontSize = 20.sp,
                         fontFamily = FontFamily(
                             Font(R.font.font_lexend)
                         ),
+                        textAlign = TextAlign.Center,
 //                        fontWeight = FontWeight.Thin,
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 12.dp, bottom = 24.dp)
-                            .align(Alignment.BottomStart)
+                            .padding(start = 8.dp, end = 8.dp, bottom = 24.dp)
+                            .align(Alignment.BottomCenter)
 
                     )
                 }

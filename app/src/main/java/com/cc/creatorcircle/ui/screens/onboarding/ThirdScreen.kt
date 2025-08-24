@@ -93,7 +93,7 @@ fun ThirdScreen(pagerState: PagerState) {
                 Text(
                     text = "AI Reel",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily(
                         Font(R.font.font_lexend)
@@ -174,16 +174,17 @@ fun ThirdScreen(pagerState: PagerState) {
                     )
 
                     Text(
-                        text = "Create your own reel\nusing Ai",
+                        text = "Idea to Reel\nin Sec with AI",
                         color = Color.White,
-                        fontSize = 12.sp,
-//                        fontWeight = FontWeight.Thin,
+                        fontSize = 20.sp,
                         fontFamily = FontFamily(
                             Font(R.font.font_lexend)
                         ),
+                        textAlign = TextAlign.Center,
+//                        fontWeight = FontWeight.Thin,
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 12.dp, bottom = 24.dp)
-                            .align(Alignment.BottomStart)
+                            .padding(start = 8.dp, end = 8.dp, bottom = 24.dp)
+                            .align(Alignment.BottomCenter)
 
                     )
                 }

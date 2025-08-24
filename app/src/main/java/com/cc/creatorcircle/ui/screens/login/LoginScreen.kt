@@ -35,8 +35,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cc.creatorcircle.MainActivity2
 import com.cc.creatorcircle.ui.screens.login.handleGoogleSignInResult
-import com.cc.creatorcircle.ui.viewModel.LoginViewModel
+import com.cc.creatorcircle.viewModel.LoginViewModel
 import com.cc.creatorcircle.R
+import com.cc.creatorcircle.ui.navigation.Screen
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
@@ -50,7 +51,9 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -132,11 +135,29 @@ fun LoginScreen(
 
                                 Log.d("ACCESS-TOKEN", accessToken)
 
-                                val activity = context as Activity
-                                val intent = Intent(activity, MainActivity2::class.java)
-                                intent.putExtra("token", accessToken)
-                                activity.startActivity(intent)
-                                activity.finish()
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    navController.navigate(Screen.Home.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                }
+
+//                                 ✅ Navigate on Main Thread
+//                                CoroutineScope(Dispatchers.Main).launch {
+//                                    navController.navigate(Screen.Webhome.route) {
+//                                        popUpTo(Screen.Login.route) { inclusive = true }
+//                                    }
+//                                }
+
+                                // ✅ Use navigation instead of Intent
+//                                navController.navigate(Screen.Webhome.route) {
+//                                    popUpTo(Screen.Login.route) { inclusive = true }
+//                                }
+
+//                                val activity = context as Activity
+//                                val intent = Intent(activity, MainActivity2::class.java)
+////                                intent.putExtra("token", accessToken)
+//                                activity.startActivity(intent)
+//                                activity.finish()
 
                             } catch (e: Exception) {
                                 Log.e("AUTH_PARSE_ERROR", e.toString())
@@ -179,9 +200,19 @@ fun LoginScreen(
                 sharedPref.edit().putString("access_token", accessToken).apply()
 
                 Log.d("AUTH-TOKEN", "LoginScreen: $accessToken")
-//                intent.putExtra("token", accessToken)
-                activity.startActivity(intent)
-                activity.finish()
+
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
+
+                // ✅ Use navigation instead of Intent
+//                navController.navigate(Screen.Webhome.route) {
+//                    popUpTo(Screen.Login.route) { inclusive = true }
+//                }
+
+////                intent.putExtra("token", accessToken)
+//                activity.startActivity(intent)
+//                activity.finish()
             } catch (e: Exception) {
                 Toast.makeText(context, "Context casting failed", Toast.LENGTH_SHORT).show()
             }

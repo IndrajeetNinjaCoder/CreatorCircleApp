@@ -9,7 +9,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.cc.creatorcircle.MainActivity2
-import com.cc.creatorcircle.ui.screens.home.FeedScreen
 import com.cc.creatorcircle.ui.screens.home.HomeScreen
 import com.cc.creatorcircle.ui.screens.profile.ProfileScreen
 import com.cc.creatorcircleapp.ui.screens.login.LoginScreen
@@ -25,7 +24,8 @@ fun NavigationHost(navController: NavHostController) {
     val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
 
     // Decide start destination
-    val startDestination = if (isLoggedIn) Screen.Webhome.route else Screen.Login.route
+//    val startDestination = if (isLoggedIn) Screen.Webhome.route else Screen.Login.route
+    val startDestination = if (isLoggedIn) Screen.Home.route else Screen.Login.route
 
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -38,7 +38,8 @@ fun NavigationHost(navController: NavHostController) {
         }
         composable(Screen.Signup.route) {
             SignupScreen(
-                onLoginClick = { navController.popBackStack() } // or navigate(Screen.Login.route)
+                onLoginClick = { navController.navigate(Screen.Login.route) }, // or navigate(Screen.Login.route)
+                navController
             )
         }
         composable(Screen.Home.route) {
@@ -48,9 +49,7 @@ fun NavigationHost(navController: NavHostController) {
             ProfileScreen()
         }
 
-        composable(Screen.Feed.route) {
-            FeedScreen()
-        }
+
 
         // 🔹 New WebView Route
         composable("webhome") {

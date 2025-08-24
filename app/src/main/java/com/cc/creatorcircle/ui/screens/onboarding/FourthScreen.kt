@@ -90,16 +90,17 @@ fun FourthScreen(onFinish: () -> Unit) {
                     )
 
                     Text(
-                        text = "SABO AI Personalized\nAssistance",
+                        text = "SABO AI: Chat to\nEnhance profile",
                         color = Color.White,
-                        fontSize = 12.sp,
-//                        fontWeight = FontWeight.Thin,
+                        fontSize = 18.sp,
                         fontFamily = FontFamily(
                             Font(R.font.font_lexend)
                         ),
+                        textAlign = TextAlign.Center,
+//                        fontWeight = FontWeight.Thin,
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 12.dp, bottom = 24.dp)
-                            .align(Alignment.BottomStart)
+                            .padding(start = 6.dp, end = 6.dp, bottom = 24.dp)
+                            .align(Alignment.BottomCenter)
 
                     )
                 }
@@ -114,7 +115,7 @@ fun FourthScreen(onFinish: () -> Unit) {
                     .size(180.dp, 240.dp)
                     .graphicsLayer(rotationZ = 0f)
                     .align(Alignment.TopCenter)
-                    .offset(x = -60.dp, y = 212.dp)
+                    .offset(x = -60.dp, y = 214.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.DarkGray)
             ) {
@@ -137,16 +138,17 @@ fun FourthScreen(onFinish: () -> Unit) {
                     )
 
                     Text(
-                        text = "Chat with SABO AI to\nEnhance your profile",
+                        text = "SABO AI Agents:\nTo bring brand collaboration",
                         color = Color.White,
-                        fontSize = 12.sp,
-//                        fontWeight = FontWeight.Thin,
+                        fontSize = 19.sp,
                         fontFamily = FontFamily(
                             Font(R.font.font_lexend)
                         ),
+                        textAlign = TextAlign.Center,
+//                        fontWeight = FontWeight.Thin,
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 12.dp, bottom = 24.dp)
-                            .align(Alignment.BottomStart)
+                            .padding(start = 8.dp, end = 8.dp, bottom = 24.dp)
+                            .align(Alignment.BottomCenter)
 
                     )
                 }

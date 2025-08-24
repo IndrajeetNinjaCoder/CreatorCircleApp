@@ -4,9 +4,7 @@
 
 package com.cc.creatorcircleapp.ui.screens.signup
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,7 +28,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,16 +38,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.cc.creatorcircle.MainActivity2
 import com.cc.creatorcircle.ui.screens.login.handleGoogleSignInResult
-import com.cc.creatorcircle.ui.viewModel.LoginViewModel
 import com.cc.creatorcircle.R
-import com.cc.creatorcircle.ui.viewModel.SignUpViewModel
+import com.cc.creatorcircle.ui.navigation.Screen
+import com.cc.creatorcircle.viewModel.SignUpViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -75,6 +74,7 @@ import kotlin.Unit
 @Composable
 fun SignupScreen(
     onLoginClick: () -> Unit = {},
+    navController: NavController,
     viewModel: SignUpViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -111,6 +111,8 @@ fun SignupScreen(
                 sharedPref.edit().putBoolean("isLoggedIn", true).apply()
 
                 Toast.makeText(context, "Google Login Success", Toast.LENGTH_SHORT).show()
+
+                Log.d("AUTH-TOKEN-GOOGLE", "LoginScreen: $googleIdToken")
 
                 try {
                     // --- POST request to your backend using OkHttp --- //
@@ -154,11 +156,23 @@ fun SignupScreen(
 
                                 Log.d("ACCESS-TOKEN", accessToken)
 
-                                val activity = context as Activity
-                                val intent = Intent(activity, MainActivity2::class.java)
-                                intent.putExtra("token", accessToken)
-                                activity.startActivity(intent)
-                                activity.finish()
+                                // ✅ Navigate on Main Thread
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    navController.navigate(Screen.Webhome.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                }
+
+                                // ✅ Use navigation instead of Intent
+//                                navController.navigate(Screen.Webhome.route) {
+//                                    popUpTo(Screen.Login.route) { inclusive = true }
+//                                }
+
+//                                val activity = context as Activity
+//                                val intent = Intent(activity, MainActivity2::class.java)
+////                                intent.putExtra("token", accessToken)
+//                                activity.startActivity(intent)
+//                                activity.finish()
 
                             } catch (e: Exception) {
                                 Log.e("AUTH_PARSE_ERROR", e.toString())
@@ -177,6 +191,8 @@ fun SignupScreen(
         )
     }
 
+
+
     // Handle success state - Show dialog when signup is successful and navigate after success
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
@@ -193,18 +209,30 @@ fun SignupScreen(
                 apply()
             }
 
-            // Navigate to main activity after successful signup
-            try {
-                val activity = context as Activity
-                val intent = Intent(activity, MainActivity2::class.java)
-                uiState.signUpResponse?.access_token?.let { token ->
-                    intent.putExtra("token", token)
+            // ✅ Navigate on Main Thread
+            CoroutineScope(Dispatchers.Main).launch {
+                navController.navigate(Screen.Webhome.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
                 }
-                activity.startActivity(intent)
-                activity.finish() // Close current activity
-            } catch (e: Exception) {
-                Log.e("NAVIGATION_ERROR", "Error navigating to MainActivity2", e)
             }
+
+            // ✅ Use navigation instead of Intent
+//            navController.navigate(Screen.Webhome.route) {
+//                popUpTo(Screen.Signup.route) { inclusive = true }
+//            }
+
+            // Navigate to main activity after successful signup
+//            try {
+//                val activity = context as Activity
+//                val intent = Intent(activity, MainActivity2::class.java)
+//                uiState.signUpResponse?.access_token?.let { token ->
+//                    intent.putExtra("token", token)
+//                }
+//                activity.startActivity(intent)
+//                activity.finish() // Close current activity
+//            } catch (e: Exception) {
+//                Log.e("NAVIGATION_ERROR", "Error navigating to MainActivity2", e)
+//            }
         }
     }
 
