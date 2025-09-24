@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Creator Circle App</string>
+    <string name="app_name">Creator Circle</string>
+    <string name="default_web_client_id">"965728963593-73o2kl524t3jhrsvgahfkrqhhmpoqdcf.apps.googleusercontent.com"</string>
 </resources>

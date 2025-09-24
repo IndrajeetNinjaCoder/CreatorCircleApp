@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 //    id("com.android.application")
 //    id("com.google.gms.google-services")
+
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 
@@ -15,8 +17,8 @@ android {
         applicationId = "com.cc.creatorcircle"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.5"
+        versionCode = 14
+        versionName = "1.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,6 +45,62 @@ android {
 }
 
 dependencies {
+
+//    implementation("com.appsflyer:af-android-sdk:6.12.1")
+// Add install referrer if needed
+//    implementation("com.android.installreferrer:installreferrer:2.2")
+
+
+
+    // WebSocket support
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.java-websocket:Java-WebSocket:1.5.3")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+
+
+
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+    // Media3 ExoPlayer - Latest stable version
+    implementation("androidx.media3:media3-exoplayer:1.2.1")
+    implementation("androidx.media3:media3-ui:1.2.1")
+    implementation("androidx.media3:media3-common:1.2.1")
+
+
+// Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
+
+
+
+
+
+
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
+
+
+
+
+    implementation("androidx.media3:media3-exoplayer:1.2.1")
+    implementation("androidx.media3:media3-ui:1.2.1")
+    implementation("androidx.media3:media3-common:1.2.1")
+
+
+
+
+
+
 
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.compose.ui:ui-viewbinding:1.9.0")

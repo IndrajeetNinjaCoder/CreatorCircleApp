@@ -127,7 +127,7 @@ fun SignupScreen(
                     val requestBody = jsonBody.toString().toRequestBody(mediaType)
 
                     val request = Request.Builder()
-                        .url("https://crazycontent.in/api/auth/google")
+                        .url("https://creatorcircle.in/api/auth/google")
                         .post(requestBody)
                         .build()
 
@@ -156,12 +156,21 @@ fun SignupScreen(
 
                                 Log.d("ACCESS-TOKEN", accessToken)
 
-                                // ✅ Navigate on Main Thread
+
                                 CoroutineScope(Dispatchers.Main).launch {
-                                    navController.navigate(Screen.Webhome.route) {
-                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    navController.navigate(Screen.SignupOnboarding.route) {
+                                        popUpTo(Screen.Signup.route) { inclusive = true }
                                     }
                                 }
+
+
+
+                                // ✅ Navigate on Main Thread
+//                                CoroutineScope(Dispatchers.Main).launch {
+//                                    navController.navigate(Screen.Webhome.route) {
+//                                        popUpTo(Screen.Login.route) { inclusive = true }
+//                                    }
+//                                }
 
                                 // ✅ Use navigation instead of Intent
 //                                navController.navigate(Screen.Webhome.route) {
@@ -209,12 +218,19 @@ fun SignupScreen(
                 apply()
             }
 
-            // ✅ Navigate on Main Thread
+
             CoroutineScope(Dispatchers.Main).launch {
-                navController.navigate(Screen.Webhome.route) {
-                    popUpTo(Screen.Login.route) { inclusive = true }
+                navController.navigate(Screen.SignupOnboarding.route) {
+                    popUpTo(Screen.Signup.route) { inclusive = true }
                 }
             }
+
+            // ✅ Navigate on Main Thread
+//            CoroutineScope(Dispatchers.Main).launch {
+//                navController.navigate(Screen.Webhome.route) {
+//                    popUpTo(Screen.Login.route) { inclusive = true }
+//                }
+//            }
 
             // ✅ Use navigation instead of Intent
 //            navController.navigate(Screen.Webhome.route) {

@@ -6,6 +6,21 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+
+val AppTypography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = Neuton,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = Neuton,
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp
+    )
+)
+
+
 // Set of Material typography styles to start with
 val Typography = Typography(
     bodyLarge = TextStyle(

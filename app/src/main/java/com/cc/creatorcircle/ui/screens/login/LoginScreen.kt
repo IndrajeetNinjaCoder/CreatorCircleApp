@@ -54,6 +54,7 @@ import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONException
 
 @Composable
 fun LoginScreen(
@@ -78,7 +79,7 @@ fun LoginScreen(
         .build()
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
 
-    // Google launcher
+//    // Google launcher
     val googleLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -106,7 +107,7 @@ fun LoginScreen(
                     val requestBody = jsonBody.toString().toRequestBody(mediaType)
 
                     val request = Request.Builder()
-                        .url("https://crazycontent.in/api/auth/google")
+                        .url("https://creatorcircle.in/api/auth/google")
                         .post(requestBody)
                         .build()
 
@@ -136,7 +137,7 @@ fun LoginScreen(
                                 Log.d("ACCESS-TOKEN", accessToken)
 
                                 CoroutineScope(Dispatchers.Main).launch {
-                                    navController.navigate(Screen.Home.route) {
+                                    navController.navigate(Screen.SaboAI.route) {
                                         popUpTo(Screen.Login.route) { inclusive = true }
                                     }
                                 }
@@ -182,10 +183,6 @@ fun LoginScreen(
 
 
 
-
-
-
-
     LaunchedEffect(loginResult) {
         loginResult?.onSuccess { token ->
 
@@ -201,7 +198,7 @@ fun LoginScreen(
 
                 Log.d("AUTH-TOKEN", "LoginScreen: $accessToken")
 
-                navController.navigate(Screen.Home.route) {
+                navController.navigate(Screen.SaboAI.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }
 

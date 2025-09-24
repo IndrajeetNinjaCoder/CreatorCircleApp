@@ -2,6 +2,7 @@ package com.cc.creatorcircle.data.models
 
 
 import com.google.gson.annotations.SerializedName
+import java.io.File
 
 data class PostsResponse(
     @SerializedName("message") val message: String,
@@ -19,7 +20,8 @@ data class Post(
     @SerializedName("isLiked") val isLiked: Boolean,
     @SerializedName("comments") val comments: Int,
     @SerializedName("reposts") val reposts: Int,
-    @SerializedName("isAuthor") val isAuthor: Boolean
+    @SerializedName("isAuthor") val isAuthor: Boolean,
+    @SerializedName("likersPreview")val likers_preview: List<LikerPreview>?
 )
 
 data class Author(
@@ -35,3 +37,38 @@ data class LikeResponse(
     val isLiked: Boolean,
     val like_count: Int
 )
+
+
+data class LikerPreview(
+    val id: Int,
+    val name: String?,
+    val avatar: String?,
+    val username: String
+)
+
+
+
+
+
+
+
+// Models to create a post
+data class PostResponse(
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("post_id") val postId: String,
+    @SerializedName("media_urls") val mediaUrls: List<String>?
+)
+
+data class PostRequest(
+    val content: String,
+    val mediaFiles: List<File> = emptyList()
+)
+
+sealed class PostCreationState {
+    object Idle : PostCreationState()
+    object Loading : PostCreationState()
+    data class Success(val response: PostResponse) : PostCreationState()
+    data class Error(val message: String) : PostCreationState()
+}
+
