@@ -17,8 +17,8 @@ android {
         applicationId = "com.cc.creatorcircle"
         minSdk = 29
         targetSdk = 36
-        versionCode = 14
-        versionName = "1.14"
+        versionCode = 16
+        versionName = "1.17"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

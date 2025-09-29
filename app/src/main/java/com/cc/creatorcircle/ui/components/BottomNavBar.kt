@@ -123,7 +123,7 @@ fun BottomNavBar(
 
             BottomNavItem(
                 iconRes = R.drawable.ic_video,
-                label = "Live Session",
+                label = "Mentor Circle",
                 isActive = currentRoute == Screen.LiveSession.route,
                 activeTint = Color(0xFFB726FF),
                 inactiveTint = Color(0xFF6B7280),

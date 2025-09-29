@@ -27,6 +27,7 @@ import com.cc.creatorcircle.ui.screens.sabo.SaboWeb
 import com.cc.creatorcircleapp.ui.screens.login.LoginScreen
 import com.cc.creatorcircleapp.ui.screens.signup.SignupScreen
 import com.example.app.ConnectionsScreen
+import com.example.mentorcircle.MentorCircle
 
 @Composable
 fun NavigationHost(navController: NavHostController) {
@@ -90,7 +91,8 @@ fun NavigationHost(navController: NavHostController) {
         }
 
         composable(Screen.LiveSession.route) {
-            LiveSession(navController)
+//            LiveSession(navController)
+            MentorCircle(navController)
         }
 
 
@@ -99,8 +101,7 @@ fun NavigationHost(navController: NavHostController) {
         }
 
         composable(Screen.NotificationsWeb.route) {
-//            NotificationsWeb(navController)
-            CreatorCoin(navController)
+            NotificationsWeb(navController)
         }
 
         composable(Screen.CreatorCoin.route) {
