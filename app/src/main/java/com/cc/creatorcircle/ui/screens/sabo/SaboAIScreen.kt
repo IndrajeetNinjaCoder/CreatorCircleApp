@@ -73,6 +73,574 @@ data class FeatureCard(
 
 
 
+//@Composable
+//fun SaboAIScreen(
+//    navController: NavController,
+//    viewModel: ChatViewModel = viewModel()
+//) {
+//    val context = LocalContext.current
+//    val postViewModel: PostsViewModel = viewModel(
+//        factory = PostsViewModelFactory(context)
+//    )
+//
+//    val chatViewModel: com.cc.creatorcircle.viewModel.ChatViewModel = viewModel {
+//        com.cc.creatorcircle.viewModel.ChatViewModel(context)
+//    }
+//
+//    // User profile states
+//    val userProfile by postViewModel.userProfile.collectAsState()
+//    val chatUserProfiles by chatViewModel.userProfiles.collectAsState()
+//    val profileLoading by chatViewModel.profileLoading.collectAsState()
+//    val profileError by chatViewModel.profileError.collectAsState()
+//
+//    // Chat history states
+//    val chatHistory by chatViewModel.chatHistory.collectAsState()
+//    val historyLoading by chatViewModel.historyLoading.collectAsState()
+//    val historyError by chatViewModel.historyError.collectAsState()
+//
+//    // Chat messages states
+//    val chatMessages by chatViewModel.messages.collectAsState()
+//    val messagesLoading by chatViewModel.messagesLoading.collectAsState()
+//    val messagesError by chatViewModel.messagesError.collectAsState()
+//
+//    var searchQuery by remember { mutableStateOf("") }
+//    var showChat by remember { mutableStateOf(false) }
+//    var isMenuOpen by remember { mutableStateOf(false) }
+//    var viewingHistoricalChat by remember { mutableStateOf(false) }
+//    var isNewChat by remember { mutableStateOf(false) }
+//
+//    // Detect keyboard visibility
+//    val isKeyboardOpen by keyboardAsState()
+//
+//    val activeProfile = chatUserProfiles.find { it.isActive }
+//
+//    // Get SharedPreferences
+//    val sharedPreferences = remember {
+//        context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
+//    }
+//
+//    // Load sessionId from SharedPreferences
+//    var currentSessionId by remember {
+//        mutableStateOf<Int?>(
+//            sharedPreferences.getInt("chatSessionId", -1).takeIf { it != -1 }
+//        )
+//    }
+//
+//    val currentProfileId by remember {
+//        derivedStateOf {
+//            sharedPreferences.getInt("chatProfileId", -1).takeIf { it != -1 }
+//        }
+//    }
+//
+//    // Track the last session ID to detect changes
+//    var lastSessionId by remember { mutableStateOf<Int?>(currentSessionId) }
+//
+//    val userId = userProfile?.id ?: -1
+//
+//    // Socket.IO states
+//    val socketIOMessages by viewModel.messages.collectAsState()
+//    val connectionState by viewModel.connectionState.collectAsState()
+//    val newSessionId by viewModel.newSessionId.collectAsState() // OBSERVE THIS
+//
+//    val listState = rememberLazyListState()
+//    val coroutineScope = rememberCoroutineScope()
+//
+//    // Fetch user profile and initialize chat session
+//    LaunchedEffect(Unit) {
+//        postViewModel.fetchUserProfile()
+//
+//        val sessionId = sharedPreferences.getInt("chatSessionId", -1)
+//        if (sessionId == -1) {
+//            isNewChat = true
+//        }
+//    }
+//
+//    LaunchedEffect(userProfile) {
+//        userProfile?.let {
+//            chatViewModel.fetchChatUserProfiles(it.id)
+//        }
+//    }
+//
+//    // Detect session changes and clear socket messages
+//    LaunchedEffect(currentSessionId) {
+//        if (currentSessionId != lastSessionId) {
+//            Log.d(
+//                "SaboAIScreen",
+//                "Session changed from $lastSessionId to $currentSessionId - clearing socket messages"
+//            )
+//            viewModel.clearMessages()
+//            lastSessionId = currentSessionId
+//        }
+//    }
+//
+//    // NEW: Listen for new session ID from socket
+//    LaunchedEffect(newSessionId) {
+//        newSessionId?.let { sessionId ->
+//            Log.d("SaboAIScreen", "New session ID received from socket: $sessionId")
+//
+//            // CRITICAL: Update currentSessionId and save to SharedPreferences
+//            currentSessionId = sessionId
+//            sharedPreferences.edit()
+//                .putInt("chatSessionId", sessionId)
+//                .apply()
+//
+//            // CRITICAL: Set isNewChat to false so subsequent messages use sessionId
+//            isNewChat = false
+//
+//            Log.d("SaboAIScreen", "Session ID saved. isNewChat set to false. Future messages will use sessionId: $sessionId")
+//
+//            // Reconnect with new session ID
+//            viewModel.connect(userId, sessionId)
+//
+//            // Clear the session ID from the flow
+//            viewModel.clearNewSessionId()
+//        }
+//    }
+//
+//    // Connect to Socket.IO
+//    LaunchedEffect(userId, currentSessionId) {
+//        if (userId != -1) {
+//            val sessionId = currentSessionId ?: -1
+//            Log.d(
+//                "SaboAIScreen",
+//                "Connecting to Socket.IO with userId: $userId, sessionId: $sessionId"
+//            )
+//            viewModel.connect(userId, sessionId)
+//        }
+//    }
+//
+//    LaunchedEffect(chatUserProfiles) {
+//        if (chatUserProfiles.isNotEmpty()) {
+//            val activeProfile = chatUserProfiles.find { it.isActive }
+//            Log.d(
+//                "SaboAIScreen",
+//                "Active profile found: ${activeProfile?.username} (${activeProfile?.platform}) - ID: ${activeProfile?.id}"
+//            )
+//
+//            if (activeProfile != null) {
+//                sharedPreferences.edit()
+//                    .putInt("chatProfileId", activeProfile.id)
+//                    .apply()
+//
+//                chatViewModel.fetchChatHistory(
+//                    userId = userId,
+//                    platform = activeProfile.platform,
+//                    profileId = activeProfile.id
+//                )
+//
+//                val sessionId = sharedPreferences.getInt("chatSessionId", -1)
+//                if (sessionId == -1) {
+//                    isNewChat = true
+//                    Log.d("SaboAIScreen", "New chat mode activated for profile: ${activeProfile.username}")
+//                }
+//            } else {
+//                Log.w("SaboAIScreen", "No active profile found, chat will not be saved")
+//                sharedPreferences.edit()
+//                    .remove("chatProfileId")
+//                    .remove("chatSessionId")
+//                    .apply()
+//                isNewChat = false
+//            }
+//        }
+//    }
+//
+//    // Auto-scroll to bottom when new messages arrive
+//    LaunchedEffect(socketIOMessages.size, chatMessages.size) {
+//        if ((socketIOMessages.isNotEmpty() || chatMessages.isNotEmpty()) && showChat) {
+//            coroutineScope.launch {
+//                val totalMessages = if (viewingHistoricalChat) {
+//                    chatMessages.size + socketIOMessages.size
+//                } else {
+//                    socketIOMessages.size
+//                }
+//                if (totalMessages > 0) {
+//                    listState.animateScrollToItem(totalMessages - 1)
+//                }
+//            }
+//        }
+//    }
+//
+//    // Show chat when there are messages
+//    LaunchedEffect(socketIOMessages.size, chatMessages.size) {
+//        if (socketIOMessages.isNotEmpty() || (viewingHistoricalChat && chatMessages.isNotEmpty())) {
+//            showChat = true
+//        }
+//    }
+//
+//    val featureCards = listOf(
+//        FeatureCard(
+//            title = "Profile Enhance",
+//            description = "Optimize your social media profile for...",
+//            icon = Icons.Default.Star,
+//            backgroundColor = Color(0xFF9C27B0),
+//            prompt = "Help me optimize my social media profile for maximum impact and engagement"
+//        ),
+//        FeatureCard(
+//            title = "Bio Enhance",
+//            description = "Create compelling bio that converts viewers...",
+//            icon = Icons.Default.Star,
+//            backgroundColor = Color(0xFF00BCD4),
+//            prompt = "Help me create a compelling bio that converts viewers into followers"
+//        ),
+//        FeatureCard(
+//            title = "Content idea creation",
+//            description = "Generate fresh content ideas for your niche",
+//            icon = Icons.Default.Create,
+//            backgroundColor = Color(0xFF4CAF50),
+//            prompt = "Generate fresh and creative content ideas for my social media niche"
+//        ),
+//        FeatureCard(
+//            title = "Engaging content idea",
+//            description = "Create content that drives engagement",
+//            icon = Icons.Default.Create,
+//            backgroundColor = Color(0xFF00BCD4),
+//            prompt = "Help me create content ideas that drive high engagement and interactions"
+//        ),
+//        FeatureCard(
+//            title = "Suggest catchy blog post",
+//            description = "Get ideas for compelling blog posts",
+//            icon = Icons.Default.Star,
+//            backgroundColor = Color(0xFF9C27B0),
+//            prompt = "Suggest catchy and viral blog post ideas for my audience"
+//        ),
+//        FeatureCard(
+//            title = "Unique reel creation",
+//            description = "Create unique and viral reel concepts",
+//            icon = Icons.Default.Create,
+//            backgroundColor = Color(0xFF4CAF50),
+//            prompt = "Help me create unique and viral reel concepts that stand out"
+//        ),
+//        FeatureCard(
+//            title = "Analyze the current trends",
+//            description = "Stay ahead with current social media trends",
+//            icon = Icons.Default.TrendingUp,
+//            backgroundColor = Color(0xFFFF9800),
+//            prompt = "Analyze current social media trends and help me stay ahead of the curve"
+//        ),
+//        FeatureCard(
+//            title = "Hashtag Strategy",
+//            description = "Develop a winning hashtag strategy for growth",
+//            icon = Icons.Default.Tag,
+//            backgroundColor = Color(0xFFE91E63),
+//            prompt = "Help me develop a winning hashtag strategy for maximum reach and growth"
+//        )
+//    )
+//
+//    Box(modifier = Modifier.fillMaxSize()) {
+//        Scaffold(
+//            topBar = {
+//                TopBarSabo(
+//                    activeProfile = activeProfile,
+//                    onClick = { isMenuOpen = true }
+//                )
+//            },
+//            bottomBar = {
+//                if (!isKeyboardOpen) {
+//                    BottomNavBar(navController = navController)
+//                }
+//            },
+//            modifier = Modifier.fillMaxSize()
+//        ) { paddingValues ->
+//
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(paddingValues)
+//            ) {
+//                val shouldShowChatInterface = showChat &&
+//                        (socketIOMessages.isNotEmpty() ||
+//                                (viewingHistoricalChat && chatMessages.isNotEmpty()))
+//
+//                if (shouldShowChatInterface) {
+//                    ChatInterface(
+//                        searchQuery = searchQuery,
+//                        onQueryChange = { searchQuery = it },
+//                        onSendClick = {
+//                            Log.d(
+//                                "SaboAIScreen",
+//                                "current session ID$currentSessionId, isNewChat: $isNewChat"
+//                            )
+//                            if (searchQuery.isNotEmpty() && connectionState == ConnectionState.CONNECTED) {
+//                                // Check if we have a valid session ID first
+//
+//                                Log.d(
+//                                    "SaboAIScreen",
+//                                    "current session ID$currentSessionId, isNewChat: $isNewChat"
+//                                )
+//
+//                                val sessionId = currentSessionId
+//
+//                                if (sessionId != null && sessionId != -1 && !isNewChat) {
+//                                    // We have a session ID, use it
+//                                    Log.d(
+//                                        "SaboAIScreen",
+//                                        "Sending message with existing sessionId: $sessionId"
+//                                    )
+//                                    viewModel.sendMessage(
+//                                        userId = userId,
+//                                        sessionId = sessionId,
+//                                        message = searchQuery
+//                                    )
+//                                } else {
+//                                    // No session ID, create new message
+//                                    val profileId = sharedPreferences.getInt("chatProfileId", -1)
+//                                    if (profileId != -1) {
+//                                        Log.d(
+//                                            "SaboAIScreen",
+//                                            "Creating NEW chat with userId: $userId, profileId: $profileId (isNewChat: $isNewChat)"
+//                                        )
+//                                        viewModel.createNewMessage(
+//                                            userId = userId,
+//                                            profileId = profileId,
+//                                            message = searchQuery
+//                                        )
+//                                        // isNewChat will be set to false when newSessionId is received
+//                                    } else {
+//                                        Log.e(
+//                                            "SaboAIScreen",
+//                                            "No profileId found in SharedPreferences"
+//                                        )
+//                                    }
+//                                }
+//                                searchQuery = ""
+//                            }
+//                        },
+//                        connectionState = connectionState,
+//                        socketIOMessages = socketIOMessages,
+//                        historicalMessages = chatMessages,
+//                        isViewingHistory = viewingHistoricalChat,
+//                        messagesLoading = messagesLoading,
+//                        messagesError = messagesError,
+//                        listState = listState,
+//                        onBackClick = {
+//                            showChat = false
+//                            viewingHistoricalChat = false
+//                            isNewChat = false
+//                            currentSessionId = null
+//                            sharedPreferences.edit().remove("chatSessionId").apply()
+//                            chatViewModel.clearCurrentSession()
+//                            viewModel.clearMessages()
+//                        }
+//                    )
+//                } else {
+//                    FeatureCardsInterface(
+//                        activeProfile = activeProfile,
+//                        featureCards = featureCards,
+//                        searchQuery = searchQuery,
+//                        onQueryChange = { searchQuery = it },
+//                        onSendClick = {
+//                            if (searchQuery.isNotEmpty()) {
+//                                // Check if we have a valid session ID first
+//                                val sessionId = currentSessionId
+//
+//                                if (sessionId != null && sessionId != -1 && !isNewChat) {
+//                                    // We have a session ID, use it
+//                                    Log.d(
+//                                        "SaboAIScreen",
+//                                        "Sending message with existing sessionId: $sessionId"
+//                                    )
+//                                    viewModel.sendMessage(
+//                                        userId = userId,
+//                                        sessionId = sessionId,
+//                                        message = searchQuery
+//                                    )
+//                                } else {
+//                                    // No session ID, create new message
+//                                    val profileId = sharedPreferences.getInt("chatProfileId", -1)
+//                                    if (profileId != -1) {
+//                                        Log.d(
+//                                            "SaboAIScreen",
+//                                            "Creating NEW chat with userId: $userId, profileId: $profileId (isNewChat: $isNewChat)"
+//                                        )
+//                                        viewModel.createNewMessage(
+//                                            userId = userId,
+//                                            profileId = profileId,
+//                                            message = searchQuery
+//                                        )
+//                                    } else {
+//                                        Log.e(
+//                                            "SaboAIScreen",
+//                                            "No profileId found - cannot create new message"
+//                                        )
+//                                    }
+//                                }
+//                                searchQuery = ""
+//                                showChat = true
+//                            }
+//                        },
+//                        onFeatureCardClick = { card ->
+//                            // Check if we have a valid session ID first
+//                            val sessionId = currentSessionId
+//
+//                            if (sessionId != null && sessionId != -1 && !isNewChat) {
+//                                // We have a session ID, use it
+//                                Log.d(
+//                                    "SaboAIScreen",
+//                                    "Sending feature card message with existing sessionId: $sessionId"
+//                                )
+//                                viewModel.sendMessage(
+//                                    userId = userId,
+//                                    sessionId = sessionId,
+//                                    message = card.prompt
+//                                )
+//                            } else {
+//                                // No session ID, create new message
+//                                val profileId = sharedPreferences.getInt("chatProfileId", -1)
+//                                if (profileId != -1) {
+//                                    Log.d(
+//                                        "SaboAIScreen",
+//                                        "Creating NEW chat from feature card with userId: $userId, profileId: $profileId"
+//                                    )
+//                                    viewModel.createNewMessage(
+//                                        userId = userId,
+//                                        profileId = profileId,
+//                                        message = card.prompt
+//                                    )
+//                                } else {
+//                                    Log.e(
+//                                        "SaboAIScreen",
+//                                        "No profileId found - cannot create new message"
+//                                    )
+//                                }
+//                            }
+//                            showChat = true
+//                            viewingHistoricalChat = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//
+//        // Side Menu Overlay
+//        if (isMenuOpen) {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .background(Color.Black.copy(alpha = 0.5f))
+//                    .clickable { isMenuOpen = false }
+//            )
+//
+//            SideMenu(
+//                modifier = Modifier
+//                    .fillMaxHeight()
+//                    .width(280.dp)
+//                    .background(Color.White),
+//                onClose = { isMenuOpen = false },
+//                onAnalyzeProfileClick = { message ->
+//                    // Check if we have a valid session ID first
+//                    val sessionId = currentSessionId
+//
+//                    if (sessionId != null && sessionId != -1 && !isNewChat) {
+//                        // We have a session ID, use it
+//                        Log.d(
+//                            "SaboAIScreen",
+//                            "Sending analyze profile message with existing sessionId: $sessionId"
+//                        )
+//                        viewModel.sendMessage(
+//                            userId = userId,
+//                            sessionId = sessionId,
+//                            message = message
+//                        )
+//                    } else {
+//                        // No session ID, create new message
+//                        val profileId = sharedPreferences.getInt("chatProfileId", -1)
+//                        if (profileId != -1) {
+//                            Log.d(
+//                                "SaboAIScreen",
+//                                "Creating NEW chat from analyze profile with userId: $userId, profileId: $profileId"
+//                            )
+//                            viewModel.createNewMessage(
+//                                userId = userId,
+//                                profileId = profileId,
+//                                message = message
+//                            )
+//                        } else {
+//                            Log.e(
+//                                "SaboAIScreen",
+//                                "No profileId found - cannot create new message"
+//                            )
+//                        }
+//                    }
+//
+//                    showChat = true
+//                    viewingHistoricalChat = false
+//                    isMenuOpen = false
+//                },
+//                onStartChatting = {
+//                    isMenuOpen = false
+//                    showChat = true
+//                    viewingHistoricalChat = false
+//                    isNewChat = true
+//                    currentSessionId = null
+//                    sharedPreferences.edit().remove("chatSessionId").apply()
+//                    chatViewModel.clearCurrentSession()
+//                    viewModel.clearMessages()
+//                },
+//                chatUserProfiles = chatUserProfiles,
+//                isLoadingProfiles = profileLoading,
+//                profileError = profileError,
+//                onRefreshProfiles = {
+//                    userProfile?.let {
+//                        chatViewModel.fetchChatUserProfiles(it.id)
+//                    }
+//                },
+//                chatViewModel = chatViewModel,
+//                userId = userId,
+//                chatHistory = chatHistory,
+//                historyLoading = historyLoading,
+//                historyError = historyError,
+//                onChatHistoryClick = { session ->
+//                    Log.d("SaboAIScreen", "Loading chat history for session: ${session.sessionId}")
+//
+//                    sharedPreferences.edit()
+//                        .putInt("chatSessionId", session.sessionId)
+//                        .apply()
+//
+//                    currentSessionId = session.sessionId
+//                    chatViewModel.fetchChatMessages(session.sessionId)
+//
+//                    viewingHistoricalChat = true
+//                    isMenuOpen = false
+//                    showChat = true
+//                },
+//                onRefreshHistory = {
+//                    val activeProfile = chatUserProfiles.find { it.isActive }
+//                    Log.d(
+//                        "SideMenu",
+//                        "Refreshing history for active profile: ${activeProfile?.username}"
+//                    )
+//
+//                    if (activeProfile != null) {
+//                        val profileId = activeProfile.id
+//                        chatViewModel.fetchChatHistory(
+//                            userId = userId,
+//                            platform = activeProfile.platform,
+//                            profileId = profileId
+//                        )
+//                        sharedPreferences.edit()
+//                            .putInt("chatProfileId", profileId)
+//                            .apply()
+//                    } else {
+//                        chatViewModel.fetchChatHistory(userId = userId)
+//                    }
+//                },
+//                onSessionChanged = { newSessionId ->
+//                    currentSessionId = newSessionId
+//                    if (newSessionId != null) {
+//                        sharedPreferences.edit()
+//                            .putInt("chatSessionId", newSessionId)
+//                            .apply()
+//                    } else {
+//                        sharedPreferences.edit().remove("chatSessionId").apply()
+//                    }
+//                }
+//            )
+//        }
+//    }
+//}
+
+
+
 @Composable
 fun SaboAIScreen(
     navController: NavController,
@@ -140,7 +708,7 @@ fun SaboAIScreen(
     // Socket.IO states
     val socketIOMessages by viewModel.messages.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
-    val newSessionId by viewModel.newSessionId.collectAsState() // OBSERVE THIS
+    val newSessionId by viewModel.newSessionId.collectAsState()
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -153,6 +721,20 @@ fun SaboAIScreen(
         if (sessionId == -1) {
             isNewChat = true
         }
+
+
+
+        // Clear sessionId from SharedPreferences
+        val sharedPreferences =
+            context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().remove("chatSessionId").apply()
+
+        // Clear messages
+        chatViewModel.clearCurrentSession()
+
+        // NOTE: We're NOT calling createNewChatSession here anymore
+        // Just trigger the callback to open chat screen in "new chat" mode
+
     }
 
     LaunchedEffect(userProfile) {
@@ -161,14 +743,21 @@ fun SaboAIScreen(
         }
     }
 
-    // Detect session changes and clear socket messages
+    // Detect session changes and clear socket messages ONLY if switching to a different session
     LaunchedEffect(currentSessionId) {
         if (currentSessionId != lastSessionId) {
             Log.d(
                 "SaboAIScreen",
-                "Session changed from $lastSessionId to $currentSessionId - clearing socket messages"
+                "Session changed from $lastSessionId to $currentSessionId"
             )
-            viewModel.clearMessages()
+
+            // Only clear messages if we're switching to a DIFFERENT existing session
+            // Don't clear when creating a new session (going from null to a new ID)
+            if (lastSessionId != null && currentSessionId != null && lastSessionId != currentSessionId) {
+                Log.d("SaboAIScreen", "Clearing messages due to session switch")
+                viewModel.clearMessages()
+            }
+
             lastSessionId = currentSessionId
         }
     }
@@ -260,8 +849,8 @@ fun SaboAIScreen(
         }
     }
 
-    // Show chat when there are messages
-    LaunchedEffect(socketIOMessages.size, chatMessages.size) {
+    // Show chat when there are messages OR when showChat is explicitly true
+    LaunchedEffect(socketIOMessages.size, chatMessages.size, showChat) {
         if (socketIOMessages.isNotEmpty() || (viewingHistoricalChat && chatMessages.isNotEmpty())) {
             showChat = true
         }
@@ -349,7 +938,8 @@ fun SaboAIScreen(
             ) {
                 val shouldShowChatInterface = showChat &&
                         (socketIOMessages.isNotEmpty() ||
-                                (viewingHistoricalChat && chatMessages.isNotEmpty()))
+                                (viewingHistoricalChat && chatMessages.isNotEmpty()) ||
+                                isNewChat) // Keep chat interface open even in new chat mode
 
                 if (shouldShowChatInterface) {
                     ChatInterface(
@@ -361,8 +951,6 @@ fun SaboAIScreen(
                                 "current session ID$currentSessionId, isNewChat: $isNewChat"
                             )
                             if (searchQuery.isNotEmpty() && connectionState == ConnectionState.CONNECTED) {
-                                // Check if we have a valid session ID first
-
                                 Log.d(
                                     "SaboAIScreen",
                                     "current session ID$currentSessionId, isNewChat: $isNewChat"
@@ -394,7 +982,6 @@ fun SaboAIScreen(
                                             profileId = profileId,
                                             message = searchQuery
                                         )
-                                        // isNewChat will be set to false when newSessionId is received
                                     } else {
                                         Log.e(
                                             "SaboAIScreen",
@@ -430,11 +1017,9 @@ fun SaboAIScreen(
                         onQueryChange = { searchQuery = it },
                         onSendClick = {
                             if (searchQuery.isNotEmpty()) {
-                                // Check if we have a valid session ID first
                                 val sessionId = currentSessionId
 
                                 if (sessionId != null && sessionId != -1 && !isNewChat) {
-                                    // We have a session ID, use it
                                     Log.d(
                                         "SaboAIScreen",
                                         "Sending message with existing sessionId: $sessionId"
@@ -445,7 +1030,6 @@ fun SaboAIScreen(
                                         message = searchQuery
                                     )
                                 } else {
-                                    // No session ID, create new message
                                     val profileId = sharedPreferences.getInt("chatProfileId", -1)
                                     if (profileId != -1) {
                                         Log.d(
@@ -469,11 +1053,9 @@ fun SaboAIScreen(
                             }
                         },
                         onFeatureCardClick = { card ->
-                            // Check if we have a valid session ID first
                             val sessionId = currentSessionId
 
                             if (sessionId != null && sessionId != -1 && !isNewChat) {
-                                // We have a session ID, use it
                                 Log.d(
                                     "SaboAIScreen",
                                     "Sending feature card message with existing sessionId: $sessionId"
@@ -484,7 +1066,6 @@ fun SaboAIScreen(
                                     message = card.prompt
                                 )
                             } else {
-                                // No session ID, create new message
                                 val profileId = sharedPreferences.getInt("chatProfileId", -1)
                                 if (profileId != -1) {
                                     Log.d(
@@ -527,11 +1108,9 @@ fun SaboAIScreen(
                     .background(Color.White),
                 onClose = { isMenuOpen = false },
                 onAnalyzeProfileClick = { message ->
-                    // Check if we have a valid session ID first
                     val sessionId = currentSessionId
 
                     if (sessionId != null && sessionId != -1 && !isNewChat) {
-                        // We have a session ID, use it
                         Log.d(
                             "SaboAIScreen",
                             "Sending analyze profile message with existing sessionId: $sessionId"
@@ -542,7 +1121,6 @@ fun SaboAIScreen(
                             message = message
                         )
                     } else {
-                        // No session ID, create new message
                         val profileId = sharedPreferences.getInt("chatProfileId", -1)
                         if (profileId != -1) {
                             Log.d(
@@ -638,6 +1216,7 @@ fun SaboAIScreen(
         }
     }
 }
+
 
 
 
@@ -1184,171 +1763,6 @@ fun SideMenu(
     }
 }
 
-
-//@Composable
-//fun ChatInterface(
-//    searchQuery: String,
-//    onQueryChange: (String) -> Unit,
-//    onSendClick: () -> Unit,
-//    connectionState: ConnectionState,
-//    socketIOMessages: List<ChatMessage>,
-//    historicalMessages: List<com.cc.creatorcircle.data.models.ChatMessage>,
-//    isViewingHistory: Boolean,
-//    messagesLoading: Boolean,
-//    messagesError: String?,
-//    listState: androidx.compose.foundation.lazy.LazyListState,
-//    onBackClick: () -> Unit = {}
-//) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .imePadding() // Add this
-//    ) {
-//        LazyColumn(
-//            modifier = Modifier
-//                .padding(horizontal = 4.dp)
-//                .weight(1f) // Takes remaining space
-//                .fillMaxWidth(),
-//            state = listState
-//        ) {
-//            when {
-//                messagesLoading && historicalMessages.isEmpty() -> {
-//                    item {
-//                        Box(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(200.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Column(
-//                                horizontalAlignment = Alignment.CenterHorizontally
-//                            ) {
-//                                CircularProgressIndicator(
-//                                    color = Color(0xFF9C27B0)
-//                                )
-//                                Spacer(modifier = Modifier.height(16.dp))
-//                                Text(
-//                                    text = "Loading chat messages...",
-//                                    style = MaterialTheme.typography.body1,
-//                                    color = Color.Gray
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                messagesError != null && historicalMessages.isEmpty() && socketIOMessages.isEmpty() -> {
-//                    item {
-//                        Box(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(200.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Column(
-//                                horizontalAlignment = Alignment.CenterHorizontally
-//                            ) {
-//                                Text(
-//                                    text = "Failed to load messages",
-//                                    style = MaterialTheme.typography.body1,
-//                                    color = Color.Red
-//                                )
-//                                Spacer(modifier = Modifier.height(8.dp))
-//                                Text(
-//                                    text = messagesError,
-//                                    style = MaterialTheme.typography.body2,
-//                                    color = Color.Gray,
-//                                    textAlign = TextAlign.Center
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                isViewingHistory -> {
-//                    // Show historical messages first
-//                    if (historicalMessages.isNotEmpty()) {
-//                        items(
-//                            items = historicalMessages,
-//                            key = { it.id }
-//                        ) { message ->
-//                            HistoricalMessageItem(message = message)
-//                            Spacer(modifier = Modifier.height(16.dp))
-//                        }
-//                    }
-//
-//                    // Then append any new socket messages (only for current session)
-//                    if (socketIOMessages.isNotEmpty()) {
-//                        items(
-//                            items = socketIOMessages,
-//                            key = { it.id }
-//                        ) { message ->
-//                            SocketIOMessageItem(message = message)
-//                            Spacer(modifier = Modifier.height(16.dp))
-//                        }
-//                    }
-//
-//                    // Show message if no messages at all
-//                    if (historicalMessages.isEmpty() && socketIOMessages.isEmpty()) {
-//                        item {
-//                            Box(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .height(200.dp),
-//                                contentAlignment = Alignment.Center
-//                            ) {
-//                                Text(
-//                                    text = "No messages in this chat",
-//                                    style = MaterialTheme.typography.body1,
-//                                    color = Color.Gray
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                !isViewingHistory && socketIOMessages.isNotEmpty() -> {
-//                    items(
-//                        items = socketIOMessages,
-//                        key = { it.id }
-//                    ) { message ->
-//                        SocketIOMessageItem(message = message)
-//                        Spacer(modifier = Modifier.height(16.dp))
-//                    }
-//                }
-//
-//                else -> {
-//                    item {
-//                        Box(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(200.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Text(
-//                                text = "Start a conversation with Sabo AI...",
-//                                style = MaterialTheme.typography.body1,
-//                                color = Color.Gray
-//                            )
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        ChatInputField(
-//            searchQuery = searchQuery,
-//            onQueryChange = onQueryChange,
-//            onSendClick = onSendClick,
-//            isEnabled = connectionState == ConnectionState.CONNECTED,
-//            placeholder = if (connectionState == ConnectionState.CONNECTED) {
-//                "Type your message to get started..."
-//            } else {
-//                "Connecting to chat..."
-//            }
-//        )
-//    }
-//}
 
 
 @Composable
@@ -2434,56 +2848,6 @@ fun FormattedText(
 }
 
 
-// Alternative simpler version if you prefer markdown-like rendering
-@Composable
-fun SimpleFormattedMessageContent(content: String, isAssistant: Boolean) {
-    val textColor = if (isAssistant) Color.White else Color(0xFF212529)
-
-    Column(
-        modifier = Modifier.padding(
-            horizontal = 16.dp,
-            vertical = 12.dp
-        )
-    ) {
-        val annotatedString = buildAnnotatedString {
-            val lines = content.split("\n")
-
-            lines.forEachIndexed { index, line ->
-                when {
-                    // Numbered items - make bold
-                    line.trim().matches(Regex("^\\d+\\.\\s+.*")) -> {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append(line.trim())
-                        }
-                    }
-                    // Bullet points
-                    line.trim().startsWith("-") -> {
-                        append("  • ${line.trim().removePrefix("-").trim()}")
-                    }
-                    // Regular text
-                    else -> {
-                        append(line.trim())
-                    }
-                }
-
-                // Add line break if not the last line
-                if (index < lines.size - 1 && line.trim().isNotEmpty()) {
-                    append("\n")
-                }
-            }
-        }
-
-        Text(
-            text = annotatedString,
-            style = MaterialTheme.typography.body1.copy(
-                fontSize = 14.sp,
-                lineHeight = 20.sp
-            ),
-            color = textColor
-        )
-    }
-}
-
 
 @Composable
 fun FeatureCardsInterface(
@@ -2685,6 +3049,186 @@ fun FeatureCardItem(
         }
     }
 }
+
+
+
+
+
+
+
+//@Composable
+//fun ChatInterface(
+//    searchQuery: String,
+//    onQueryChange: (String) -> Unit,
+//    onSendClick: () -> Unit,
+//    connectionState: ConnectionState,
+//    socketIOMessages: List<ChatMessage>,
+//    historicalMessages: List<com.cc.creatorcircle.data.models.ChatMessage>,
+//    isViewingHistory: Boolean,
+//    messagesLoading: Boolean,
+//    messagesError: String?,
+//    listState: androidx.compose.foundation.lazy.LazyListState,
+//    onBackClick: () -> Unit = {}
+//) {
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .imePadding() // Add this
+//    ) {
+//        LazyColumn(
+//            modifier = Modifier
+//                .padding(horizontal = 4.dp)
+//                .weight(1f) // Takes remaining space
+//                .fillMaxWidth(),
+//            state = listState
+//        ) {
+//            when {
+//                messagesLoading && historicalMessages.isEmpty() -> {
+//                    item {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Column(
+//                                horizontalAlignment = Alignment.CenterHorizontally
+//                            ) {
+//                                CircularProgressIndicator(
+//                                    color = Color(0xFF9C27B0)
+//                                )
+//                                Spacer(modifier = Modifier.height(16.dp))
+//                                Text(
+//                                    text = "Loading chat messages...",
+//                                    style = MaterialTheme.typography.body1,
+//                                    color = Color.Gray
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                messagesError != null && historicalMessages.isEmpty() && socketIOMessages.isEmpty() -> {
+//                    item {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Column(
+//                                horizontalAlignment = Alignment.CenterHorizontally
+//                            ) {
+//                                Text(
+//                                    text = "Failed to load messages",
+//                                    style = MaterialTheme.typography.body1,
+//                                    color = Color.Red
+//                                )
+//                                Spacer(modifier = Modifier.height(8.dp))
+//                                Text(
+//                                    text = messagesError,
+//                                    style = MaterialTheme.typography.body2,
+//                                    color = Color.Gray,
+//                                    textAlign = TextAlign.Center
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                isViewingHistory -> {
+//                    // Show historical messages first
+//                    if (historicalMessages.isNotEmpty()) {
+//                        items(
+//                            items = historicalMessages,
+//                            key = { it.id }
+//                        ) { message ->
+//                            HistoricalMessageItem(message = message)
+//                            Spacer(modifier = Modifier.height(16.dp))
+//                        }
+//                    }
+//
+//                    // Then append any new socket messages (only for current session)
+//                    if (socketIOMessages.isNotEmpty()) {
+//                        items(
+//                            items = socketIOMessages,
+//                            key = { it.id }
+//                        ) { message ->
+//                            SocketIOMessageItem(message = message)
+//                            Spacer(modifier = Modifier.height(16.dp))
+//                        }
+//                    }
+//
+//                    // Show message if no messages at all
+//                    if (historicalMessages.isEmpty() && socketIOMessages.isEmpty()) {
+//                        item {
+//                            Box(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .height(200.dp),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Text(
+//                                    text = "No messages in this chat",
+//                                    style = MaterialTheme.typography.body1,
+//                                    color = Color.Gray
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                !isViewingHistory && socketIOMessages.isNotEmpty() -> {
+//                    items(
+//                        items = socketIOMessages,
+//                        key = { it.id }
+//                    ) { message ->
+//                        SocketIOMessageItem(message = message)
+//                        Spacer(modifier = Modifier.height(16.dp))
+//                    }
+//                }
+//
+//                else -> {
+//                    item {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Text(
+//                                text = "Start a conversation with Sabo AI...",
+//                                style = MaterialTheme.typography.body1,
+//                                color = Color.Gray
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        ChatInputField(
+//            searchQuery = searchQuery,
+//            onQueryChange = onQueryChange,
+//            onSendClick = onSendClick,
+//            isEnabled = connectionState == ConnectionState.CONNECTED,
+//            placeholder = if (connectionState == ConnectionState.CONNECTED) {
+//                "Type your message to get started..."
+//            } else {
+//                "Connecting to chat..."
+//            }
+//        )
+//    }
+//}
+
+
+
+
+
+
+
+
+
 
 
 
