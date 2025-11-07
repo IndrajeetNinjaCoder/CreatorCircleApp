@@ -187,20 +187,7 @@ fun ResourceHub(
         }
     }
 
-//    LaunchedEffect(userProfile) {
-//        userProfile?.let { profile ->
-//            val username = profile.full_name?.takeIf { it.isNotEmpty() }
-//                ?: profile.username
-//                ?: ""
-//            val profilePic = profile.profile_pic ?: ""
-//
-//            // Save to SharedPreferences
-//            userDataManager.saveUserData(username, profilePic)
-//
-//            // Update local state
-//            userData = UserData(username, profilePic)
-//        }
-//    }
+
 
     // Get auth token using TokenManager
     val tokenManager = remember { TokenManager(context) }
@@ -220,7 +207,7 @@ fun ResourceHub(
     Scaffold(
         topBar = {
             TopBarHome(
-                tabs = listOf("Feed", "Resources"),
+                tabs = listOf("Feed", "Resources", "Connections"),
                 selectedTab = "Resources", // This should be "Resources" since you're in ResourceHub
                 navController = navController,
                 onTabSelected = { tab ->
@@ -229,6 +216,7 @@ fun ResourceHub(
                         "Feed" -> navController.navigate("home") // NOT "feed"
                         "Resources" -> { /* Already here */
                         }
+                        "Connections" -> navController.navigate("connections")
                     }
                 },
             )
@@ -281,8 +269,8 @@ fun ResourceHub(
                                         .fillMaxSize()
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop,
-                                    fallback = painterResource(id = R.drawable.ic_profile),
-                                    error = painterResource(id = R.drawable.ic_profile)
+                                    fallback = painterResource(id = R.drawable.ic_profile1),
+                                    error = painterResource(id = R.drawable.ic_profile1)
                                 )
                             } else {
                                 // Placeholder for profile image

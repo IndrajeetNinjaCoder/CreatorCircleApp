@@ -4,65 +4,102 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.cc.creatorcircle.data.models.websocket.StreamingMessage
-import com.cc.creatorcircle.data.websocket.WebSocketManager
+import com.cc.creatorcircle.data.socket.ChatMessage
+import com.cc.creatorcircle.data.socket.ConnectionState
 import com.cc.creatorcircle.viewModel.websocket.ChatViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = viewModel()
 ) {
-    var messageText by remember { mutableStateOf("") }
-    val userId = "233" // Fixed user ID
-    val websocketUrl = "wss://creatorcircle.in/api/chat/ws/" // Fixed WebSocket URL
 
+
+    val userId: Int = 3
+
+    val sessionId: Int = 188
+
+    val messages by viewModel.messages.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
-    val streamingMessages by viewModel.streamingMessages.collectAsState()
-
+    var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-
-    // Auto-connect when screen loads
-    LaunchedEffect(Unit) {
-        if (connectionState == WebSocketManager.ConnectionState.DISCONNECTED) {
-            viewModel.connect(websocketUrl)
-        }
-    }
 
     // Auto-scroll to bottom when new messages arrive
-    LaunchedEffect(streamingMessages.size) {
-        if (streamingMessages.isNotEmpty()) {
-            coroutineScope.launch {
-                listState.animateScrollToItem(streamingMessages.size - 1)
-            }
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Connection Status (Optional - can be removed if you don't want to show status)
-        if (connectionState != WebSocketManager.ConnectionState.CONNECTED) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = when (connectionState) {
-                        WebSocketManager.ConnectionState.CONNECTING -> MaterialTheme.colorScheme.secondaryContainer
-                        WebSocketManager.ConnectionState.ERROR -> MaterialTheme.colorScheme.errorContainer
-                        else -> MaterialTheme.colorScheme.surfaceVariant
+    // Connect on first composition
+    LaunchedEffect(Unit) {
+        viewModel.connect(userId, sessionId)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("AI Chat")
+                        Text(
+                            text = when (connectionState) {
+                                ConnectionState.CONNECTING -> "Connecting..."
+                                ConnectionState.CONNECTED -> "Connected"
+                                ConnectionState.DISCONNECTED -> "Disconnected"
+                                ConnectionState.ERROR -> "Connection Error"
+                            },
+                            fontSize = 12.sp,
+                            color = when (connectionState) {
+                                ConnectionState.CONNECTING -> Color(0xFFFFA500)
+                                ConnectionState.CONNECTED -> Color(0xFF4CAF50)
+                                ConnectionState.DISCONNECTED -> Color.Gray
+                                ConnectionState.ERROR -> Color.Red
+                            }
+                        )
                     }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // Messages List
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                state = listState,
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(messages) { message ->
+                    ChatMessageItem(message)
+                }
+            }
+
+            // Input Field
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                tonalElevation = 3.dp
             ) {
                 Row(
                     modifier = Modifier
@@ -70,175 +107,88 @@ fun ChatScreen(
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (connectionState == WebSocketManager.ConnectionState.CONNECTING) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = when (connectionState) {
-                            WebSocketManager.ConnectionState.CONNECTING -> "Connecting..."
-                            WebSocketManager.ConnectionState.ERROR -> "Connection Error"
-                            else -> "Disconnected"
+                    OutlinedTextField(
+                        value = messageText,
+                        onValueChange = { messageText = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Type a message...") },
+                        shape = RoundedCornerShape(24.dp),
+                        maxLines = 4,
+                        enabled = connectionState == ConnectionState.CONNECTED
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = {
+                            if (messageText.isNotBlank()) {
+                                viewModel.sendMessage(userId, sessionId, messageText)
+                                messageText = ""
+                            }
                         },
-                        color = when (connectionState) {
-                            WebSocketManager.ConnectionState.ERROR -> MaterialTheme.colorScheme.onErrorContainer
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Messages List
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            if (streamingMessages.isEmpty()) {
-                // Empty state
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Start a conversation...",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
-                ) {
-                    items(
-                        items = streamingMessages.values.sortedBy { it.timestamp },
-                        key = { it.id }
-                    ) { message ->
-                        StreamingMessageItem(message = message)
-                        if (message != streamingMessages.values.sortedBy { it.timestamp }.last()) {
-                            Divider(modifier = Modifier.padding(vertical = 4.dp))
-                        }
+                        enabled = messageText.isNotBlank() &&
+                                connectionState == ConnectionState.CONNECTED
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Send",
+                            tint = if (messageText.isNotBlank() &&
+                                connectionState == ConnectionState.CONNECTED) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                Color.Gray
+                            }
+                        )
                     }
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Message Input
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = messageText,
-                onValueChange = { messageText = it },
-                label = { Text("Type your message...") },
-                modifier = Modifier.weight(1f),
-                enabled = connectionState == WebSocketManager.ConnectionState.CONNECTED,
-                maxLines = 3
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = {
-                    if (messageText.isNotBlank()) {
-                        viewModel.sendMessage(userId.toIntOrNull() ?: 233, messageText)
-                        messageText = ""
-                    }
-                },
-                enabled = connectionState == WebSocketManager.ConnectionState.CONNECTED &&
-                        messageText.isNotBlank()
-            ) {
-                Text("Send")
             }
         }
     }
 }
 
-//@Composable
-//fun StreamingMessageItem(message: StreamingMessage) {
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(vertical = 4.dp),
-//        colors = CardDefaults.cardColors(
-//            containerColor = if (message.role == "user") {
-//                MaterialTheme.colorScheme.primaryContainer
-//            } else {
-//                MaterialTheme.colorScheme.secondaryContainer
-//            }
-//        )
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(12.dp)
-//        ) {
-//            // Message header
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Text(
-//                    text = message.role.uppercase(),
-//                    style = MaterialTheme.typography.labelMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant
-//                )
-//
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    // Streaming indicator
-//                    if (!message.isComplete) {
-//                        CircularProgressIndicator(
-//                            modifier = Modifier.size(12.dp),
-//                            strokeWidth = 1.dp,
-//                            color = MaterialTheme.colorScheme.primary
-//                        )
-//                        Spacer(modifier = Modifier.width(4.dp))
-//                        Text(
-//                            text = "Typing...",
-//                            style = MaterialTheme.typography.labelSmall,
-//                            color = MaterialTheme.colorScheme.primary
-//                        )
-//                    } else {
-//                        Text(
-//                            text = "Complete",
-//                            style = MaterialTheme.typography.labelSmall,
-//                            color = Color.Green
-//                        )
-//                    }
-//                }
-//            }
-//
-//            Spacer(modifier = Modifier.height(8.dp))
-//
-//            // Message content with streaming effect
-//            Text(
-//                text = message.content,
-//                style = MaterialTheme.typography.bodyMedium,
-//                color = MaterialTheme.colorScheme.onSurface
-//            )
-//
-//            Spacer(modifier = Modifier.height(4.dp))
-//
-//            // Timestamp
-//            Text(
-//                text = message.timestamp,
-//                style = MaterialTheme.typography.labelSmall,
-//                color = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
-//        }
-//    }
-//}
+@Composable
+fun ChatMessageItem(message: ChatMessage) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (message.isAssistant) {
+            Arrangement.Start
+        } else {
+            Arrangement.End
+        }
+    ) {
+        Surface(
+            modifier = Modifier.widthIn(max = 300.dp),
+            shape = RoundedCornerShape(
+                topStart = 16.dp,
+                topEnd = 16.dp,
+                bottomStart = if (message.isAssistant) 4.dp else 16.dp,
+                bottomEnd = if (message.isAssistant) 16.dp else 4.dp
+            ),
+            color = if (message.isAssistant) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.primaryContainer
+            }
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                if (message.isAssistant) {
+                    Text(
+                        text = "AI Assistant",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+
+                Text(
+                    text = message.content,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}

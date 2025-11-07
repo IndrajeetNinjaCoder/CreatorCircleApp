@@ -1,7 +1,6 @@
 package com.cc.creatorcircle.ui.screens.connections.recommendation
 
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -201,8 +199,8 @@ fun RecommendationProfileCard(
                                 .size(116.dp)
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop,
-                            placeholder = painterResource(id = R.drawable.ic_profile),
-                            error = painterResource(id = R.drawable.ic_profile)
+                            placeholder = painterResource(id = R.drawable.ic_profile1),
+                            error = painterResource(id = R.drawable.ic_profile1)
                         )
                     } else {
                         // Transparent placeholder - no background

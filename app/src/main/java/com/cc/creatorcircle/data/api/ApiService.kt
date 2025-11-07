@@ -4,6 +4,10 @@ import com.cc.creatorcircle.data.models.AddChatProfileRequest
 import com.cc.creatorcircle.data.models.AddChatProfileResponse
 import com.cc.creatorcircle.data.models.AddCommentResponse
 import com.cc.creatorcircle.data.models.AddReplyResponse
+import com.cc.creatorcircle.data.models.AvailabilityResponse
+import com.cc.creatorcircle.data.models.BookSlotRequest
+import com.cc.creatorcircle.data.models.BookSlotResponse
+import com.cc.creatorcircle.data.models.CancelBookingResponse
 import com.cc.creatorcircle.data.models.CancelConnectionResponse
 import com.cc.creatorcircle.data.models.ChatHistoryResponse
 import com.cc.creatorcircle.data.models.ChatMessagesResponse
@@ -14,22 +18,46 @@ import com.cc.creatorcircle.data.models.CommentLikeResponse
 import com.cc.creatorcircle.data.models.CommentResponse
 import com.cc.creatorcircle.data.models.ConnectionActionResponse
 import com.cc.creatorcircle.data.models.ConnectionResponse
+import com.cc.creatorcircle.data.models.ConversationMessage
 import com.cc.creatorcircle.data.models.CreateChatSessionRequest
 import com.cc.creatorcircle.data.models.CreateChatSessionResponse
+import com.cc.creatorcircle.data.models.DeleteChatProfileResponse
+import com.cc.creatorcircle.data.models.DeleteChatSessionResponse
+import com.cc.creatorcircle.data.models.DeleteMessageResponse
+import com.cc.creatorcircle.data.models.InfluencerFilterRequest
+import com.cc.creatorcircle.data.models.Influencers
+import com.cc.creatorcircle.data.models.InfluencersResponse
 import com.cc.creatorcircle.data.models.LikeResponse
+import com.cc.creatorcircle.data.models.LiveSessionAvailabilityResponse
 import com.cc.creatorcircle.data.models.LoginResponse
 import com.cc.creatorcircle.data.models.LogoutResponse
+import com.cc.creatorcircle.data.models.MentorConfigurationResponse
 import com.cc.creatorcircle.data.models.PostResponse
 import com.cc.creatorcircle.data.models.PostsResponse
 import com.cc.creatorcircle.data.models.RemoveConnectionResponse
+import com.cc.creatorcircle.data.models.SendMessageRequest
+import com.cc.creatorcircle.data.models.SendMessageResponse
+import com.cc.creatorcircle.data.models.Session
+import com.cc.creatorcircle.data.models.SessionsRequest
+import com.cc.creatorcircle.data.models.SessionsResponse
 import com.cc.creatorcircle.data.models.SetProfileActiveRequest
 import com.cc.creatorcircle.data.models.SetProfileActiveResponse
 import com.cc.creatorcircle.data.models.SignUpRequest
 import com.cc.creatorcircle.data.models.SignUpResponse
 import com.cc.creatorcircle.data.models.SocialMediaResponse
+import com.cc.creatorcircle.data.models.UpdateMentorConfigurationRequest
+import com.cc.creatorcircle.data.models.UpdateMentorConfigurationResponse
 import com.cc.creatorcircle.data.models.UserDiscoveryResponse
 import com.cc.creatorcircle.data.models.UserProfile
 import com.cc.creatorcircle.data.repository.GoogleSignUpRequest
+import com.example.creatorcircle.models.ApplyToDealRequest
+import com.example.creatorcircle.models.ApplyToDealResponse
+import com.example.creatorcircle.models.BrandsResponse
+import com.example.creatorcircle.models.DealsResponse
+import com.example.creatorcircle.models.GenerateEmailRequest
+import com.example.creatorcircle.models.GenerateEmailResponse
+import com.example.creatorcircle.models.SaveDefaultFiltersRequest
+import com.example.creatorcircle.models.SaveDefaultFiltersResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -40,6 +68,7 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
@@ -141,6 +170,13 @@ interface ApiService {
         @Part("content") content: RequestBody,
         @Part media_files: List<MultipartBody.Part>? = null
     ): Response<PostResponse>
+
+
+    @GET("user/profile/{userId}")
+    suspend fun getUserProfileById(
+        @Header("Authorization") authorization: String,
+        @Path("userId") userId: Int
+    ): Response<UserProfile>
 
 
     @Multipart
@@ -268,12 +304,145 @@ interface ApiService {
 
 
 
+    @POST("live-session/seek/suggest_influencers")
+    suspend fun getSuggestedInfluencers(
+        @Header("Authorization") token: String
+    ): Response<List<Influencers>>
+
+    @POST("live-session/seek/suggest_influencers")
+    suspend fun getFilteredInfluencers(
+        @Header("Authorization") token: String,
+        @Body filterRequest: InfluencerFilterRequest
+    ): Response<List<Influencers>>
 
 
 
+    @POST("live-session/seek/book-slot")
+    suspend fun bookLiveSessionSlot(
+        @Body request: BookSlotRequest,
+        @Header("Authorization") token: String
+    ): Response<BookSlotResponse>
+
+
+    @GET("live-session/seek/{userId}/availability")
+    suspend fun getMentorAvailability(
+        @Path("userId") userId: Int,
+        @Header("Authorization") token: String
+    ): Response<AvailabilityResponse>
+
+
+    @POST("sessions")
+    suspend fun getSessions(
+        @Body request: SessionsRequest,
+        @Header("Authorization") token: String
+    ): Response<List<Session>>
+
+    @PATCH("live-session/seek/cancel-booking/{bookingId}")
+    suspend fun cancelBooking(
+        @Path("bookingId") bookingId: Int,
+        @Header("Authorization") token: String
+    ): Response<CancelBookingResponse>
 
 
 
+    @GET("live-session/provide-guidance/configuration")
+    suspend fun getGuidanceConfiguration(
+        @Header("Authorization") token: String
+    ): Response<MentorConfigurationResponse>
 
+    @PUT("live-session/provide-guidance/configuration/{configId}")
+    suspend fun updateGuidanceConfiguration(
+        @Path("configId") configId: Int,
+        @Header("Authorization") token: String,
+        @Body request: UpdateMentorConfigurationRequest
+    ): Response<UpdateMentorConfigurationResponse>
+
+
+    @POST("api/messages/send")
+    suspend fun sendMessage(
+        @Body request: SendMessageRequest,
+        @Header("Authorization") token: String
+    ): Response<SendMessageResponse>
+
+
+    @GET("api/messages/conversation/{userId}")
+    suspend fun getConversation(
+        @Path("userId") userId: Int,
+        @Header("Authorization") token: String
+    ): Response<List<ConversationMessage>>
+
+
+    @DELETE("api/messages/{messageId}")
+    suspend fun deleteMessage(
+        @Path("messageId") messageId: Int,
+        @Header("Authorization") token: String
+    ): Response<DeleteMessageResponse>
+
+
+    @GET("brands/deals")
+    suspend fun getDeals(
+        @Header("Authorization") token: String,
+        @Query("category") category: String? = null,
+        @Query("collaboration_type") collaborationType: String? = null,
+        @Query("location") location: String? = null,
+        @Query("min_amount") minAmount: String? = null,
+        @Query("max_amount") maxAmount: String? = null,
+        @Query("status") status: String? = null,
+        @Query("brand_id") brandId: Int? = null
+//        @Query("limit") limit: Int? = 20,
+//        @Query("offset") offset: Int? = 0
+    ): Response<DealsResponse>
+
+    @GET("brands/")
+    suspend fun getBrands(
+        @Header("Authorization") token: String,
+        @Query("category") category: String? = null,
+        @Query("states") states: List<String>? = null,
+        @Query("country") country: String? = null,
+        @Query("profile_id") profileId: Int? = null,
+        @Query("limit") limit: Int? = 20,
+        @Query("offset") offset: Int? = 0
+    ): Response<BrandsResponse>
+
+
+    @POST("brands/default-filters")
+    suspend fun saveDefaultFilters(
+        @Body request: SaveDefaultFiltersRequest,
+        @Header("Authorization") token: String
+    ): Response<SaveDefaultFiltersResponse>
+
+
+    @POST("brands/set_email_texts/")
+    suspend fun generateEmail(
+        @Body request: GenerateEmailRequest,
+        @Header("Authorization") token: String
+    ): Response<GenerateEmailResponse>
+
+    @POST("brands/deals/{dealId}/apply")
+    suspend fun applyToDeal(
+        @Path("dealId") dealId: Int,
+        @Body request: ApplyToDealRequest,
+        @Header("Authorization") token: String
+    ): Response<ApplyToDealResponse>
+
+    @GET("live-session/seek/{sessionId}/availability")
+    suspend fun getLiveSessionAvailability(
+        @Path("sessionId") sessionId: Int,
+        @Header("Authorization") token: String
+    ): Response<LiveSessionAvailabilityResponse>
+
+
+    @DELETE("chat/profiles/remove/{profileId}")
+    suspend fun deleteChatProfile(
+        @Path("profileId") profileId: Int,
+        @Query("user_id") userId: Int,
+        @Header("Authorization") token: String
+    ): Response<DeleteChatProfileResponse>
+
+    @DELETE("chat/{sessionId}")
+    suspend fun deleteChatSession(
+        @Path("sessionId") sessionId: Int,
+        @Header("Authorization") token: String
+    ): Response<DeleteChatSessionResponse>
 
 }

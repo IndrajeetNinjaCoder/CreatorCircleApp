@@ -45,11 +45,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
@@ -127,6 +129,7 @@ import com.cc.creatorcircle.viewModel.PostsViewModelFactory
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import com.cc.creatorcircle.ui.navigation.Screen
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -220,20 +223,6 @@ fun HomeScreen(
     }
 
 
-//    LaunchedEffect(userProfile) {
-//        userProfile?.let { profile ->
-//            val username = profile.full_name?.takeIf { it.isNotEmpty() }
-//                ?: profile.username
-//                ?: ""
-//            val profilePic = profile.profile_pic ?: ""
-//
-//            // Save to SharedPreferences
-//            userDataManager.saveUserData(username, profilePic)
-//
-//            // Update local state
-//            userData = UserData(username, profilePic)
-//        }
-//    }
 
     // FIXED: Single LaunchedEffect for initial data loading
     LaunchedEffect(Unit) {
@@ -253,7 +242,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopBarHome(
-                tabs = listOf("Feed", "Resources"),
+                tabs = listOf("Feed", "Resources", "Connections"),
                 selectedTab = "Feed",
                 navController = navController,
                 onTabSelected = { tab ->
@@ -262,6 +251,8 @@ fun HomeScreen(
                         }
 
                         "Resources" -> navController.navigate("resourcehub")
+
+                        "Connections" -> navController.navigate("connections")
                     }
                 },
                 modifier = Modifier.background(Color.White)
@@ -272,17 +263,112 @@ fun HomeScreen(
         bottomBar = {
             BottomNavBar(navController = navController)
         },
+//        floatingActionButton = {
+//            GradientCreatePostButton(
+//                viewModel = viewModel,
+//                modifier = Modifier.padding(16.dp),
+//                username = userData.username.ifEmpty { "Loading..." },
+//                profilePic = userData.profilePic.takeIf { it?.isNotEmpty() == true }
+//            )
+//        },
+//        floatingActionButtonPosition = FabPosition.End,
+//        modifier = Modifier
+//            .fillMaxSize()
+
+
         floatingActionButton = {
-            GradientCreatePostButton(
-                viewModel = viewModel,
-                modifier = Modifier.padding(16.dp),
-                username = userData.username.ifEmpty { "Loading..." },
-                profilePic = userData.profilePic.takeIf { it?.isNotEmpty() == true }
-            )
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Message Icon FAB
+//                FloatingActionButton(
+//                    onClick = {
+//                        navController.navigate(Screen.MessageConnections.route)
+//                    },
+////                    containerColor = Color(0xFF8B5CF6),
+//                    contentColor = Color.White,
+//                    modifier = Modifier.size(56.dp)
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Message,
+//                        contentDescription = "Messages",
+//                        modifier = Modifier.size(24.dp)
+//                    )
+//                }
+
+//                FloatingActionButton(
+//                    onClick = {
+//                        navController.navigate(Screen.MessageConnections.route)
+//                    },
+////                    containerColor = Color.Transparent,
+//                    contentColor = Color.White,
+//                    modifier = Modifier
+//                        .size(56.dp)
+//                        .background(
+//                            brush = Brush.verticalGradient(
+//                                colors = listOf(
+//                                    Color(0xFF893BCF), // Bright magenta/pink
+//                                    Color(0xFFEA3BA1)  // Pink
+//                                )
+//                            ),
+//                            shape = CircleShape
+//                        )
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Message,
+//                        contentDescription = "Messages",
+//                        modifier = Modifier.size(24.dp)
+//                    )
+//                }
+
+
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF893BCF),
+                                    Color(0xFFEA3BA1)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                        .clickable {
+                            navController.navigate(Screen.MessageConnections.route)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Message,
+                        contentDescription = "Messages",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+
+                // Create Post Button
+                GradientCreatePostButton(
+                    viewModel = viewModel,
+                    modifier = Modifier,
+                    username = userData.username.ifEmpty { "Loading..." },
+                    profilePic = userData.profilePic.takeIf { it?.isNotEmpty() == true }
+                )
+            }
         },
         floatingActionButtonPosition = FabPosition.End,
-        modifier = Modifier
-            .fillMaxSize()
+
+
+
+
+
+
+
+
+
+
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -490,6 +576,352 @@ fun HomeScreen(
         }
     }
 }
+//
+//
+//@Composable
+//fun PostCardSection(
+//    post: Post,
+//    userProfile: UserProfile?,
+//    connectionViewModel: ConnectionViewModel,
+//    onLikeClick: (String) -> Unit = {},
+//    onCommentClick: (Post) -> Unit = {},
+//    onShareClick: (Post) -> Unit = {},
+//    onConnectClick: (Int) -> Unit = {}
+//) {
+//
+//    // State to track if full content is shown
+//    var isExpanded by remember { mutableStateOf(false) }
+//
+//    // Check if user is already connected
+//    val isAlreadyConnected = userProfile?.accepted_connections?.users?.any {
+//        it.user_id == post.author.id
+//    } ?: false
+//
+//    // Check if user is following the post author
+//    val isFollowing = userProfile?.following?.users?.any {
+//        it.user_id == post.author.id
+//    } ?: false
+//
+//    // Check if connection request is already sent
+//    val isConnectionSent = connectionViewModel.isConnectionAlreadySent(post.author.id)
+//
+//    // Get connection loading state for this specific user
+//    val connectionLoading by connectionViewModel.isLoading.observeAsState(false)
+//
+//    // Get the connection for this user to check status
+//    val connection = connectionViewModel.getConnectionByUserId(post.author.id)
+//
+//    // Determine button text and state based on connection status
+//    val buttonText = when {
+//        isConnectionSent -> when (connection?.status) {
+//            "pending" -> "Pending"
+//            "accepted" -> "Connected"
+//            "rejected" -> "Rejected"
+//            else -> "Sent"
+//        }
+//
+//        isFollowing -> "Pending"  // Show "Pending" if following but not connected
+//        else -> "Connect"
+//    }
+//
+//    val buttonEnabled = !connectionLoading && !isConnectionSent && !isFollowing
+//
+//    // Extract links from post content
+//    val links = extractLinksFromText(post.content)
+//
+//    Card(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 12.dp, vertical = 8.dp)
+//            .border(
+//                width = 1.dp,
+//                brush = Brush.horizontalGradient(
+//                    listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+//                ),
+//                shape = RoundedCornerShape(12.dp)
+//            ),
+//        colors = CardDefaults.cardColors(containerColor = Color.White),
+//        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//        shape = RoundedCornerShape(12.dp)
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 8.dp, vertical = 12.dp)
+//        ) {
+//            // Profile Image
+//            if (post.author.avatar != null) {
+//                AsyncImage(
+//                    model = post.author.avatar,
+//                    contentDescription = "Profile",
+//                    modifier = Modifier
+//                        .size(36.dp)
+//                        .clip(CircleShape),
+//                    contentScale = ContentScale.Crop,
+//                    placeholder = painterResource(id = R.drawable.ic_profile),
+//                    error = painterResource(id = R.drawable.ic_profile)
+//                )
+//            } else {
+//                Image(
+//                    painter = painterResource(id = R.drawable.ic_profile),
+//                    contentDescription = "Profile",
+//                    modifier = Modifier
+//                        .size(36.dp)
+//                        .clip(CircleShape),
+//                    contentScale = ContentScale.Crop
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.width(10.dp))
+//
+//            // Name and description
+//            Column(modifier = Modifier.weight(1f)) {
+//                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Text(
+//                        text = post.author.name ?: post.author.role ?: "Anonymous",
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = 14.sp,
+//                        color = Color.Black
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text(
+//                        text = "• ${post.timestamp}",
+//                        fontSize = 10.sp,
+//                        color = Color.Gray
+//                    )
+//                }
+////                Spacer(modifier = Modifier.height(2.dp))
+//                if (post.author.role != null && post.author.role != post.author.name) {
+//                    Text(
+//                        text = "@${post.author.role}",
+//                        fontSize = 10.sp,
+//                        color = Color.Gray,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis,
+//                    )
+//                }
+//            }
+//
+//            Spacer(modifier = Modifier.width(12.dp))
+//
+//            // Connect Button (only show if not author and not already connected)
+//            if (!post.isAuthor && !isAlreadyConnected) {
+//                Button(
+//                    onClick = {
+//                        if (!isConnectionSent && !connectionLoading && !isFollowing) {
+//                            onConnectClick(post.author.id)
+//                        }
+//                    },
+//                    enabled = !connectionLoading && !isConnectionSent && !isFollowing,
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = when {
+//                            isConnectionSent || isFollowing -> Color(0xFFE0E0E0)
+//                            else -> Color(0xFFEDE1FF)
+//                        },
+//                        disabledContainerColor = Color(0xFFE0E0E0)
+//                    ),
+//                    shape = RoundedCornerShape(6.dp),
+//                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+//                    modifier = Modifier
+//                        .height(32.dp)
+//                        .wrapContentWidth()
+//                        .padding(end = 8.dp),
+//                    border = BorderStroke(
+//                        1.dp,
+//                        when {
+//                            isConnectionSent || isFollowing -> Color.Gray
+//                            else -> Color(0xFF8B5CF6)
+//                        }
+//                    )
+//                ) {
+//                    if (connectionLoading) {
+//                        CircularProgressIndicator(
+//                            modifier = Modifier.size(12.dp),
+//                            strokeWidth = 2.dp,
+//                            color = Color(0xFF8B5CF6)
+//                        )
+//                    } else {
+//                        Text(
+//                            text = when {
+//                                isConnectionSent -> when (connection?.status) {
+//                                    "pending" -> "Pending"
+//                                    "accepted" -> "Connected"
+//                                    "rejected" -> "Rejected"
+//                                    else -> "Sent"
+//                                }
+//
+//                                isFollowing -> "Pending"
+//                                else -> "Connect"
+//                            },
+//                            color = when {
+//                                isConnectionSent || isFollowing -> Color.Gray
+//                                else -> Color(0xFF8B5CF6)
+//                            },
+//                            fontWeight = FontWeight.Medium,
+//                            fontSize = 12.sp
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth(),
+//            colors = CardDefaults.cardColors(containerColor = Color.White),
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp)
+//            ) {
+//                // Post Content
+//                if (post.content.isNotEmpty()) {
+//                    Column {
+//                        Text(
+//                            text = post.content,
+//                            fontSize = 14.sp,
+//                            maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+//                            overflow = TextOverflow.Ellipsis,
+//                            color = Color.Black,
+//                            lineHeight = 20.sp
+//                        )
+//
+//                        // Check if text actually overflows 2 lines by measuring
+//                        var showButton by remember { mutableStateOf(false) }
+//
+//                        Text(
+//                            text = post.content,
+//                            fontSize = 14.sp,
+//                            maxLines = 2,
+//                            color = Color.Transparent,
+//                            lineHeight = 20.sp,
+//                            onTextLayout = { textLayoutResult ->
+//                                showButton = textLayoutResult.hasVisualOverflow
+//                            }
+//                        )
+//
+//                        if (showButton) {
+//                            Text(
+//                                text = if (isExpanded) "Show less" else "Show more",
+//                                fontSize = 14.sp,
+//                                color = Color(0xFF1976D2),
+//                                fontWeight = FontWeight.Medium,
+//                                modifier = Modifier
+////                                    .padding(top = 4.dp)
+//                                    .clickable {
+//                                        isExpanded = !isExpanded
+//                                    }
+//                            )
+//                        }
+//                    }
+//                }
+//
+//
+//                // Display Links if any
+//                if (links.isNotEmpty()) {
+//                    Spacer(modifier = Modifier.height(8.dp))
+//
+//                    LazyRow(
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        itemsIndexed(links) { index, link ->
+//                            LinkChip(
+//                                link = link,
+//                                linkNumber = index + 1
+//                            )
+//                        }
+//                    }
+//                }
+//
+//                // Post Media (Images and Videos)
+//                if (post.media.isNotEmpty()) {
+//                    Spacer(modifier = Modifier.height(12.dp))
+//
+//                    post.media.forEachIndexed { index, mediaUrl ->
+//                        val isVideo = isVideoUrl(mediaUrl)
+//
+//                        if (isVideo) {
+//                            VideoPlayer(
+//                                videoUrl = mediaUrl,
+//                                // Create unique videoId using post ID and media index
+//                                videoId = "${post.id}_media_$index",
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .aspectRatio(9f / 16f) // 9:16 aspect ratio
+//                                    .clip(RoundedCornerShape(12.dp))
+//                            )
+//                        } else {
+//                            AsyncImage(
+//                                model = mediaUrl,
+//                                contentDescription = "Post Image",
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+////                                    .aspectRatio(9f / 16f) // Changed from fixed height to 9:16 aspect ratio
+//                                    .aspectRatio(4f / 5f) // Changed from fixed height to 9:16 aspect ratio
+//                                    .clip(RoundedCornerShape(12.dp)),
+//                                contentScale = ContentScale.Crop,
+//                                placeholder = painterResource(id = R.drawable.ic_post_image),
+//                                error = painterResource(id = R.drawable.ic_post_image)
+//                            )
+//                        }
+//
+//                        if (index < post.media.size - 1) {
+//                            Spacer(modifier = Modifier.height(8.dp))
+//                        }
+//                    }
+//                }
+//
+////                Spacer(modifier = Modifier.height(12.dp))
+//
+//                // Likes and Comments count
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        text = if (post.likes > 0) "${post.likes} likes" else "",
+//                        fontSize = 12.sp,
+//                        color = Color.Gray
+//                    )
+//                    Text(
+//                        text = if (post.comments > 0) "${post.comments} Comments" else "",
+//                        fontSize = 12.sp,
+//                        color = Color.Gray
+//                    )
+//                }
+//
+////                Spacer(modifier = Modifier.height(12.dp))
+//
+//                // Action buttons
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    LikeButton(
+//                        post = post,
+//                        text = "Like",
+//                        onClick = { onLikeClick(post.id) }
+//                    )
+//
+//                    // Updated ActionButton calls
+//                    ActionButton(
+//                        iconRes = R.drawable.ic_comment,
+//                        text = "Comment",
+//                        onClick = { onCommentClick(post) }
+//                    )
+//                    ActionButton(
+//                        iconRes = R.drawable.ic_share,
+//                        text = "Share",
+//                        onClick = { onShareClick(post) }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
 
 
 @Composable
@@ -572,12 +1004,12 @@ fun PostCardSection(
                         .size(36.dp)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.ic_profile),
-                    error = painterResource(id = R.drawable.ic_profile)
+                    placeholder = painterResource(id = R.drawable.ic_profile1),
+                    error = painterResource(id = R.drawable.ic_profile1)
                 )
             } else {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_profile),
+                    painter = painterResource(id = R.drawable.ic_profile1),
                     contentDescription = "Profile",
                     modifier = Modifier
                         .size(36.dp)
@@ -767,18 +1199,55 @@ fun PostCardSection(
                                     .clip(RoundedCornerShape(12.dp))
                             )
                         } else {
-                            AsyncImage(
-                                model = mediaUrl,
-                                contentDescription = "Post Image",
+                            // State to track image loading
+                            var imageLoadState by remember { mutableStateOf<ImageLoadState>(ImageLoadState.Loading) }
+
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-//                                    .aspectRatio(9f / 16f) // Changed from fixed height to 9:16 aspect ratio
-                                    .aspectRatio(4f / 5f) // Changed from fixed height to 9:16 aspect ratio
-                                    .clip(RoundedCornerShape(12.dp)),
-                                contentScale = ContentScale.Crop,
-                                placeholder = painterResource(id = R.drawable.ic_post_image),
-                                error = painterResource(id = R.drawable.ic_post_image)
-                            )
+                                    .aspectRatio(4f / 5f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (imageLoadState is ImageLoadState.Error)
+                                            Color(0xFFE0E0E0)
+                                        else
+                                            Color.Transparent
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                when (imageLoadState) {
+                                    is ImageLoadState.Loading, is ImageLoadState.Success -> {
+                                        AsyncImage(
+                                            model = mediaUrl,
+                                            contentDescription = "Post Image",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop,
+                                            onSuccess = { imageLoadState = ImageLoadState.Success },
+                                            onError = { imageLoadState = ImageLoadState.Error }
+                                        )
+                                    }
+                                    is ImageLoadState.Error -> {
+                                        // Show gray placeholder with icon
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_cross),
+                                                contentDescription = "Failed to load",
+                                                tint = Color.Gray,
+                                                modifier = Modifier.size(48.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "Unable to load media",
+                                                fontSize = 12.sp,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         if (index < post.media.size - 1) {
@@ -837,6 +1306,32 @@ fun PostCardSection(
     }
 }
 
+// Helper sealed class to track image loading state
+sealed class ImageLoadState {
+    object Loading : ImageLoadState()
+    object Success : ImageLoadState()
+    object Error : ImageLoadState()
+}
+
+// Improved video URL detection function
+fun isVideoUrl(url: String): Boolean {
+    val videoExtensions = listOf(".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp", ".m4v")
+    val lowerUrl = url.lowercase()
+
+    // Check file extension
+    if (videoExtensions.any { lowerUrl.contains(it) }) {
+        return true
+    }
+
+    // Check common video hosting patterns
+    if (lowerUrl.contains("video") ||
+        lowerUrl.contains(".mp4") ||
+        lowerUrl.contains("cloudinary.com/video")) {
+        return true
+    }
+
+    return false
+}
 
 @Composable
 fun LinkChip(
@@ -1100,11 +1595,11 @@ fun VideoFeedItem(
 }
 
 // Helper function to determine if URL is a video
-private fun isVideoUrl(url: String): Boolean {
-    val videoExtensions = listOf("mp4", "avi", "mov", "mkv", "3gp", "webm", "m4v", "wmv", "flv")
-    val extension = url.substringAfterLast('.', "").lowercase()
-    return videoExtensions.contains(extension)
-}
+//private fun isVideoUrl(url: String): Boolean {
+//    val videoExtensions = listOf("mp4", "avi", "mov", "mkv", "3gp", "webm", "m4v", "wmv", "flv")
+//    val extension = url.substringAfterLast('.', "").lowercase()
+//    return videoExtensions.contains(extension)
+//}
 
 
 @Composable
@@ -1118,12 +1613,12 @@ fun ShareBottomSheetContent(
     // Mock contact data - replace with actual contact data
     val contacts = remember {
         listOf(
-            Contact("Nisha___119", R.drawable.ic_profile),
-            Contact("Nisha___119", R.drawable.ic_profile),
-            Contact("Nisha___119", R.drawable.ic_profile),
-            Contact("Nisha___119", R.drawable.ic_profile),
-            Contact("Nisha___119", R.drawable.ic_profile),
-            Contact("Nisha___119", R.drawable.ic_profile)
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1)
         )
     }
 
@@ -1313,8 +1808,8 @@ fun ContactItem(
                 .size(60.dp)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.ic_profile),
-            error = painterResource(id = R.drawable.ic_profile)
+            placeholder = painterResource(id = R.drawable.ic_profile1),
+            error = painterResource(id = R.drawable.ic_profile1)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -1478,7 +1973,7 @@ fun CommentBottomSheetContent(
             {
                 // Profile Image
                 Image(
-                    painter = painterResource(id = R.drawable.ic_profile),
+                    painter = painterResource(id = R.drawable.ic_profile1),
                     contentDescription = "Your Profile",
                     modifier = Modifier
                         .size(34.dp)
@@ -1716,8 +2211,8 @@ fun CommentItem(
                         .size(profileSize)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.ic_profile),
-                    error = painterResource(id = R.drawable.ic_profile)
+                    placeholder = painterResource(id = R.drawable.ic_profile1),
+                    error = painterResource(id = R.drawable.ic_profile1)
                 )
             } else {
                 Box(
@@ -1726,7 +2221,7 @@ fun CommentItem(
                         .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_profile),
+                        painter = painterResource(id = R.drawable.ic_profile1),
                         contentDescription = "Profile",
                         modifier = Modifier
                             .fillMaxSize()
@@ -1908,7 +2403,7 @@ fun GoodMorningNotification(
                 ) {
                     // You can replace this with actual profile image
                     Image(
-                        painter = painterResource(id = R.drawable.ic_profile), // Replace with actual profile image
+                        painter = painterResource(id = R.drawable.ic_profile1), // Replace with actual profile image
                         contentDescription = "Profile",
                         modifier = Modifier
                             .fillMaxSize()
@@ -1997,8 +2492,8 @@ fun GradientCreatePostButton(
                 contentDescription = "Add",
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Create post", color = Color.White)
+//            Spacer(modifier = Modifier.width(12.dp))
+//            Text("Create post", color = Color.White)
         }
     }
 
@@ -2078,13 +2573,13 @@ fun PostInputSection(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape),
-                    placeholder = painterResource(id = R.drawable.ic_profile),
-                    error = painterResource(id = R.drawable.ic_profile),
+                    placeholder = painterResource(id = R.drawable.ic_profile1),
+                    error = painterResource(id = R.drawable.ic_profile1),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_profile),
+                    painter = painterResource(id = R.drawable.ic_profile1),
                     contentDescription = "Profile",
                     modifier = Modifier
                         .size(42.dp)

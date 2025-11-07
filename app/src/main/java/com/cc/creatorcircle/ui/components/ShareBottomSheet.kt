@@ -354,14 +354,14 @@ fun ContactItem(
     ) {
         // Profile Image
         AsyncImage(
-            model = contact.profilePic ?: R.drawable.ic_profile,
+            model = contact.profilePic ?: R.drawable.ic_profile1,
             contentDescription = contact.username,
             modifier = Modifier
                 .size(60.dp)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.ic_profile),
-            error = painterResource(id = R.drawable.ic_profile)
+            placeholder = painterResource(id = R.drawable.ic_profile1),
+            error = painterResource(id = R.drawable.ic_profile1)
         )
 
         Spacer(modifier = Modifier.height(8.dp))

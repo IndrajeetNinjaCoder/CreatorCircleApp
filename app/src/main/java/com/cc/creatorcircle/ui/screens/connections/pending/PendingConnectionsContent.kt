@@ -34,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -193,8 +192,8 @@ fun PendingConnectionCard(
                                     .size(76.dp)
                                     .clip(CircleShape),
                                 contentScale = ContentScale.Crop,
-                                placeholder = painterResource(id = R.drawable.ic_profile),
-                                error = painterResource(id = R.drawable.ic_profile)
+                                placeholder = painterResource(id = R.drawable.ic_profile1),
+                                error = painterResource(id = R.drawable.ic_profile1)
                             )
                         } else {
                             Icon(

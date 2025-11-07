@@ -10,6 +10,8 @@ import com.cc.creatorcircle.data.models.ChatSession
 import com.cc.creatorcircle.data.models.ChatSessionDetail
 import com.cc.creatorcircle.data.models.ChatUserProfile
 import com.cc.creatorcircle.data.models.CreateChatSessionResponse
+import com.cc.creatorcircle.data.models.DeleteChatProfileResponse
+import com.cc.creatorcircle.data.models.DeleteChatSessionResponse
 import com.cc.creatorcircle.data.models.ProfileData
 import com.cc.creatorcircle.data.repository.ChatRepository
 import com.cc.creatorcircle.utils.TokenManager
@@ -106,7 +108,27 @@ class ChatViewModel(private val context: Context) : ViewModel() {
 
 
 
+    // Add these after _profileAdded state flows
+    private val _deleteProfileLoading = MutableStateFlow(false)
+    val deleteProfileLoading: StateFlow<Boolean> = _deleteProfileLoading.asStateFlow()
 
+    private val _deleteProfileError = MutableStateFlow<String?>(null)
+    val deleteProfileError: StateFlow<String?> = _deleteProfileError.asStateFlow()
+
+    private val _profileDeleted = MutableStateFlow<DeleteChatProfileResponse?>(null)
+    val profileDeleted: StateFlow<DeleteChatProfileResponse?> = _profileDeleted.asStateFlow()
+
+
+
+    // Delete Chat Session State
+    private val _deleteChatSessionLoading = MutableStateFlow(false)
+    val deleteChatSessionLoading: StateFlow<Boolean> = _deleteChatSessionLoading.asStateFlow()
+
+    private val _deleteChatSessionError = MutableStateFlow<String?>(null)
+    val deleteChatSessionError: StateFlow<String?> = _deleteChatSessionError.asStateFlow()
+
+    private val _chatSessionDeleted = MutableStateFlow<DeleteChatSessionResponse?>(null)
+    val chatSessionDeleted: StateFlow<DeleteChatSessionResponse?> = _chatSessionDeleted.asStateFlow()
 
     /**
      * Fetch chat user profile by user ID
@@ -156,7 +178,9 @@ class ChatViewModel(private val context: Context) : ViewModel() {
 
 
 
-
+    fun clearMessages() {
+        _messages.value = emptyList()
+    }
 
 
 
@@ -567,44 +591,110 @@ class ChatViewModel(private val context: Context) : ViewModel() {
         _profileAdded.value = null
         _addProfileError.value = null
     }
+
+
+
+
+
+    /**
+     * Delete a chat profile
+     */
+    fun deleteChatProfile(profileId: Int, userId: Int) {
+        viewModelScope.launch {
+            try {
+                Log.d("ChatViewModel", "Deleting chat profile - ProfileId: $profileId")
+                _deleteProfileLoading.value = true
+                _deleteProfileError.value = null
+                _profileDeleted.value = null
+
+                repository.deleteChatProfile(profileId, userId)
+                    .onSuccess { deleteProfileResponse ->
+                        Log.d("ChatViewModel", "Profile deleted successfully: ${deleteProfileResponse.message}")
+                        _profileDeleted.value = deleteProfileResponse
+
+                        // Remove the profile from local state
+                        val updatedProfiles = _userProfiles.value.filter { it.id != profileId }
+                        _userProfiles.value = updatedProfiles
+
+                        // If the deleted profile was the active one, set first profile as active
+                        if (_userProfile.value?.id == profileId && updatedProfiles.isNotEmpty()) {
+                            _userProfile.value = updatedProfiles.first()
+                        } else if (updatedProfiles.isEmpty()) {
+                            _userProfile.value = null
+                        }
+
+                        // Refresh user profiles to get updated state from server
+                        fetchChatUserProfiles(userId)
+                    }
+                    .onFailure { exception ->
+                        Log.e("ChatViewModel", "Failed to delete chat profile", exception)
+                        _deleteProfileError.value = exception.message ?: "Failed to delete chat profile"
+                    }
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Exception in deleteChatProfile", e)
+                _deleteProfileError.value = "Network error: ${e.message}"
+            } finally {
+                _deleteProfileLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Clear delete profile state
+     */
+    fun clearDeleteProfileState() {
+        _profileDeleted.value = null
+        _deleteProfileError.value = null
+    }
+
+
+
+    fun deleteChatSession(sessionId: Int, userId: Int) {
+        viewModelScope.launch {
+            try {
+                Log.d("ChatViewModel", "Deleting chat session - SessionId: $sessionId")
+                _deleteChatSessionLoading.value = true
+                _deleteChatSessionError.value = null
+                _chatSessionDeleted.value = null
+
+                repository.deleteChatSession(sessionId)
+                    .onSuccess { deleteSessionResponse ->
+                        Log.d("ChatViewModel", "Chat session deleted successfully: ${deleteSessionResponse.message}")
+                        _chatSessionDeleted.value = deleteSessionResponse
+
+                        // Remove the session from local chat history
+                        val updatedHistory = _chatHistory.value.filter { it.sessionId != sessionId }
+                        _chatHistory.value = updatedHistory
+
+                        // Clear current session if it was the deleted one
+                        if (_currentSession.value?.sessionId == sessionId) {
+                            clearCurrentSession()
+                        }
+
+                        // Refresh chat history to get updated state from server
+                        fetchChatHistory(userId)
+                    }
+                    .onFailure { exception ->
+                        Log.e("ChatViewModel", "Failed to delete chat session", exception)
+                        _deleteChatSessionError.value = exception.message ?: "Failed to delete chat session"
+                    }
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Exception in deleteChatSession", e)
+                _deleteChatSessionError.value = "Network error: ${e.message}"
+            } finally {
+                _deleteChatSessionLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Clear delete chat session state
+     */
+    fun clearDeleteChatSessionState() {
+        _chatSessionDeleted.value = null
+        _deleteChatSessionError.value = null
+    }
+
+
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    fun fetchChatMessages(sessionId: Int) {
-//        viewModelScope.launch {
-//            try {
-//                Log.d("ChatViewModel", "Fetching messages for session: $sessionId")
-//                _messagesLoading.value = true
-//                _messagesError.value = null
-//
-//                repository.getChatMessages(sessionId)
-//                    .onSuccess { messagesResponse ->
-//                        Log.d("ChatViewModel", "Messages fetched: ${messagesResponse.data.size}")
-//                        _messages.value = messagesResponse.data
-//                    }
-//                    .onFailure { exception ->
-//                        Log.e("ChatViewModel", "Failed to fetch messages", exception)
-//                        _messagesError.value = exception.message ?: "Failed to fetch messages"
-//                    }
-//            } catch (e: Exception) {
-//                Log.e("ChatViewModel", "Exception in fetchChatMessages", e)
-//                _messagesError.value = "Network error: ${e.message}"
-//            } finally {
-//                _messagesLoading.value = false
-//            }
-//        }
-//    }

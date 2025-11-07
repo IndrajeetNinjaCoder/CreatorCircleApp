@@ -13,9 +13,16 @@ import androidx.navigation.navArgument
 import com.cc.creatorcircle.MainActivity2
 import com.cc.creatorcircle.data.api.ApiService
 import com.cc.creatorcircle.data.api.RetrofitInstance
+import com.cc.creatorcircle.ui.screens.brandcollab.BrandCollab
+import com.cc.creatorcircle.ui.screens.brandcollab.BrandCollabScreen
 import com.cc.creatorcircle.ui.screens.creatorcoin.CreatorCoin
 import com.cc.creatorcircle.ui.screens.home.HomeScreen
+import com.cc.creatorcircle.ui.screens.livesession.AboutSection
+import com.cc.creatorcircle.ui.screens.livesession.BookingSlot
 import com.cc.creatorcircle.ui.screens.livesession.LiveSession
+import com.cc.creatorcircle.ui.screens.livesession.MySessionScreen
+import com.cc.creatorcircle.ui.screens.message.MessageConnections
+import com.cc.creatorcircle.ui.screens.message.MessageScreen
 import com.cc.creatorcircle.ui.screens.notification.NotificationsWeb
 import com.cc.creatorcircle.ui.screens.onboarding.SignupOnboarding
 import com.cc.creatorcircle.ui.screens.profile.ProfileWeb
@@ -23,10 +30,12 @@ import com.cc.creatorcircle.ui.screens.profile.UserProfile
 import com.cc.creatorcircle.ui.screens.resourcehub.ResourceHub
 import com.cc.creatorcircle.ui.screens.sabo.ChatScreen
 import com.cc.creatorcircle.ui.screens.sabo.SaboAIScreen
+//import com.cc.creatorcircle.ui.screens.sabo.SaboAIScreen
 import com.cc.creatorcircle.ui.screens.sabo.SaboWeb
 import com.cc.creatorcircleapp.ui.screens.login.LoginScreen
 import com.cc.creatorcircleapp.ui.screens.signup.SignupScreen
 import com.example.app.ConnectionsScreen
+import com.example.mentorcircle.BookingScreen
 import com.example.mentorcircle.MentorCircle
 
 @Composable
@@ -69,9 +78,6 @@ fun NavigationHost(navController: NavHostController) {
 //        }
 
 
-
-
-
         // 🔹 New WebView Route
         composable("webhome") {
             val context = LocalContext.current
@@ -84,9 +90,18 @@ fun NavigationHost(navController: NavHostController) {
 //            SignupOnboarding(navController)
         }
 
+
+        composable(Screen.BrandCollab.route) {
+//            BrandCollab(navController)
+            BrandCollabScreen(navController)
+        }
+
+
+
+
         composable(Screen.SaboAI.route) {
-            SaboWeb(navController)
-//            SaboAIScreen(navController)
+//            SaboWeb(navController)
+            SaboAIScreen(navController)
 //            ChatScreen()
         }
 
@@ -94,6 +109,20 @@ fun NavigationHost(navController: NavHostController) {
 //            LiveSession(navController)
             MentorCircle(navController)
         }
+
+//        composable(Screen.MentorCircle.route) {
+//            MentorCircle(navController)
+//        }
+
+        composable(Screen.BookingScreen.route) {
+            BookingScreen(navController)
+        }
+
+        composable(Screen.MySessionScreen.route) {
+            MySessionScreen(navController)
+        }
+
+
 
 
         composable(Screen.ProfileWeb.route) {
@@ -120,6 +149,15 @@ fun NavigationHost(navController: NavHostController) {
         }
 
 
+        composable(Screen.MessageConnections.route) {
+            MessageConnections(navController)
+        }
+
+//        composable(Screen.MessageScreen.route) {
+//            MessageScreen(navController)
+//        }
+
+
 
         composable(
             route = "userprofile/{userId}",
@@ -129,6 +167,69 @@ fun NavigationHost(navController: NavHostController) {
             UserProfile(navController, userId = userId)
         }
 
+//        composable(
+//            route = "booking_slot/{userId}",
+//            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+//            BookingSlot(navController, userId = userId)
+//        }
+//
+
+
+        composable(
+            route = "booking_slot/{userId}/{influencerName}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("influencerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val influencerName = backStackEntry.arguments?.getString("influencerName") ?: ""
+            BookingSlot(navController, userId = userId, influencerName = influencerName)
+        }
+
+
+        composable(
+            route = "about_section/{userId}/{influencerName}",  // ✅ matches Screen object
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("influencerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val influencerName = backStackEntry.arguments?.getString("influencerName") ?: ""
+
+            AboutSection(
+                navController = navController,
+                userId = userId,
+                influencerName = influencerName
+            )
+        }
+
+
+        composable(
+            route = "message_screen/{userId}/{userName}/{profilePic}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("userName") { type = NavType.StringType },
+                navArgument("profilePic") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+            val profilePic = backStackEntry.arguments?.getString("profilePic")
+
+            MessageScreen(
+                navController = navController,
+                otherUserId = userId,
+                userName = userName,
+                profilePic = profilePic
+            )
+        }
 
     }
 }

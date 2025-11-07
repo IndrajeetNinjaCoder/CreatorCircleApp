@@ -3,21 +3,6 @@ package com.cc.creatorcircle.data.models
 
 import com.google.gson.annotations.SerializedName
 
-// Model for Chat User Profile
-//data class ChatUserProfile(
-//    @SerializedName("id")
-//    val id: Int,
-//    @SerializedName("username")
-//    val username: String,
-//    @SerializedName("platform")
-//    val platform: String,
-//    @SerializedName("platform_link")
-//    val platformLink: String,
-//    @SerializedName("last_updated")
-//    val lastUpdated: String,
-//    @SerializedName("is_active")
-//    val isActive: Boolean
-//)
 
 
 data class ChatUserProfile(
@@ -134,16 +119,6 @@ data class ChatSessionResponse(
     val message: String? = null
 )
 
-// Response model for chat messages
-//data class ChatMessagesResponse(
-//    @SerializedName("data")
-//    val data: List<ChatMessage>,
-//    @SerializedName("success")
-//    val success: Boolean,
-//    @SerializedName("message")
-//    val message: String? = null
-//)
-
 
 // Set profile active
 // Request Model
@@ -157,13 +132,7 @@ data class SetProfileActiveResponse(
     val profile: ProfileData
 )
 
-//data class ProfileData(
-//    val id: Int,
-//    val username: String,
-//    val platform: String,
-//    val platform_link: String,
-//    val is_active: Boolean
-//)
+
 
 
 // Data classes for the new API methods
@@ -184,3 +153,18 @@ data class AddChatProfileResponse(
 )
 
 
+
+// Response model for delete Insta profile API
+data class DeleteChatProfileResponse(
+    val message: String,
+    val profile_id: Int
+)
+
+
+// Response model for delete chat session API
+data class DeleteChatSessionResponse(
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("session_id")
+    val sessionId: Int
+)

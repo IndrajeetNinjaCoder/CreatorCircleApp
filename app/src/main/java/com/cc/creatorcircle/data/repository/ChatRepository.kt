@@ -12,6 +12,8 @@ import com.cc.creatorcircle.data.models.ChatUserProfile
 import com.cc.creatorcircle.data.models.ChatUserProfilesResponse
 import com.cc.creatorcircle.data.models.CreateChatSessionRequest
 import com.cc.creatorcircle.data.models.CreateChatSessionResponse
+import com.cc.creatorcircle.data.models.DeleteChatProfileResponse
+import com.cc.creatorcircle.data.models.DeleteChatSessionResponse
 import com.cc.creatorcircle.data.models.SetProfileActiveRequest
 import com.cc.creatorcircle.data.models.SetProfileActiveResponse
 import com.cc.creatorcircle.utils.TokenManager
@@ -323,32 +325,65 @@ class ChatRepository(private val context: Context) {
             throw Exception("Access token not found. Please log in again.")
         }
     }
+
+
+
+    suspend fun deleteChatProfile(profileId: Int, userId: Int): Result<DeleteChatProfileResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = tokenManager.getToken()
+                if (token.isEmpty()) {
+                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
+                }
+
+                val response = apiService.deleteChatProfile(profileId, userId, "Bearer $token")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { deleteProfileResponse ->
+                        Log.d("ChatRepository", "Profile deleted successfully: ${deleteProfileResponse.message}")
+                        Result.success(deleteProfileResponse)
+                    } ?: Result.failure(Exception("Empty response body"))
+                } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+                    Log.e("ChatRepository", "API Error in deleteChatProfile: ${response.code()} - $errorMessage")
+                    Result.failure(Exception("Failed to delete chat profile: ${response.code()} - $errorMessage"))
+                }
+            } catch (e: Exception) {
+                Log.e("ChatRepository", "Exception in deleteChatProfile", e)
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun deleteChatSession(sessionId: Int): Result<DeleteChatSessionResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = tokenManager.getToken()
+                if (token.isEmpty()) {
+                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
+                }
+
+                val response = apiService.deleteChatSession(sessionId, "Bearer $token")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { deleteSessionResponse ->
+                        Log.d("ChatRepository", "Chat session deleted successfully: ${deleteSessionResponse.message}")
+                        Result.success(deleteSessionResponse)
+                    } ?: Result.failure(Exception("Empty response body"))
+                } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+                    Log.e("ChatRepository", "API Error in deleteChatSession: ${response.code()} - $errorMessage")
+                    Result.failure(Exception("Failed to delete chat session: ${response.code()} - $errorMessage"))
+                }
+            } catch (e: Exception) {
+                Log.e("ChatRepository", "Exception in deleteChatSession", e)
+                Result.failure(e)
+            }
+        }
+    }
+
+
 }
 
 
 
-//    suspend fun getChatMessages(sessionId: Int): Result<ChatMessagesResponse> {
-//        return withContext(Dispatchers.IO) {
-//            try {
-//                val token = tokenManager.getToken()
-//                if (token.isEmpty()) {
-//                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
-//                }
-//
-//                val response = apiService.getChatMessages(sessionId, "Bearer $token")
-//
-//                if (response.isSuccessful) {
-//                    response.body()?.let { chatMessages ->
-//                        Result.success(chatMessages)
-//                    } ?: Result.failure(Exception("Empty response body"))
-//                } else {
-//                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
-//                    Log.e("ChatRepository", "API Error in getChatMessages: ${response.code()} - $errorMessage")
-//                    Result.failure(Exception("Failed to get chat messages: ${response.code()} - $errorMessage"))
-//                }
-//            } catch (e: Exception) {
-//                Log.e("ChatRepository", "Exception in getChatMessages", e)
-//                Result.failure(e)
-//            }
-//        }
-//    }

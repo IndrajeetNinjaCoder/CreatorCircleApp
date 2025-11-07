@@ -94,6 +94,16 @@ class PostsRepository(private val context: Context) {
             throw Exception("Access token not found. Please log in again.")
         }
     }
+
+    suspend fun getUserProfileById(userId: Int): Response<UserProfile> {
+        val token = tokenManager.getToken()
+        return if (token.isNotEmpty()) {
+            apiService.getUserProfileById("Bearer $token", userId)
+        } else {
+            throw Exception("Access token not found. Please log in again.")
+        }
+    }
+
     suspend fun createPost(postRequest: PostRequest, postType: String): Result<PostResponse> {
         return withContext(Dispatchers.IO) {
             try {

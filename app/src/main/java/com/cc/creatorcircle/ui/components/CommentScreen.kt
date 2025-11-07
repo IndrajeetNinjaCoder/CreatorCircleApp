@@ -86,9 +86,9 @@ fun CommentScreen() {
     var newComment by remember { mutableStateOf("") }
     var comments by remember {
         mutableStateOf(listOf(
-            Comment(1, "Priya", "Gorgeous picture !!", R.drawable.ic_profile, 0, true, 3),
-            Comment(2, "Priya", "Gorgeous picture !!", R.drawable.ic_profile, 0),
-            Comment(3, "Priya", "Gorgeous picture !!", R.drawable.ic_profile, 0)
+            Comment(1, "Priya", "Gorgeous picture !!", R.drawable.ic_profile1, 0, true, 3),
+            Comment(2, "Priya", "Gorgeous picture !!", R.drawable.ic_profile1, 0),
+            Comment(3, "Priya", "Gorgeous picture !!", R.drawable.ic_profile1, 0)
         ))
     }
 
@@ -102,7 +102,7 @@ fun CommentScreen() {
         timeAgo = "1 day ago",
         content = "has done a great performance on the dance show",
         postImage = R.drawable.ic_post_image,
-        profileImage = R.drawable.ic_profile
+        profileImage = R.drawable.ic_profile1
     )
 
     Column(
@@ -257,7 +257,7 @@ fun CommentScreen() {
                         id = comments.size + 1,
                         username = "You",
                         text = newComment,
-                        profileImage = R.drawable.ic_profile
+                        profileImage = R.drawable.ic_profile1
                     )
                     newComment = ""
                 }

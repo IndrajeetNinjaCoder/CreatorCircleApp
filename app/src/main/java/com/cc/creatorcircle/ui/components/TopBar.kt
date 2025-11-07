@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
@@ -40,6 +41,8 @@ import com.cc.creatorcircle.viewModel.UserViewModel
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import com.cc.creatorcircle.data.models.ChatUserProfile
 
 // Data class for notification state
 data class NotificationState(
@@ -237,6 +240,7 @@ fun TopBar(
 
 @Composable
 fun TopBarSabo(
+    activeProfile: ChatUserProfile?,
     onClick: () -> Unit = {}
 ) {
 
@@ -261,16 +265,47 @@ fun TopBarSabo(
             )
         }
 
+        Row{
+
+            Image(
+                painter = painterResource(id = R.drawable.ic_instagram),
+                contentDescription = "Instagram_icon",
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(6.dp))
+
+            Text(
+                text = activeProfile?.username?.let { "@$it" } ?: "Provide your IG",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF9C27B0),
+//            modifier = Modifier
+//                .width(100.dp) // Adjust height as needed
+//                .height(30.dp) // Adjust height as needed
+            )
+        }
+
+//        Text(
+//            text = activeProfile?.username?.let { "@$it" } ?: "Provide your IG",
+//            fontSize = 16.sp,
+//            fontWeight = FontWeight.Bold,
+//            color = Color(0xFF9C27B0),
+////            modifier = Modifier
+////                .width(100.dp) // Adjust height as needed
+////                .height(30.dp) // Adjust height as needed
+//        )
+
         // SABO logo on the right
-        Icon(
-            painter = painterResource(id = R.drawable.ic_sabo),
-            contentDescription = "SABO",
-            tint = Color.Unspecified, // Keep original colors
-            modifier = Modifier
-                .width(100.dp) // Adjust height as needed
-                .height(30.dp) // Adjust height as needed
-//                .fillMaxWidth()
-        )
+//        Icon(
+//            painter = painterResource(id = R.drawable.ic_sabo),
+//            contentDescription = "SABO",
+//            tint = Color.Unspecified, // Keep original colors
+//            modifier = Modifier
+//                .width(100.dp) // Adjust height as needed
+//                .height(30.dp) // Adjust height as needed
+////                .fillMaxWidth()
+//        )
     }
 }
 
@@ -651,7 +686,7 @@ fun TopBarHome(
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                             )
                         }
                     } else {
@@ -678,7 +713,7 @@ fun TopBarHome(
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                             )
                         }
                     }

@@ -72,6 +72,21 @@ class PostsViewModel(private val context: Context) : ViewModel() {
     val profileError: StateFlow<String?> = _profileError
 
 
+
+
+    // StateFlows for other user's profile
+
+    // Replace the single otherUserProfile with a map
+    private val _otherUserProfiles = MutableStateFlow<Map<Int, UserProfile>>(emptyMap())
+    val otherUserProfiles: StateFlow<Map<Int, UserProfile>> = _otherUserProfiles
+
+    private val _otherUserLoading = MutableStateFlow<Set<Int>>(emptySet())
+    val otherUserLoading: StateFlow<Set<Int>> = _otherUserLoading
+
+    private val _otherUserError = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val otherUserError: StateFlow<Map<Int, String>> = _otherUserError
+
+
 //    init {
 //        fetchPosts()
 //    }
@@ -419,6 +434,89 @@ class PostsViewModel(private val context: Context) : ViewModel() {
         if (_postCreationState.value is PostCreationState.Error) {
             _postCreationState.value = PostCreationState.Idle
         }
+    }
+
+
+
+
+
+
+
+
+
+
+    // Update the fetch function
+    fun fetchUserProfileById(userId: Int) {
+        // Don't fetch if already loading or already loaded
+        if (_otherUserLoading.value.contains(userId) || _otherUserProfiles.value.containsKey(userId)) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                Log.d("PostsViewModel", "Fetching profile for userId: $userId")
+                _otherUserLoading.value = _otherUserLoading.value + userId
+
+                val currentErrors = _otherUserError.value.toMutableMap()
+                currentErrors.remove(userId)
+                _otherUserError.value = currentErrors
+
+                val response = repository.getUserProfileById(userId)
+                Log.d("PostsViewModel", "Repository response received for user $userId")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { userProfile ->
+                        Log.d("PostsViewModel", "User profile data: $userProfile")
+                        _otherUserProfiles.value = _otherUserProfiles.value + (userId to userProfile)
+                        Log.d("PostsViewModel", "Profile data set successfully for user $userId")
+                    } ?: run {
+                        Log.e("PostsViewModel", "Response body is null for user $userId")
+                        val errors = _otherUserError.value.toMutableMap()
+                        errors[userId] = "Empty response body"
+                        _otherUserError.value = errors
+                    }
+                } else {
+                    Log.e(
+                        "PostsViewModel",
+                        "API call failed for user $userId: ${response.code()} - ${response.message()}"
+                    )
+                    val errors = _otherUserError.value.toMutableMap()
+                    errors[userId] = "Failed to fetch user profile: ${response.message()}"
+                    _otherUserError.value = errors
+                }
+            } catch (e: Exception) {
+                Log.e("PostsViewModel", "Exception in fetchUserProfileById for user $userId", e)
+                val errors = _otherUserError.value.toMutableMap()
+                errors[userId] = "Network error: ${e.message}"
+                _otherUserError.value = errors
+            } finally {
+                _otherUserLoading.value = _otherUserLoading.value - userId
+            }
+        }
+    }
+
+    // Update clear function
+    fun clearOtherUserProfiles() {
+        _otherUserProfiles.value = emptyMap()
+        _otherUserError.value = emptyMap()
+    }
+
+    // Helper function to get a specific user's profile
+    fun getUserProfile(userId: Int): UserProfile? {
+        return _otherUserProfiles.value[userId]
+    }
+
+    // Update other helper functions
+    fun getOtherUserAcceptedConnections(userId: Int): UserList? {
+        return _otherUserProfiles.value[userId]?.accepted_connections
+    }
+
+    fun getOtherUserFollowers(userId: Int): UserList? {
+        return _otherUserProfiles.value[userId]?.followers
+    }
+
+    fun getOtherUserFollowing(userId: Int): UserList? {
+        return _otherUserProfiles.value[userId]?.following
     }
 
 
