@@ -1213,6 +1213,9 @@ fun SideMenu(
 }
 
 
+
+
+
 @Composable
 fun ChatInterface(
     searchQuery: String,
@@ -1227,6 +1230,31 @@ fun ChatInterface(
     listState: androidx.compose.foundation.lazy.LazyListState,
     onBackClick: () -> Unit = {}
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    // Track the last assistant message to detect when response is complete
+    val lastAssistantMessage = remember(socketIOMessages) {
+        socketIOMessages.lastOrNull { it.isAssistant }
+    }
+
+    // Auto-scroll when new messages arrive or response completes
+    LaunchedEffect(socketIOMessages.size, lastAssistantMessage?.content) {
+        if (socketIOMessages.isNotEmpty()) {
+            val totalMessages = if (isViewingHistory) {
+                historicalMessages.size + socketIOMessages.size
+            } else {
+                socketIOMessages.size
+            }
+
+            if (totalMessages > 0) {
+                coroutineScope.launch {
+                    // Smooth scroll to the last item
+                    listState.animateScrollToItem(totalMessages - 1)
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1358,6 +1386,13 @@ fun ChatInterface(
     }
 }
 
+
+
+
+
+
+
+
 //@Composable
 //fun ChatInterface(
 //    searchQuery: String,
@@ -1438,21 +1473,18 @@ fun ChatInterface(
 //                    }
 //                }
 //
-//                isViewingHistory -> {
+//                isViewingHistory && historicalMessages.isNotEmpty() -> {
 //                    // Show historical messages first
-//                    if (historicalMessages.isNotEmpty()) {
-//                        items(
-//                            items = historicalMessages,
-//                            key = { message -> "historical_${message.id}" }
-//                        ) { message ->
-//                            HistoricalMessageItem(message = message)
-//                            Spacer(modifier = Modifier.height(16.dp))
-//                        }
+//                    items(
+//                        items = historicalMessages,
+//                        key = { message -> "historical_${message.id}" }
+//                    ) { message ->
+//                        HistoricalMessageItem(message = message)
+//                        Spacer(modifier = Modifier.height(16.dp))
 //                    }
 //
-//                    // Only show socket messages if they belong to the current historical session
-//                    // Don't show socket messages when viewing historical chats
-//                    if (socketIOMessages.isNotEmpty() && !isViewingHistory) {
+//                    // FIXED: Always show socket messages when they exist, even in historical view
+//                    if (socketIOMessages.isNotEmpty()) {
 //                        items(
 //                            items = socketIOMessages,
 //                            key = { message -> "socket_${message.id}" }
@@ -1461,31 +1493,12 @@ fun ChatInterface(
 //                            Spacer(modifier = Modifier.height(16.dp))
 //                        }
 //                    }
-//
-//                    // Show message if no messages at all
-//                    if (historicalMessages.isEmpty() && socketIOMessages.isEmpty()) {
-//                        item(key = "empty_history") {
-//                            Box(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .height(200.dp),
-//                                contentAlignment = Alignment.Center
-//                            ) {
-//                                Text(
-//                                    text = "No messages in this chat",
-//                                    style = MaterialTheme.typography.body1,
-//                                    color = Color.Gray
-//                                )
-//                            }
-//                        }
-//                    }
 //                }
 //
-//
-//                !isViewingHistory && socketIOMessages.isNotEmpty() -> {
+//                socketIOMessages.isNotEmpty() -> {
 //                    items(
 //                        items = socketIOMessages,
-//                        key = { message -> "socket_${message.id}" }  // Add prefix to make unique
+//                        key = { message -> "socket_${message.id}" }
 //                    ) { message ->
 //                        SocketIOMessageItem(message = message)
 //                        Spacer(modifier = Modifier.height(16.dp))
@@ -1524,6 +1537,7 @@ fun ChatInterface(
 //        )
 //    }
 //}
+
 
 @Composable
 fun ChatInputField(
