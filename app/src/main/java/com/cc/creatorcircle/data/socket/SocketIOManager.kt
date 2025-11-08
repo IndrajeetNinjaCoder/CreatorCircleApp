@@ -85,7 +85,56 @@ class SocketIOManager {
         Log.e(TAG, "Error type: ${error?.javaClass?.name}")
         _connectionState.value = ConnectionState.ERROR
     }
+//
+//    private val onChatChunk = Emitter.Listener { args ->
+//        try {
+//            val data = args[0] as JSONObject
+//            Log.d(TAG, "Chat chunk received: $data")
+//
+//            val content = data.getString("content")
+//            val messageId = data.getString("assistant_message_id")
+//
+//            // Check for session_id in chunks (just in case)
+//            if (data.has("session_id")) {
+//                val receivedSessionId = data.getInt("session_id")
+//                Log.d(TAG, "✅ Session ID found in chat chunk: $receivedSessionId")
+//
+//                if (this.sessionId == null || this.sessionId == -1 || this.sessionId != receivedSessionId) {
+//                    Log.d(TAG, "✅ Emitting new session ID from chunk: $receivedSessionId")
+//                    _newSessionId.value = receivedSessionId
+//                    this.sessionId = receivedSessionId
+//                }
+//            }
+//
+//            val currentMessages = _messages.value.toMutableList()
+//            val existingIndex = currentMessages.indexOfLast {
+//                it.isAssistant && it.id == messageId
+//            }
+//
+//            if (existingIndex != -1) {
+//                currentMessages[existingIndex] = currentMessages[existingIndex].copy(
+//                    content = currentMessages[existingIndex].content + content
+//                )
+//            } else {
+//                currentMessages.add(
+//                    ChatMessage(
+//                        id = messageId,
+//                        content = content,
+//                        isAssistant = true,
+//                        timestamp = System.currentTimeMillis()
+//                    )
+//                )
+//            }
+//            _messages.value = currentMessages
+//        } catch (e: Exception) {
+//            Log.e(TAG, "❌ Error handling chat chunk: ${e.message}", e)
+//            e.printStackTrace()
+//        }
+//    }
 
+
+
+    // ALSO UPDATE onChatChunk to skip empty/placeholder chunks
     private val onChatChunk = Emitter.Listener { args ->
         try {
             val data = args[0] as JSONObject
@@ -104,6 +153,12 @@ class SocketIOManager {
                     _newSessionId.value = receivedSessionId
                     this.sessionId = receivedSessionId
                 }
+            }
+
+            // Skip if content is empty or whitespace
+            if (content.isBlank()) {
+                Log.d(TAG, "⏭️ Skipping empty chunk")
+                return@Listener
             }
 
             val currentMessages = _messages.value.toMutableList()
@@ -131,6 +186,9 @@ class SocketIOManager {
             e.printStackTrace()
         }
     }
+
+
+
 
     fun clearMessages() {
         _messages.value = emptyList()
@@ -167,6 +225,53 @@ class SocketIOManager {
             e.printStackTrace()
         }
     }
+//
+//    private val onChatResponse = Emitter.Listener { args ->
+//        try {
+//            val data = args[0] as JSONObject
+//            Log.d(TAG, "Chat response received: $data")
+//
+//            val fullMessage = data.getString("message")
+//            val messageId = data.getString("assistant_message_id")
+//
+//            // Check for session_id
+//            if (data.has("session_id")) {
+//                val receivedSessionId = data.getInt("session_id")
+//                Log.d(TAG, "✅ Session ID found in chat response: $receivedSessionId")
+//
+//                if (this.sessionId == null || this.sessionId == -1 || this.sessionId != receivedSessionId) {
+//                    Log.d(TAG, "✅ Emitting new session ID from response: $receivedSessionId")
+//                    _newSessionId.value = receivedSessionId
+//                    this.sessionId = receivedSessionId
+//                }
+//            }
+//
+//            val currentMessages = _messages.value.toMutableList()
+//            val existingIndex = currentMessages.indexOfLast {
+//                it.isAssistant && it.id == messageId
+//            }
+//
+//            if (existingIndex != -1) {
+//                currentMessages[existingIndex] = currentMessages[existingIndex].copy(
+//                    content = fullMessage
+//                )
+//            } else {
+//                currentMessages.add(
+//                    ChatMessage(
+//                        id = messageId,
+//                        content = fullMessage,
+//                        isAssistant = true,
+//                        timestamp = System.currentTimeMillis()
+//                    )
+//                )
+//            }
+//            _messages.value = currentMessages
+//        } catch (e: Exception) {
+//            Log.e(TAG, "❌ Error handling chat response: ${e.message}", e)
+//            e.printStackTrace()
+//        }
+//    }
+
 
     private val onChatResponse = Emitter.Listener { args ->
         try {
@@ -186,6 +291,16 @@ class SocketIOManager {
                     _newSessionId.value = receivedSessionId
                     this.sessionId = receivedSessionId
                 }
+            }
+
+            // CRITICAL FIX: Skip adding "Generating response..." message
+            val isGeneratingPlaceholder = fullMessage.trim().equals("Generating response...", ignoreCase = true) ||
+                    fullMessage.trim().equals("Generating response.", ignoreCase = true) ||
+                    fullMessage.trim().equals("Generating response", ignoreCase = true)
+
+            if (isGeneratingPlaceholder) {
+                Log.d(TAG, "⏭️ Skipping 'Generating response...' placeholder message")
+                return@Listener
             }
 
             val currentMessages = _messages.value.toMutableList()
@@ -213,6 +328,9 @@ class SocketIOManager {
             e.printStackTrace()
         }
     }
+
+
+
 
     fun sendMessage(userId: Int, sessionId: Int, message: String) {
         if (socket?.connected() != true) {

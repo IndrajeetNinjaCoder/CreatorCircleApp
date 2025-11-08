@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.window.Dialog
@@ -1215,7 +1216,7 @@ fun SideMenu(
 
 
 
-
+// Updated ChatInterface.kt
 @Composable
 fun ChatInterface(
     searchQuery: String,
@@ -1231,6 +1232,22 @@ fun ChatInterface(
     onBackClick: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
+
+    // Track if AI is generating response
+    val isGeneratingResponse = remember(socketIOMessages) {
+        // Check if last message is from user and no assistant response yet
+        // OR if the last assistant message is still being generated (incomplete)
+        val lastMessage = socketIOMessages.lastOrNull()
+        val lastUserMessage = socketIOMessages.lastOrNull { !it.isAssistant }
+        val lastAssistantMessage = socketIOMessages.lastOrNull { it.isAssistant }
+
+        // AI is generating if:
+        // 1. Last message is from user and there's no assistant response after it
+        // 2. Or if we're receiving chunks (you can track this via a flag in your ViewModel)
+        lastMessage?.isAssistant == false ||
+                (lastUserMessage != null && lastAssistantMessage != null &&
+                        lastUserMessage.timestamp > lastAssistantMessage.timestamp)
+    }
 
     // Track the last assistant message to detect when response is complete
     val lastAssistantMessage = remember(socketIOMessages) {
@@ -1248,7 +1265,6 @@ fun ChatInterface(
 
             if (totalMessages > 0) {
                 coroutineScope.launch {
-                    // Smooth scroll to the last item
                     listState.animateScrollToItem(totalMessages - 1)
                 }
             }
@@ -1322,7 +1338,6 @@ fun ChatInterface(
                 }
 
                 isViewingHistory && historicalMessages.isNotEmpty() -> {
-                    // Show historical messages first
                     items(
                         items = historicalMessages,
                         key = { message -> "historical_${message.id}" }
@@ -1331,7 +1346,6 @@ fun ChatInterface(
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
-                    // FIXED: Always show socket messages when they exist, even in historical view
                     if (socketIOMessages.isNotEmpty()) {
                         items(
                             items = socketIOMessages,
@@ -1377,6 +1391,7 @@ fun ChatInterface(
             onQueryChange = onQueryChange,
             onSendClick = onSendClick,
             isEnabled = connectionState == ConnectionState.CONNECTED,
+            isGenerating = isGeneratingResponse,
             placeholder = if (connectionState == ConnectionState.CONNECTED) {
                 "Type your message to get started..."
             } else {
@@ -1385,6 +1400,595 @@ fun ChatInterface(
         )
     }
 }
+
+
+
+// Updated ChatInputField.kt
+@Composable
+fun ChatInputField(
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
+    onSendClick: () -> Unit,
+    isEnabled: Boolean = true,
+    isGenerating: Boolean = false,
+    placeholder: String = "Type your message to get started...",
+    modifier: Modifier = Modifier
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .imePadding(),
+        color = Color.White
+    ) {
+        Column(
+            modifier = Modifier.wrapContentHeight()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .border(
+                            width = if (isFocused) 1.dp else 2.dp,
+                            brush = if (isFocused) {
+                                Brush.horizontalGradient(
+                                    colors = listOf(Color.Blue, Color.Blue)
+                                )
+                            } else {
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFF893BCF),
+                                        Color(0xFFEA3BA1)
+                                    )
+                                )
+                            },
+                            shape = RoundedCornerShape(24.dp)
+                        ),
+                    shape = RoundedCornerShape(24.dp),
+                    backgroundColor = Color(0xFFF8F9FA),
+                    elevation = 0.dp
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 20.dp)
+                            .wrapContentHeight()
+                    ) {
+                        if (searchQuery.isEmpty() && !isGenerating) {
+                            Text(
+                                text = placeholder,
+                                fontSize = 14.sp,
+                                color = Color(0xFF9E9E9E)
+                            )
+                        }
+
+                        if (isGenerating && searchQuery.isEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color(0xFF7C4DFF)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "AI is thinking...",
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF7C4DFF),
+                                    fontStyle = FontStyle.Italic
+                                )
+                            }
+                        }
+
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = onQueryChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { focusState ->
+                                    isFocused = focusState.isFocused
+                                },
+                            textStyle = TextStyle(
+                                color = Color(0xFF1A1A1A),
+                                fontSize = 14.sp
+                            ),
+                            maxLines = 1,
+                            enabled = isEnabled && !isGenerating,
+                            cursorBrush = SolidColor(Color(0xFF7C4DFF))
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = onSendClick,
+                    enabled = searchQuery.isNotEmpty() && isEnabled && !isGenerating,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            brush = if (searchQuery.isNotEmpty() && isEnabled && !isGenerating) {
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color(0xFF893BCF),
+                                        Color(0xFFEA3BA1)
+                                    )
+                                )
+                            } else {
+                                SolidColor(Color(0xFFE0E0E0))
+                            },
+                            shape = CircleShape
+                        )
+                ) {
+                    if (isGenerating) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Send",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+//@Composable
+//fun ChatInterface(
+//    searchQuery: String,
+//    onQueryChange: (String) -> Unit,
+//    onSendClick: () -> Unit,
+//    connectionState: ConnectionState,
+//    socketIOMessages: List<ChatMessage>,
+//    historicalMessages: List<com.cc.creatorcircle.data.models.ChatMessage>,
+//    isViewingHistory: Boolean,
+//    messagesLoading: Boolean,
+//    messagesError: String?,
+//    listState: androidx.compose.foundation.lazy.LazyListState,
+//    onBackClick: () -> Unit = {}
+//) {
+//    val coroutineScope = rememberCoroutineScope()
+//
+//    // Track the last assistant message to detect when response is complete
+//    val lastAssistantMessage = remember(socketIOMessages) {
+//        socketIOMessages.lastOrNull { it.isAssistant }
+//    }
+//
+//    // Auto-scroll when new messages arrive or response completes
+//    LaunchedEffect(socketIOMessages.size, lastAssistantMessage?.content) {
+//        if (socketIOMessages.isNotEmpty()) {
+//            val totalMessages = if (isViewingHistory) {
+//                historicalMessages.size + socketIOMessages.size
+//            } else {
+//                socketIOMessages.size
+//            }
+//
+//            if (totalMessages > 0) {
+//                coroutineScope.launch {
+//                    // Smooth scroll to the last item
+//                    listState.animateScrollToItem(totalMessages - 1)
+//                }
+//            }
+//        }
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .imePadding()
+//    ) {
+//        LazyColumn(
+//            modifier = Modifier
+//                .padding(horizontal = 4.dp)
+//                .weight(1f)
+//                .fillMaxWidth(),
+//            state = listState
+//        ) {
+//            when {
+//                messagesLoading && historicalMessages.isEmpty() -> {
+//                    item(key = "loading_indicator") {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Column(
+//                                horizontalAlignment = Alignment.CenterHorizontally
+//                            ) {
+//                                CircularProgressIndicator(
+//                                    color = Color(0xFF9C27B0)
+//                                )
+//                                Spacer(modifier = Modifier.height(16.dp))
+//                                Text(
+//                                    text = "Loading chat messages...",
+//                                    style = MaterialTheme.typography.body1,
+//                                    color = Color.Gray
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                messagesError != null && historicalMessages.isEmpty() && socketIOMessages.isEmpty() -> {
+//                    item(key = "error_message") {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Column(
+//                                horizontalAlignment = Alignment.CenterHorizontally
+//                            ) {
+//                                Text(
+//                                    text = "Failed to load messages",
+//                                    style = MaterialTheme.typography.body1,
+//                                    color = Color.Red
+//                                )
+//                                Spacer(modifier = Modifier.height(8.dp))
+//                                Text(
+//                                    text = messagesError,
+//                                    style = MaterialTheme.typography.body2,
+//                                    color = Color.Gray,
+//                                    textAlign = TextAlign.Center
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                isViewingHistory && historicalMessages.isNotEmpty() -> {
+//                    // Show historical messages first
+//                    items(
+//                        items = historicalMessages,
+//                        key = { message -> "historical_${message.id}" }
+//                    ) { message ->
+//                        HistoricalMessageItem(message = message)
+//                        Spacer(modifier = Modifier.height(16.dp))
+//                    }
+//
+//                    // Show socket messages when they exist, even in historical view
+//                    if (socketIOMessages.isNotEmpty()) {
+//                        items(
+//                            items = socketIOMessages,
+//                            key = { message -> "socket_${message.id}" }
+//                        ) { message ->
+//                            SocketIOMessageItem(message = message)
+//                            Spacer(modifier = Modifier.height(16.dp))
+//                        }
+//                    }
+//                }
+//
+//                socketIOMessages.isNotEmpty() -> {
+//                    items(
+//                        items = socketIOMessages,
+//                        key = { message -> "socket_${message.id}" }
+//                    ) { message ->
+//                        SocketIOMessageItem(message = message)
+//                        Spacer(modifier = Modifier.height(16.dp))
+//                    }
+//                }
+//
+//                else -> {
+//                    item(key = "start_conversation") {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Text(
+//                                text = "Start a conversation with Sabo AI...",
+//                                style = MaterialTheme.typography.body1,
+//                                color = Color.Gray
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        ChatInputField(
+//            searchQuery = searchQuery,
+//            onQueryChange = onQueryChange,
+//            onSendClick = onSendClick,
+//            isEnabled = connectionState == ConnectionState.CONNECTED,
+//            placeholder = if (connectionState == ConnectionState.CONNECTED) {
+//                "Type your message to get started..."
+//            } else {
+//                "Connecting to chat..."
+//            }
+//        )
+//    }
+//}
+
+
+
+
+@Composable
+fun SocketIOMessageItem(message: ChatMessage) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = if (message.isAssistant) {
+                Arrangement.Start
+            } else {
+                Arrangement.End
+            }
+        ) {
+            Card(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .widthIn(max = 320.dp),
+                backgroundColor = if (message.isAssistant) {
+                    Color(0xFF7C4DFF)
+                } else {
+                    Color(0xFFE9ECEF)
+                },
+                elevation = 0.dp,
+                shape = RoundedCornerShape(
+                    topStart = if (message.isAssistant) 4.dp else 18.dp,
+                    topEnd = if (message.isAssistant) 18.dp else 4.dp,
+                    bottomStart = 18.dp,
+                    bottomEnd = 18.dp
+                )
+            ) {
+                FormattedMessageContent(
+                    content = message.content,
+                    isAssistant = message.isAssistant
+                )
+            }
+        }
+    }
+}
+
+
+
+
+
+// UPDATE YOUR SocketIOMessageItem COMPOSABLE LIKE THIS:
+//@Composable
+//fun SocketIOMessageItem(message: ChatMessage) {
+//    // Filter out "Generating response..." placeholder text
+//    val shouldHideMessage = message.content.trim().equals("Generating response...", ignoreCase = true) ||
+//            message.content.trim().equals("Generating response.", ignoreCase = true) ||
+//            message.content.isBlank()
+//
+//    if (shouldHideMessage) {
+//        // Don't render anything for placeholder messages
+//        return
+//    }
+//
+//    Column(
+//        modifier = Modifier.fillMaxWidth()
+//    ) {
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = if (message.isAssistant) {
+//                Arrangement.Start
+//            } else {
+//                Arrangement.End
+//            }
+//        ) {
+//            Card(
+//                modifier = Modifier
+//                    .wrapContentWidth()
+//                    .widthIn(max = 320.dp),
+//                backgroundColor = if (message.isAssistant) {
+//                    Color(0xFF7C4DFF)
+//                } else {
+//                    Color(0xFFE9ECEF)
+//                },
+//                elevation = 0.dp,
+//                shape = RoundedCornerShape(
+//                    topStart = if (message.isAssistant) 4.dp else 18.dp,
+//                    topEnd = if (message.isAssistant) 18.dp else 4.dp,
+//                    bottomStart = 18.dp,
+//                    bottomEnd = 18.dp
+//                )
+//            ) {
+//                FormattedMessageContent(
+//                    content = message.content,
+//                    isAssistant = message.isAssistant
+//                )
+//            }
+//        }
+//    }
+//}
+
+
+
+//@Composable
+//fun ChatInterface(
+//    searchQuery: String,
+//    onQueryChange: (String) -> Unit,
+//    onSendClick: () -> Unit,
+//    connectionState: ConnectionState,
+//    socketIOMessages: List<ChatMessage>,
+//    historicalMessages: List<com.cc.creatorcircle.data.models.ChatMessage>,
+//    isViewingHistory: Boolean,
+//    messagesLoading: Boolean,
+//    messagesError: String?,
+//    listState: androidx.compose.foundation.lazy.LazyListState,
+//    onBackClick: () -> Unit = {}
+//) {
+//    val coroutineScope = rememberCoroutineScope()
+//
+//    // Track the last assistant message to detect when response is complete
+//    val lastAssistantMessage = remember(socketIOMessages) {
+//        socketIOMessages.lastOrNull { it.isAssistant }
+//    }
+//
+//    // Auto-scroll when new messages arrive or response completes
+//    LaunchedEffect(socketIOMessages.size, lastAssistantMessage?.content) {
+//        if (socketIOMessages.isNotEmpty()) {
+//            val totalMessages = if (isViewingHistory) {
+//                historicalMessages.size + socketIOMessages.size
+//            } else {
+//                socketIOMessages.size
+//            }
+//
+//            if (totalMessages > 0) {
+//                coroutineScope.launch {
+//                    // Smooth scroll to the last item
+//                    listState.animateScrollToItem(totalMessages - 1)
+//                }
+//            }
+//        }
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .imePadding()
+//    ) {
+//        LazyColumn(
+//            modifier = Modifier
+//                .padding(horizontal = 4.dp)
+//                .weight(1f)
+//                .fillMaxWidth(),
+//            state = listState
+//        ) {
+//            when {
+//                messagesLoading && historicalMessages.isEmpty() -> {
+//                    item(key = "loading_indicator") {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Column(
+//                                horizontalAlignment = Alignment.CenterHorizontally
+//                            ) {
+//                                CircularProgressIndicator(
+//                                    color = Color(0xFF9C27B0)
+//                                )
+//                                Spacer(modifier = Modifier.height(16.dp))
+//                                Text(
+//                                    text = "Loading chat messages...",
+//                                    style = MaterialTheme.typography.body1,
+//                                    color = Color.Gray
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                messagesError != null && historicalMessages.isEmpty() && socketIOMessages.isEmpty() -> {
+//                    item(key = "error_message") {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Column(
+//                                horizontalAlignment = Alignment.CenterHorizontally
+//                            ) {
+//                                Text(
+//                                    text = "Failed to load messages",
+//                                    style = MaterialTheme.typography.body1,
+//                                    color = Color.Red
+//                                )
+//                                Spacer(modifier = Modifier.height(8.dp))
+//                                Text(
+//                                    text = messagesError,
+//                                    style = MaterialTheme.typography.body2,
+//                                    color = Color.Gray,
+//                                    textAlign = TextAlign.Center
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                isViewingHistory && historicalMessages.isNotEmpty() -> {
+//                    // Show historical messages first
+//                    items(
+//                        items = historicalMessages,
+//                        key = { message -> "historical_${message.id}" }
+//                    ) { message ->
+//                        HistoricalMessageItem(message = message)
+//                        Spacer(modifier = Modifier.height(16.dp))
+//                    }
+//
+//                    // FIXED: Always show socket messages when they exist, even in historical view
+//                    if (socketIOMessages.isNotEmpty()) {
+//                        items(
+//                            items = socketIOMessages,
+//                            key = { message -> "socket_${message.id}" }
+//                        ) { message ->
+//                            SocketIOMessageItem(message = message)
+//                            Spacer(modifier = Modifier.height(16.dp))
+//                        }
+//                    }
+//                }
+//
+//                socketIOMessages.isNotEmpty() -> {
+//                    items(
+//                        items = socketIOMessages,
+//                        key = { message -> "socket_${message.id}" }
+//                    ) { message ->
+//                        SocketIOMessageItem(message = message)
+//                        Spacer(modifier = Modifier.height(16.dp))
+//                    }
+//                }
+//
+//                else -> {
+//                    item(key = "start_conversation") {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Text(
+//                                text = "Start a conversation with Sabo AI...",
+//                                style = MaterialTheme.typography.body1,
+//                                color = Color.Gray
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        ChatInputField(
+//            searchQuery = searchQuery,
+//            onQueryChange = onQueryChange,
+//            onSendClick = onSendClick,
+//            isEnabled = connectionState == ConnectionState.CONNECTED,
+//            placeholder = if (connectionState == ConnectionState.CONNECTED) {
+//                "Type your message to get started..."
+//            } else {
+//                "Connecting to chat..."
+//            }
+//        )
+//    }
+//}
 
 
 
@@ -2216,44 +2820,44 @@ fun ManageSocialAccountsPopup(
 }
 
 
-@Composable
-fun SocketIOMessageItem(message: ChatMessage) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = if (message.isAssistant) {
-                Arrangement.Start
-            } else {
-                Arrangement.End
-            }
-        ) {
-            Card(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .widthIn(max = 320.dp),
-                backgroundColor = if (message.isAssistant) {
-                    Color(0xFF7C4DFF)
-                } else {
-                    Color(0xFFE9ECEF)
-                },
-                elevation = 0.dp,
-                shape = RoundedCornerShape(
-                    topStart = if (message.isAssistant) 4.dp else 18.dp,
-                    topEnd = if (message.isAssistant) 18.dp else 4.dp,
-                    bottomStart = 18.dp,
-                    bottomEnd = 18.dp
-                )
-            ) {
-                FormattedMessageContent(
-                    content = message.content,
-                    isAssistant = message.isAssistant
-                )
-            }
-        }
-    }
-}
+//@Composable
+//fun SocketIOMessageItem(message: ChatMessage) {
+//    Column(
+//        modifier = Modifier.fillMaxWidth()
+//    ) {
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = if (message.isAssistant) {
+//                Arrangement.Start
+//            } else {
+//                Arrangement.End
+//            }
+//        ) {
+//            Card(
+//                modifier = Modifier
+//                    .wrapContentWidth()
+//                    .widthIn(max = 320.dp),
+//                backgroundColor = if (message.isAssistant) {
+//                    Color(0xFF7C4DFF)
+//                } else {
+//                    Color(0xFFE9ECEF)
+//                },
+//                elevation = 0.dp,
+//                shape = RoundedCornerShape(
+//                    topStart = if (message.isAssistant) 4.dp else 18.dp,
+//                    topEnd = if (message.isAssistant) 18.dp else 4.dp,
+//                    bottomStart = 18.dp,
+//                    bottomEnd = 18.dp
+//                )
+//            ) {
+//                FormattedMessageContent(
+//                    content = message.content,
+//                    isAssistant = message.isAssistant
+//                )
+//            }
+//        }
+//    }
+//}
 
 
 @Composable
