@@ -23,6 +23,7 @@ import com.cc.creatorcircle.ui.screens.livesession.LiveSession
 import com.cc.creatorcircle.ui.screens.livesession.MySessionScreen
 import com.cc.creatorcircle.ui.screens.message.MessageConnections
 import com.cc.creatorcircle.ui.screens.message.MessageScreen
+import com.cc.creatorcircle.ui.screens.message.MessageWeb
 import com.cc.creatorcircle.ui.screens.notification.NotificationsWeb
 import com.cc.creatorcircle.ui.screens.onboarding.SignupOnboarding
 import com.cc.creatorcircle.ui.screens.profile.ProfileWeb
@@ -92,8 +93,8 @@ fun NavigationHost(navController: NavHostController) {
 
 
         composable(Screen.BrandCollab.route) {
-//            BrandCollab(navController)
-            BrandCollabScreen(navController)
+            BrandCollab(navController)
+//            BrandCollabScreen(navController)
         }
 
 
@@ -223,12 +224,14 @@ fun NavigationHost(navController: NavHostController) {
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
             val profilePic = backStackEntry.arguments?.getString("profilePic")
 
-            MessageScreen(
-                navController = navController,
-                otherUserId = userId,
-                userName = userName,
-                profilePic = profilePic
-            )
+//            MessageScreen(
+//                navController = navController,
+//                otherUserId = userId,
+//                userName = userName,
+//                profilePic = profilePic
+//            )
+
+            MessageWeb(navController = navController)
         }
 
     }

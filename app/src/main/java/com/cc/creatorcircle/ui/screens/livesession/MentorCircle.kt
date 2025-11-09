@@ -78,7 +78,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
-
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 
 @Composable
 fun SearchBar(
@@ -1315,7 +1315,7 @@ data class FilterState(
     val selectedFollowerRanges: Set<String> = emptySet()
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun FilterDialog(
     showDialog: Boolean,
