@@ -4,6 +4,7 @@ import android.R.attr.onClick
 import android.content.Context
 import android.util.Log
 import android.view.ViewTreeObserver
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,6 +63,8 @@ import com.cc.creatorcircle.viewModel.PostsViewModel
 import com.cc.creatorcircle.viewModel.PostsViewModelFactory
 import com.cc.creatorcircle.data.models.ChatUserProfile
 import com.cc.creatorcircle.data.socket.ConnectionState
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material3.AlertDialog
 
 data class FeatureCard(
     val title: String,
@@ -260,6 +263,46 @@ fun SaboAIScreen(
         }
     }
 
+//    LaunchedEffect(chatUserProfiles) {
+//        if (chatUserProfiles.isNotEmpty()) {
+//            val activeProfile = chatUserProfiles.find { it.isActive }
+//            Log.d(
+//                "SaboAIScreen",
+//                "Active profile found: ${activeProfile?.username} (${activeProfile?.platform}) - ID: ${activeProfile?.id}"
+//            )
+//
+//            if (activeProfile != null) {
+//                sharedPreferences.edit()
+//                    .putInt("chatProfileId", activeProfile.id)
+//                    .apply()
+//
+//                chatViewModel.fetchChatHistory(
+//                    userId = userId,
+//                    platform = activeProfile.platform,
+//                    profileId = activeProfile.id
+//                )
+//
+//                val sessionId = sharedPreferences.getInt("chatSessionId", -1)
+//                if (sessionId == -1) {
+//                    isNewChat = true
+//                    Log.d(
+//                        "SaboAIScreen",
+//                        "New chat mode activated for profile: ${activeProfile.username}"
+//                    )
+//                }
+//            } else {
+//                Log.w("SaboAIScreen", "No active profile found, chat will not be saved")
+//                sharedPreferences.edit()
+//                    .remove("chatProfileId")
+//                    .remove("chatSessionId")
+//                    .apply()
+//                isNewChat = false
+//            }
+//        }
+//    }
+
+
+
     LaunchedEffect(chatUserProfiles) {
         if (chatUserProfiles.isNotEmpty()) {
             val activeProfile = chatUserProfiles.find { it.isActive }
@@ -273,6 +316,7 @@ fun SaboAIScreen(
                     .putInt("chatProfileId", activeProfile.id)
                     .apply()
 
+                // This fetches chat history for ONLY the active profile
                 chatViewModel.fetchChatHistory(
                     userId = userId,
                     platform = activeProfile.platform,
@@ -297,6 +341,7 @@ fun SaboAIScreen(
             }
         }
     }
+
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(socketIOMessages.size, chatMessages.size) {
@@ -570,6 +615,127 @@ fun SaboAIScreen(
                     .clickable { isMenuOpen = false }
             )
 
+//            SideMenu(
+//                modifier = Modifier
+//                    .fillMaxHeight()
+//                    .width(280.dp)
+//                    .background(Color.White),
+//                onClose = { isMenuOpen = false },
+//                onAnalyzeProfileClick = { message ->
+//                    val sessionId = currentSessionId
+//
+//                    if (sessionId != null && sessionId != -1 && !isNewChat) {
+//                        Log.d(
+//                            "SaboAIScreen",
+//                            "Sending analyze profile message with existing sessionId: $sessionId"
+//                        )
+//                        viewModel.sendMessage(
+//                            userId = userId,
+//                            sessionId = sessionId,
+//                            message = message
+//                        )
+//                    } else {
+//                        val profileId = sharedPreferences.getInt("chatProfileId", -1)
+//                        if (profileId != -1) {
+//                            Log.d(
+//                                "SaboAIScreen",
+//                                "Creating NEW chat from analyze profile with userId: $userId, profileId: $profileId"
+//                            )
+//                            viewModel.createNewMessage(
+//                                userId = userId,
+//                                profileId = profileId,
+//                                message = message
+//                            )
+//                        } else {
+//                            Log.e(
+//                                "SaboAIScreen",
+//                                "No profileId found - cannot create new message"
+//                            )
+//                        }
+//                    }
+//
+//                    showChat = true
+//                    viewingHistoricalChat = false
+//                    isMenuOpen = false
+//                },
+//                onStartChatting = {
+//                    isMenuOpen = false
+//                    showChat = true
+//                    viewingHistoricalChat = false
+//                    isNewChat = true
+//                    shouldRefreshHistory = false
+//                    currentSessionId = null
+//                    sharedPreferences.edit().remove("chatSessionId").apply()
+//                    chatViewModel.clearCurrentSession()
+//                    viewModel.clearMessages()
+//                },
+//                chatUserProfiles = chatUserProfiles,
+//                isLoadingProfiles = profileLoading,
+//                profileError = profileError,
+//                onRefreshProfiles = {
+//                    userProfile?.let {
+//                        chatViewModel.fetchChatUserProfiles(it.id)
+//                    }
+//                },
+//                chatViewModel = chatViewModel,
+//                userId = userId,
+//                chatHistory = chatHistory,
+//                historyLoading = historyLoading,
+//                historyError = historyError,
+//
+//
+//                onChatHistoryClick = { session ->
+//                    Log.d("SaboAIScreen", "Loading chat history for session: ${session.sessionId}")
+//
+//                    sharedPreferences.edit()
+//                        .putInt("chatSessionId", session.sessionId)
+//                        .apply()
+//
+//                    currentSessionId = session.sessionId
+//
+//                    // Clear socket messages when viewing a different historical chat
+//                    viewModel.clearMessages()
+//
+//                    chatViewModel.fetchChatMessages(session.sessionId)
+//
+//                    viewingHistoricalChat = true
+//                    isMenuOpen = false
+//                    showChat = true
+//                },
+//                onRefreshHistory = {
+//                    val activeProfile = chatUserProfiles.find { it.isActive }
+//                    Log.d(
+//                        "SideMenu",
+//                        "Refreshing history for active profile: ${activeProfile?.username}"
+//                    )
+//
+//                    if (activeProfile != null) {
+//                        val profileId = activeProfile.id
+//                        chatViewModel.fetchChatHistory(
+//                            userId = userId,
+//                            platform = activeProfile.platform,
+//                            profileId = profileId
+//                        )
+//                        sharedPreferences.edit()
+//                            .putInt("chatProfileId", profileId)
+//                            .apply()
+//                    } else {
+//                        chatViewModel.fetchChatHistory(userId = userId)
+//                    }
+//                },
+//                onSessionChanged = { newSessionId ->
+//                    currentSessionId = newSessionId
+//                    if (newSessionId != null) {
+//                        sharedPreferences.edit()
+//                            .putInt("chatSessionId", newSessionId)
+//                            .apply()
+//                    } else {
+//                        sharedPreferences.edit().remove("chatSessionId").apply()
+//                    }
+//                }
+//            )
+//
+
             SideMenu(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -637,8 +803,6 @@ fun SaboAIScreen(
                 chatHistory = chatHistory,
                 historyLoading = historyLoading,
                 historyError = historyError,
-
-
                 onChatHistoryClick = { session ->
                     Log.d("SaboAIScreen", "Loading chat history for session: ${session.sessionId}")
 
@@ -687,8 +851,58 @@ fun SaboAIScreen(
                     } else {
                         sharedPreferences.edit().remove("chatSessionId").apply()
                     }
+                },
+                // NEW: Add delete chat session handler
+//                onDeleteChatSession = { sessionId ->
+//                    Log.d("SaboAIScreen", "Deleting chat session: $sessionId")
+//
+//                    // Delete the session
+//                    chatViewModel.deleteChatSession(sessionId, userId)
+//
+//                    // If we're viewing this session, clear it
+//                    if (currentSessionId == sessionId) {
+//                        showChat = false
+//                        viewingHistoricalChat = false
+//                        isNewChat = false
+//                        currentSessionId = null
+//                        sharedPreferences.edit().remove("chatSessionId").apply()
+//                        chatViewModel.clearCurrentSession()
+//                        viewModel.clearMessages()
+//                    }
+//                }
+
+
+                // NEW: Add delete chat session handler
+                onDeleteChatSession = { sessionId ->
+                    Log.d("SaboAIScreen", "Deleting chat session: $sessionId")
+
+                    // Get the active profile ID from SharedPreferences
+                    val activeProfileId = sharedPreferences.getInt("chatProfileId", -1)
+
+                    // Delete the session with the active profile ID
+                    if (activeProfileId != -1) {
+                        chatViewModel.deleteChatSession(sessionId, userId)
+
+                        // If we're viewing this session, clear it
+                        if (currentSessionId == sessionId) {
+                            showChat = false
+                            viewingHistoricalChat = false
+                            isNewChat = false
+                            currentSessionId = null
+                            sharedPreferences.edit().remove("chatSessionId").apply()
+                            chatViewModel.clearCurrentSession()
+                            viewModel.clearMessages()
+                        }
+                    } else {
+                        Log.e("SaboAIScreen", "No active profile found, cannot delete chat")
+                    }
                 }
+
             )
+
+
+
+
         }
     }
 }
@@ -711,7 +925,8 @@ fun SideMenu(
     historyError: String? = null,
     onChatHistoryClick: (com.cc.creatorcircle.data.models.ChatSession) -> Unit = {},
     onRefreshHistory: () -> Unit = {},
-    onSessionChanged: (Int?) -> Unit = {}
+    onSessionChanged: (Int?) -> Unit = {},
+    onDeleteChatSession: (Int) -> Unit = {}  // NEW: Add this parameter
 ) {
 
     val context = LocalContext.current
@@ -734,6 +949,53 @@ fun SideMenu(
     val deleteProfileLoading by chatViewModel.deleteProfileLoading.collectAsState()
     val deleteProfileError by chatViewModel.deleteProfileError.collectAsState()
     val profileDeleted by chatViewModel.profileDeleted.collectAsState()
+
+    // Observe delete chat session states
+    val deleteChatSessionLoading by chatViewModel.deleteChatSessionLoading.collectAsState()
+    val deleteChatSessionError by chatViewModel.deleteChatSessionError.collectAsState()
+    val chatSessionDeleted by chatViewModel.chatSessionDeleted.collectAsState()
+
+// Handle successful chat session deletion
+//    LaunchedEffect(chatSessionDeleted) {
+//        chatSessionDeleted?.let {
+//            Log.d("SideMenu", "Chat session deleted successfully: ${it.message}")
+//
+//            // Refresh chat history to reflect the deletion
+//            onRefreshHistory()
+//
+//            // Clear the delete state
+//            chatViewModel.clearDeleteChatSessionState()
+//        }
+//    }
+
+    // Handle successful chat session deletion
+    LaunchedEffect(chatSessionDeleted) {
+        chatSessionDeleted?.let {
+            Log.d("SideMenu", "Chat session deleted successfully: ${it.message}")
+
+            // Refresh chat history for the active profile only
+            val activeProfile = chatUserProfiles.find { profile -> profile.isActive }
+            if (activeProfile != null) {
+                chatViewModel.fetchChatHistory(
+                    userId = userId,
+                    platform = activeProfile.platform,
+                    profileId = activeProfile.id
+                )
+            } else {
+                // Fallback to general refresh if no active profile
+                onRefreshHistory()
+            }
+
+            // Clear the delete state
+            chatViewModel.clearDeleteChatSessionState()
+        }
+    }
+
+// Show delete error if any
+    deleteChatSessionError?.let { error ->
+        // You can show a Snackbar or Toast here
+        Log.e("SideMenu", "Failed to delete chat session: $error")
+    }
 
     // Handle successful profile deletion
     LaunchedEffect(profileDeleted) {
@@ -1162,6 +1424,106 @@ fun SideMenu(
 //                            .heightIn(max = 200.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+//                        items(chatHistory.sortedByDescending { it.sessionId }) { session ->
+//                            ChatHistoryItem(
+//                                session = session,
+//                                onClick = {
+//                                    Log.d(
+//                                        "SideMenu",
+//                                        "Chat history clicked - sessionId: ${session.sessionId}"
+//                                    )
+//
+//                                    // Clear all messages first
+//                                    chatViewModel.clearMessages()
+//
+//                                    // Set the session ID to trigger message loading
+//                                    onSessionChanged(session.sessionId)
+//
+//                                    // Trigger the callback which saves to SharedPreferences
+//                                    onChatHistoryClick(session)
+//                                }
+//                            )
+//                        }
+//
+
+//                        // Inside the LazyColumn for chat history in SideMenu
+//                        items(chatHistory.sortedByDescending { it.sessionId }) { session ->
+//                            ChatHistoryItem(
+//                                session = session,
+//                                onClick = {
+//                                    Log.d(
+//                                        "SideMenu",
+//                                        "Chat history clicked - sessionId: ${session.sessionId}"
+//                                    )
+//
+//                                    // Clear all messages first
+//                                    chatViewModel.clearMessages()
+//
+//                                    // Set the session ID to trigger message loading
+//                                    onSessionChanged(session.sessionId)
+//
+//                                    // Trigger the callback which saves to SharedPreferences
+//                                    onChatHistoryClick(session)
+//                                },
+//                                onDeleteClick = { sessionId ->
+//                                    Log.d(
+//                                        "SideMenu",
+//                                        "Delete chat session clicked - sessionId: $sessionId"
+//                                    )
+//                                    chatViewModel.deleteChatSession(sessionId, userId)
+//                                },
+//                                onPinClick = { sessionId ->
+//                                    Log.d(
+//                                        "SideMenu",
+//                                        "Pin chat session clicked - sessionId: $sessionId"
+//                                    )
+//                                    // TODO: Implement pin functionality
+//                                    // For now, just log the action
+//                                }
+//                            )
+//                        }
+
+
+                        // Inside the LazyColumn for chat history in SideMenu
+//                        items(chatHistory.sortedByDescending { it.sessionId }) { session ->
+//                            ChatHistoryItem(
+//                                session = session,
+//                                onClick = {
+//                                    Log.d(
+//                                        "SideMenu",
+//                                        "Chat history clicked - sessionId: ${session.sessionId}"
+//                                    )
+//
+//                                    // Clear all messages first
+//                                    chatViewModel.clearMessages()
+//
+//                                    // Set the session ID to trigger message loading
+//                                    onSessionChanged(session.sessionId)
+//
+//                                    // Trigger the callback which saves to SharedPreferences
+//                                    onChatHistoryClick(session)
+//                                },
+//                                onDeleteClick = { sessionId ->
+//                                    Log.d(
+//                                        "SideMenu",
+//                                        "Delete chat session clicked - sessionId: $sessionId"
+//                                    )
+//                                    // Use the callback from SaboAIScreen to handle deletion
+//                                    onDeleteChatSession(sessionId)
+//                                },
+//                                onPinClick = { sessionId ->
+//                                    Log.d(
+//                                        "SideMenu",
+//                                        "Pin chat session clicked - sessionId: $sessionId"
+//                                    )
+//                                    // TODO: Implement pin functionality
+//                                    // For now, just log the action
+//                                }
+//                            )
+//                        }
+
+
+                        // Inside the LazyColumn for chat history in SideMenu
                         items(chatHistory.sortedByDescending { it.sessionId }) { session ->
                             ChatHistoryItem(
                                 session = session,
@@ -1179,9 +1541,26 @@ fun SideMenu(
 
                                     // Trigger the callback which saves to SharedPreferences
                                     onChatHistoryClick(session)
+                                },
+                                onDeleteClick = {
+                                    Log.d(
+                                        "SideMenu",
+                                        "Delete chat session clicked - sessionId: ${session.sessionId}"
+                                    )
+                                    // Use the callback from SaboAIScreen to handle deletion
+                                    onDeleteChatSession(session.sessionId)
+                                },
+                                onPinClick = {
+                                    Log.d(
+                                        "SideMenu",
+                                        "Pin chat session clicked - sessionId: ${session.sessionId}"
+                                    )
+                                    // TODO: Implement pin functionality
+                                    // For now, just log the action
                                 }
                             )
                         }
+
                     }
                 }
 
@@ -1212,8 +1591,6 @@ fun SideMenu(
         )
     }
 }
-
-
 
 
 // Updated ChatInterface.kt
@@ -1402,7 +1779,6 @@ fun ChatInterface(
 }
 
 
-
 // Updated ChatInputField.kt
 @Composable
 fun ChatInputField(
@@ -1548,8 +1924,6 @@ fun ChatInputField(
         }
     }
 }
-
-
 
 
 //@Composable
@@ -1723,8 +2097,6 @@ fun ChatInputField(
 //}
 
 
-
-
 @Composable
 fun SocketIOMessageItem(message: ChatMessage) {
     Column(
@@ -1763,9 +2135,6 @@ fun SocketIOMessageItem(message: ChatMessage) {
         }
     }
 }
-
-
-
 
 
 // UPDATE YOUR SocketIOMessageItem COMPOSABLE LIKE THIS:
@@ -1817,7 +2186,6 @@ fun SocketIOMessageItem(message: ChatMessage) {
 //        }
 //    }
 //}
-
 
 
 //@Composable
@@ -1989,12 +2357,6 @@ fun SocketIOMessageItem(message: ChatMessage) {
 //        )
 //    }
 //}
-
-
-
-
-
-
 
 
 //@Composable
@@ -2356,12 +2718,16 @@ fun formatMessageTimestamp(timestamp: String): String {
 @Composable
 fun ChatHistoryItem(
     session: com.cc.creatorcircle.data.models.ChatSession,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit = {},
+    onPinClick: () -> Unit = {}
 ) {
+    var showDropdown by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
             .background(
                 Color.White,
                 RoundedCornerShape(8.dp)
@@ -2369,64 +2735,373 @@ fun ChatHistoryItem(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Platform icon
-
-        Image(
-            painter = painterResource(id = R.drawable.ic_robot_filled),
-            contentDescription = session.platform,
-            modifier = Modifier.size(24.dp)
-        )
-
-
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Chat details
-        Column(
-            modifier = Modifier.weight(1f)
+        // Main clickable area for opening chat
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onClick() },
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = session.title,
-                fontSize = 14.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            // Platform icon
+            Image(
+                painter = painterResource(id = R.drawable.ic_robot_filled),
+                contentDescription = session.platform,
+                modifier = Modifier.size(24.dp)
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-            Text(
-                text = formatChatDate(session.updatedAt),
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
+            // Chat details
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = session.title,
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = formatChatDate(session.updatedAt),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
         }
 
-        // Platform badge
-//        Surface(
-//            shape = RoundedCornerShape(12.dp),
-//            color = when (session.platform.lowercase()) {
-//                "instagram" -> Color(0xFFE91E63).copy(alpha = 0.1f)
-//                else -> Color(0xFF9C27B0).copy(alpha = 0.1f)
-//            }
-//        ) {
-//            Text(
-//                text = when (session.platform.lowercase()) {
-//                    "instagram" -> "Instagram"
-//                    else -> session.platform.capitalize()
-//                },
-//                fontSize = 10.sp,
-//                color = when (session.platform.lowercase()) {
-//                    "instagram" -> Color(0xFFE91E63)
-//                    else -> Color(0xFF9C27B0)
-//                },
-//                fontWeight = FontWeight.Medium,
-//                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-//            )
-//        }
+        // Three dots menu button
+        Box {
+            IconButton(
+                onClick = { showDropdown = true },
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More options",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Dropdown menu
+            DropdownMenu(
+                expanded = showDropdown,
+                onDismissRequest = { showDropdown = false },
+                modifier = Modifier.background(Color.White)
+            ) {
+                // Pin chat option
+                DropdownMenuItem(
+                    onClick = {
+                        showDropdown = false
+                        onPinClick()
+                    }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PushPin,
+                            contentDescription = "Pin",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Pin chat",
+                            fontSize = 14.sp,
+                            color = Color.Black
+                        )
+                    }
+                }
+
+                // Delete option
+                DropdownMenuItem(
+                    onClick = {
+                        showDropdown = false
+                        showDeleteDialog = true
+                    }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color.Red,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Delete",
+                            fontSize = 14.sp,
+                            color = Color.Red
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // Delete Confirmation Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = "Delete Chat",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to delete this chat? This action cannot be undone.",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    lineHeight = 20.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color.Red,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(120.dp)
+                ) {
+                    Text(
+                        text = "Delete",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showDeleteDialog = false },
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.LightGray),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(120.dp)
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            backgroundColor = Color.White
+        )
     }
 }
+
+
+//@Composable
+//fun ChatHistoryItem(
+//    session: com.cc.creatorcircle.data.models.ChatSession,
+//    onClick: () -> Unit,
+//    onDeleteClick: () -> Unit = {},
+//    onPinClick: () -> Unit = {}
+//) {
+//    var showDropdown by remember { mutableStateOf(false) }
+//
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(
+//                Color.White,
+//                RoundedCornerShape(8.dp)
+//            )
+//            .padding(12.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        // Main clickable area for opening chat
+//        Row(
+//            modifier = Modifier
+//                .weight(1f)
+//                .clickable { onClick() },
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            // Platform icon
+//            Image(
+//                painter = painterResource(id = R.drawable.ic_robot_filled),
+//                contentDescription = session.platform,
+//                modifier = Modifier.size(24.dp)
+//            )
+//
+//            Spacer(modifier = Modifier.width(12.dp))
+//
+//            // Chat details
+//            Column(
+//                modifier = Modifier.weight(1f)
+//            ) {
+//                Text(
+//                    text = session.title,
+//                    fontSize = 14.sp,
+//                    color = Color.Black,
+//                    fontWeight = FontWeight.Medium,
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis
+//                )
+//
+//                Spacer(modifier = Modifier.height(2.dp))
+//
+//                Text(
+//                    text = formatChatDate(session.updatedAt),
+//                    fontSize = 12.sp,
+//                    color = Color.Gray
+//                )
+//            }
+//        }
+//
+//        // Three dots menu button
+//        Box {
+//            IconButton(
+//                onClick = { showDropdown = true },
+//                modifier = Modifier.size(32.dp)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.MoreVert,
+//                    contentDescription = "More options",
+//                    tint = Color.Gray,
+//                    modifier = Modifier.size(20.dp)
+//                )
+//            }
+//
+//            // Dropdown menu
+//            DropdownMenu(
+//                expanded = showDropdown,
+//                onDismissRequest = { showDropdown = false },
+//                modifier = Modifier.background(Color.White)
+//            ) {
+//                // Pin chat option
+//                DropdownMenuItem(
+//                    onClick = {
+//                        showDropdown = false
+//                        onPinClick()
+//                    }
+//                ) {
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.PushPin,
+//                            contentDescription = "Pin",
+//                            tint = Color.Gray,
+//                            modifier = Modifier.size(18.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(12.dp))
+//                        Text(
+//                            text = "Pin chat",
+//                            fontSize = 14.sp,
+//                            color = Color.Black
+//                        )
+//                    }
+//                }
+//
+//                // Delete option
+//                DropdownMenuItem(
+//                    onClick = {
+//                        showDropdown = false
+//                        onDeleteClick()
+//                    }
+//                ) {
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Delete,
+//                            contentDescription = "Delete",
+//                            tint = Color.Red,
+//                            modifier = Modifier.size(18.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(12.dp))
+//                        Text(
+//                            text = "Delete",
+//                            fontSize = 14.sp,
+//                            color = Color.Red
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
+//@Composable
+//fun ChatHistoryItem(
+//    session: com.cc.creatorcircle.data.models.ChatSession,
+//    onClick: () -> Unit
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable { onClick() }
+//            .background(
+//                Color.White,
+//                RoundedCornerShape(8.dp)
+//            )
+//            .padding(12.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        // Platform icon
+//
+//        Image(
+//            painter = painterResource(id = R.drawable.ic_robot_filled),
+//            contentDescription = session.platform,
+//            modifier = Modifier.size(24.dp)
+//        )
+//
+//
+//
+//        Spacer(modifier = Modifier.width(12.dp))
+//
+//        // Chat details
+//        Column(
+//            modifier = Modifier.weight(1f)
+//        ) {
+//            Text(
+//                text = session.title,
+//                fontSize = 14.sp,
+//                color = Color.Black,
+//                fontWeight = FontWeight.Medium,
+//                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis
+//            )
+//
+//            Spacer(modifier = Modifier.height(2.dp))
+//
+//            Text(
+//                text = formatChatDate(session.updatedAt),
+//                fontSize = 12.sp,
+//                color = Color.Gray
+//            )
+//        }
+//    }
+//}
+//
+
 
 fun formatChatDate(dateString: String): String {
     return try {
