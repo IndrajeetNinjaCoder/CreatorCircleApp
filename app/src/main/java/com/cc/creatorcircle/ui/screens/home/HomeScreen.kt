@@ -223,7 +223,6 @@ fun HomeScreen(
     }
 
 
-
     // FIXED: Single LaunchedEffect for initial data loading
     LaunchedEffect(Unit) {
         // Fetch feed posts (default postType is "feed")
@@ -361,15 +360,7 @@ fun HomeScreen(
         floatingActionButtonPosition = FabPosition.End,
 
 
-
-
-
-
-
-
-
-
-    ) { paddingValues ->
+        ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -975,6 +966,21 @@ fun PostCardSection(
     // Extract links from post content
     val links = extractLinksFromText(post.content)
 
+//    Card(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 12.dp, vertical = 8.dp)
+//            .border(
+//                width = 1.dp,
+//                brush = Brush.horizontalGradient(
+//                    listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+//                ),
+//                shape = RoundedCornerShape(12.dp)
+//            ),
+//        colors = CardDefaults.cardColors(containerColor = Color.White),
+//        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//        shape = RoundedCornerShape(12.dp)
+//    ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -982,7 +988,10 @@ fun PostCardSection(
             .border(
                 width = 1.dp,
                 brush = Brush.horizontalGradient(
-                    listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+                    listOf(
+                        Color(0xFFB726FF).copy(alpha = 0.5f),
+                        Color(0xFFFB3D91).copy(alpha = 0.5f)
+                    )
                 ),
                 shape = RoundedCornerShape(12.dp)
             ),
@@ -1009,7 +1018,7 @@ fun PostCardSection(
                 )
             } else {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_profile1),
+                    painter = painterResource(id = R.drawable.ic_profile),
                     contentDescription = "Profile",
                     modifier = Modifier
                         .size(36.dp)
@@ -1126,10 +1135,10 @@ fun PostCardSection(
                     Column {
                         Text(
                             text = post.content,
-                            fontSize = 14.sp,
-                            maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+                            fontSize = 12.sp,
+                            maxLines = if (isExpanded) Int.MAX_VALUE else 4,
                             overflow = TextOverflow.Ellipsis,
-                            color = Color.Black,
+                            color = Color(0xFF4B5563),
                             lineHeight = 20.sp
                         )
 
@@ -1200,7 +1209,11 @@ fun PostCardSection(
                             )
                         } else {
                             // State to track image loading
-                            var imageLoadState by remember { mutableStateOf<ImageLoadState>(ImageLoadState.Loading) }
+                            var imageLoadState by remember {
+                                mutableStateOf<ImageLoadState>(
+                                    ImageLoadState.Loading
+                                )
+                            }
 
                             Box(
                                 modifier = Modifier
@@ -1226,6 +1239,7 @@ fun PostCardSection(
                                             onError = { imageLoadState = ImageLoadState.Error }
                                         )
                                     }
+
                                     is ImageLoadState.Error -> {
                                         // Show gray placeholder with icon
                                         Column(
@@ -1326,7 +1340,8 @@ fun isVideoUrl(url: String): Boolean {
     // Check common video hosting patterns
     if (lowerUrl.contains("video") ||
         lowerUrl.contains(".mp4") ||
-        lowerUrl.contains("cloudinary.com/video")) {
+        lowerUrl.contains("cloudinary.com/video")
+    ) {
         return true
     }
 
@@ -2605,7 +2620,7 @@ fun PostInputSection(
                 .border(
                     width = 1.dp,
                     brush = Brush.horizontalGradient(
-                        listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+                        listOf(Color(0xFFB726FF).copy(alpha = 0.5f), Color(0xFFFB3D91).copy(alpha = 0.5f))
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )

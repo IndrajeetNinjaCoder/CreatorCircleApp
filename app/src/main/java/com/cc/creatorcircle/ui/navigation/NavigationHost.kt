@@ -150,13 +150,6 @@ fun NavigationHost(navController: NavHostController) {
         }
 
 
-        composable(Screen.MessageConnections.route) {
-            MessageConnections(navController)
-        }
-
-//        composable(Screen.MessageScreen.route) {
-//            MessageScreen(navController)
-//        }
 
 
 
@@ -209,6 +202,16 @@ fun NavigationHost(navController: NavHostController) {
         }
 
 
+        composable(Screen.MessageConnections.route) {
+            MessageConnections(navController)
+//            MessageWeb(navController = navController)
+        }
+
+//        composable(Screen.MessageScreen.route) {
+//            MessageScreen(navController)
+//        }
+
+
         composable(
             route = "message_screen/{userId}/{userName}/{profilePic}",
             arguments = listOf(
@@ -224,14 +227,14 @@ fun NavigationHost(navController: NavHostController) {
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
             val profilePic = backStackEntry.arguments?.getString("profilePic")
 
-//            MessageScreen(
-//                navController = navController,
-//                otherUserId = userId,
-//                userName = userName,
-//                profilePic = profilePic
-//            )
+            MessageScreen(
+                navController = navController,
+                otherUserId = userId,
+                userName = userName,
+                profilePic = profilePic
+            )
 
-            MessageWeb(navController = navController)
+//            MessageWeb(navController = navController)
         }
 
     }
