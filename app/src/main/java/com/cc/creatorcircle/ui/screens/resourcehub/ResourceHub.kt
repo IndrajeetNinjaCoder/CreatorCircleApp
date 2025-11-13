@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -65,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -91,6 +94,364 @@ import com.cc.creatorcircle.viewModel.ConnectionViewModel
 import com.cc.creatorcircle.viewModel.PostsViewModel
 import com.cc.creatorcircle.viewModel.PostsViewModelFactory
 import java.io.File
+
+
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun ResourceHub(
+//    navController: NavController,
+//    onCommentClick: (Post) -> Unit = {},
+//    onShareClick: (Post) -> Unit = {}
+//) {
+//    val context = LocalContext.current
+//    val viewModel: PostsViewModel = viewModel(
+//        factory = PostsViewModelFactory(context)
+//    )
+//
+//    var showPopup by remember { mutableStateOf(false) }
+//
+//    // Add ConnectionViewModel
+//    val connectionViewModel: ConnectionViewModel = viewModel()
+//
+//    // Add UserDataManager
+//    val userDataManager = remember { UserDataManager(context) }
+//    var userData by remember { mutableStateOf(userDataManager.getUserData()) }
+//
+//    // Add the missing declarations
+//    val focusRequester = remember { FocusRequester() }
+//    val coroutineScope = rememberCoroutineScope()
+//    val lazyListState = rememberLazyListState()
+//
+//    var showNotification by remember { mutableStateOf(true) }
+//    val posts by viewModel.posts.collectAsState()
+//    val isLoading by viewModel.isLoading.collectAsState()
+//    val error by viewModel.error.collectAsState()
+//
+//    // Comment states
+//    val comments by viewModel.comments.collectAsState()
+//    val commentsLoading by viewModel.commentsLoading.collectAsState()
+//    val commentsError by viewModel.commentsError.collectAsState()
+//
+//    // User profile states
+//    val userProfile by viewModel.userProfile.collectAsState()
+//    val profileLoading by viewModel.profileLoading.collectAsState()
+//
+//    // Connection states
+//    val connectionRequestState by connectionViewModel.connectionRequestState.observeAsState()
+//    val connectionResponse by connectionViewModel.connectionResponse.observeAsState()
+//    val connectionLoading by connectionViewModel.isLoading.observeAsState()
+//    val connectionError by connectionViewModel.errorMessage.observeAsState()
+//
+//    // Bottom sheet state for comments
+//    val commentBottomSheetState = rememberModalBottomSheetState(
+//        skipPartiallyExpanded = false
+//    )
+//    var showCommentBottomSheet by remember { mutableStateOf(false) }
+//    var selectedPost by remember { mutableStateOf<Post?>(null) }
+//
+//    // Bottom sheet state for share
+//    val shareBottomSheetState = rememberModalBottomSheetState(
+//        skipPartiallyExpanded = true
+//    )
+//    var showShareBottomSheet by remember { mutableStateOf(false) }
+//    var selectedPostForShare by remember { mutableStateOf<Post?>(null) }
+//
+//    // Handle connection success
+//    LaunchedEffect(connectionRequestState) {
+//        when (connectionRequestState) {
+//            is ConnectionRequestState.Success -> {
+//                // Show success message or handle UI update
+//                // You can add a snackbar or toast here
+//            }
+//
+//            is ConnectionRequestState.Error -> {
+//                // Handle error - could show a snackbar
+//            }
+//
+//            else -> {}
+//        }
+//    }
+//
+//    // Update userData when userProfile changes and save to SharedPreferences
+//
+//    LaunchedEffect(userProfile) {
+//        userProfile?.let { profile ->
+//            val userId = profile.id ?: -1  // Assuming UserProfile has an id field
+//            val username = profile.full_name?.takeIf { it.isNotEmpty() }
+//                ?: profile.username
+//                ?: ""
+//            val profilePic = profile.profile_pic ?: ""
+//
+//            // Save to SharedPreferences
+//            userDataManager.saveUserData(userId, username, profilePic)
+//
+//            // Update local state
+//            userData = UserData(userId, username, profilePic)
+//        }
+//    }
+//
+//
+//
+//    // Get auth token using TokenManager
+//    val tokenManager = remember { TokenManager(context) }
+//    val token = remember { tokenManager.getToken() }
+//
+//    // Fetch resource posts and user profile when the composable is first launched
+//    LaunchedEffect(Unit) {
+//        // Fetch resource posts specifically
+//        viewModel.fetchPosts(postType = "resource")
+//
+//        // Fetch user profile if userData is empty
+//        if (userData.username.isEmpty()) {
+//            viewModel.fetchUserProfile()
+//        }
+//    }
+//
+//    Scaffold(
+//        topBar = {
+//            TopBarHome(
+//                tabs = listOf("Feed", "Resources", "Connections"),
+//                selectedTab = "Resources", // This should be "Resources" since you're in ResourceHub
+//                navController = navController,
+//                onTabSelected = { tab ->
+//                    // Make sure this doesn't try to navigate to "feed"
+//                    when (tab) {
+//                        "Feed" -> navController.navigate("home") // NOT "feed"
+//                        "Resources" -> { /* Already here */
+//                        }
+//                        "Connections" -> navController.navigate("connections")
+//                    }
+//                },
+//            )
+//        },
+//        bottomBar = {
+//            BottomNavBar(navController = navController)
+//        }
+//    ) { paddingValues -> // Fixed: Added paddingValues parameter
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(paddingValues) // Fixed: Apply scaffold padding
+//                .background(Color.White)
+//        ) {
+//
+//            // Profile Card Component
+//            Card(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(12.dp),
+//                shape = RoundedCornerShape(12.dp),
+//                colors = CardDefaults.cardColors(
+//                    containerColor = Color.White
+//                ),
+//                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+//            ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(8.dp),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    // Profile Image
+//                    Card(
+//                        modifier = Modifier.size(48.dp),
+//                        shape = CircleShape,
+//                        colors = CardDefaults.cardColors(
+//                            containerColor = Color.Gray
+//                        )
+//                    ) {
+//                        Box(
+//                            modifier = Modifier.fillMaxSize(),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            if (userData.profilePic?.isNotEmpty() == true) {
+//                                AsyncImage(
+//                                    model = userData.profilePic,
+//                                    contentDescription = "Profile Picture",
+//                                    modifier = Modifier
+//                                        .fillMaxSize()
+//                                        .clip(CircleShape),
+//                                    contentScale = ContentScale.Crop,
+//                                    fallback = painterResource(id = R.drawable.ic_profile1),
+//                                    error = painterResource(id = R.drawable.ic_profile1)
+//                                )
+//                            } else {
+//                                // Placeholder for profile image
+//                                Icon(
+//                                    imageVector = Icons.Default.Person,
+//                                    contentDescription = "Profile",
+//                                    tint = Color.White,
+//                                    modifier = Modifier.size(24.dp)
+//                                )
+//                            }
+//                        }
+//                    }
+//
+//                    Spacer(modifier = Modifier.width(12.dp))
+//
+//                    // User Info
+//                    Column(
+//                        modifier = Modifier.weight(1f)
+//                    ) {
+//                        Text(
+//                            text = userData.username.ifEmpty { "Loading..." },
+//                            fontSize = 16.sp,
+//                            fontWeight = FontWeight.Medium,
+//                            color = Color.Black
+//                        )
+//                    }
+//
+//                    GradientButton(
+//                        text = "Share your post",
+//                        onClick = {
+//                            showPopup = true
+//                        }
+//                    )
+//                }
+//            }
+//
+//            // Posts Content
+//            when {
+//                isLoading -> {
+//                    // Loading state
+//                    Box(
+//                        modifier = Modifier.fillMaxSize(),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator(
+//                            color = Color(0xFF8B5CF6)
+//                        )
+//                    }
+//                }
+//
+//                error != null -> {
+//                    // Error state
+//                    Box(
+//                        modifier = Modifier.fillMaxSize(),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text(
+//                            text = error!!,
+//                            color = Color.Red,
+//                            modifier = Modifier.padding(16.dp)
+//                        )
+//                    }
+//                }
+//
+//                posts.isEmpty() -> {
+//                    // Empty state
+//                    Box(
+//                        modifier = Modifier.fillMaxSize(),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text(
+//                            text = "No resource posts available",
+//                            color = Color.Gray,
+//                            fontSize = 16.sp
+//                        )
+//                    }
+//                }
+//
+//                else -> {
+//                    // Posts list
+//                    LazyColumn(
+//                        modifier = Modifier.fillMaxSize(),
+//                        state = lazyListState // Fixed: Use the declared lazyListState
+//                    ) {
+//                        items(posts) { post ->
+//                            PostCardSection(
+//                                post = post,
+//                                userProfile = userProfile,
+//                                connectionViewModel = connectionViewModel,
+//                                onLikeClick = { postId ->
+//                                    viewModel.toggleLike(postId)
+//                                },
+//                                onCommentClick = { clickedPost ->
+//                                    selectedPost = clickedPost
+//                                    viewModel.fetchComments(clickedPost.id)
+//                                    showCommentBottomSheet = true
+//                                },
+//                                onShareClick = { clickedPost ->
+//                                    selectedPostForShare = clickedPost
+//                                    showShareBottomSheet = true
+//                                },
+//                                onConnectClick = { userId ->
+//                                    connectionViewModel.sendConnectionRequest(userId)
+//                                }
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Comment Bottom Sheet
+//        if (showCommentBottomSheet && selectedPost != null) {
+//            ModalBottomSheet(
+//                onDismissRequest = {
+//                    showCommentBottomSheet = false
+//                    selectedPost = null
+//                    viewModel.clearComments()
+//                },
+//                sheetState = commentBottomSheetState,
+//                modifier = Modifier.fillMaxSize()
+//            ) {
+//                CommentBottomSheetContent(
+//                    post = selectedPost!!,
+//                    comments = comments,
+//                    isLoading = commentsLoading,
+//                    error = commentsError,
+//                    viewModel = viewModel,
+//                    onDismiss = {
+//                        showCommentBottomSheet = false
+//                        selectedPost = null
+//                        viewModel.clearComments()
+//                    },
+//                    onRefresh = {
+//                        selectedPost?.let { post ->
+//                            viewModel.fetchComments(post.id)
+//                        }
+//                    }
+//                )
+//            }
+//        }
+//
+//        // Share Bottom Sheet
+//        selectedPostForShare?.let { post ->
+//            if (showShareBottomSheet) {
+//                ModalBottomSheet(
+//                    onDismissRequest = {
+//                        showShareBottomSheet = false
+//                        selectedPostForShare = null
+//                    },
+//                    sheetState = shareBottomSheetState,
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    ShareBottomSheetContent(
+//                        post = post,
+//                        context = context,
+//                        onDismiss = {
+//                            showShareBottomSheet = false
+//                            selectedPostForShare = null
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//
+//        // Post Creation Popup
+//        if (showPopup) {
+//            PostInputPopupDialogResource(
+//                viewModel = viewModel,
+//                username = userData.username.ifEmpty { "Loading..." },
+//                profilePic = userData.profilePic,
+//                onDismiss = { showPopup = false }
+//            )
+//        }
+//    }
+//}
+//
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -170,7 +531,6 @@ fun ResourceHub(
     }
 
     // Update userData when userProfile changes and save to SharedPreferences
-
     LaunchedEffect(userProfile) {
         userProfile?.let { profile ->
             val userId = profile.id ?: -1  // Assuming UserProfile has an id field
@@ -186,8 +546,6 @@ fun ResourceHub(
             userData = UserData(userId, username, profilePic)
         }
     }
-
-
 
     // Get auth token using TokenManager
     val tokenManager = remember { TokenManager(context) }
@@ -224,11 +582,11 @@ fun ResourceHub(
         bottomBar = {
             BottomNavBar(navController = navController)
         }
-    ) { paddingValues -> // Fixed: Added paddingValues parameter
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Fixed: Apply scaffold padding
+                .padding(paddingValues)
                 .background(Color.White)
         ) {
 
@@ -327,11 +685,27 @@ fun ResourceHub(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = error!!,
-                            color = Color.Red,
-                            modifier = Modifier.padding(16.dp)
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = error!!,
+                                color = Color.Red,
+                                modifier = Modifier.padding(16.dp),
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.fetchPosts(postType = "resource")
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF8B5CF6)
+                                )
+                            ) {
+                                Text("Retry")
+                            }
+                        }
                     }
                 }
 
@@ -341,11 +715,26 @@ fun ResourceHub(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "No resource posts available",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "No resource posts available",
+                                color = Color.Gray,
+                                fontSize = 16.sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.fetchPosts(postType = "resource")
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF8B5CF6)
+                                )
+                            ) {
+                                Text("Refresh")
+                            }
+                        }
                     }
                 }
 
@@ -353,13 +742,17 @@ fun ResourceHub(
                     // Posts list
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        state = lazyListState // Fixed: Use the declared lazyListState
+                        state = lazyListState
                     ) {
-                        items(posts) { post ->
+                        items(
+                            items = posts,
+                            key = { post -> post.id } // Add key for better performance
+                        ) { post ->
                             PostCardSection(
                                 post = post,
                                 userProfile = userProfile,
                                 connectionViewModel = connectionViewModel,
+                                postsViewModel = viewModel,  // Add PostsViewModel parameter
                                 onLikeClick = { postId ->
                                     viewModel.toggleLike(postId)
                                 },
@@ -374,6 +767,12 @@ fun ResourceHub(
                                 },
                                 onConnectClick = { userId ->
                                     connectionViewModel.sendConnectionRequest(userId)
+                                },
+                                onEditClick = { post ->
+                                    // TODO: Navigate to edit post screen or show edit dialog
+                                },
+                                onViewPostClick = { post ->
+                                    // TODO: Navigate to post detail screen
                                 }
                             )
                         }

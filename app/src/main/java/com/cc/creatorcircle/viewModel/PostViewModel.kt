@@ -630,7 +630,7 @@ class PostsViewModel(private val context: Context) : ViewModel() {
 
 
     // Add this function
-    fun deletePost(postId: String, userId: Int? = null) {
+    fun deletePost(postId: String) {
         viewModelScope.launch {
             try {
                 _postDeletionState.value = PostDeletionState.Loading
@@ -644,15 +644,6 @@ class PostsViewModel(private val context: Context) : ViewModel() {
                         // Remove post from main posts list
                         _posts.value = _posts.value.filter { it.id != postId }
 
-                        // Remove post from user-specific posts if userId is provided
-                        userId?.let { uid ->
-                            _userPosts.value[uid]?.let { userPostsList ->
-                                val updatedUserPosts = userPostsList.filter { it.id != postId }
-                                _userPosts.value = _userPosts.value.toMutableMap().apply {
-                                    put(uid, updatedUserPosts)
-                                }
-                            }
-                        }
                     }
                 } else {
                     _postDeletionState.value = PostDeletionState.Error(
@@ -670,6 +661,36 @@ class PostsViewModel(private val context: Context) : ViewModel() {
     fun clearDeletionState() {
         _postDeletionState.value = PostDeletionState.Idle
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Add this function to your PostsViewModel class
+
+    /**
+     * Manually remove a post from the user posts list for immediate UI update
+     */
+    fun removePostFromUserPosts(userId: Int, postId: String) {
+        val currentPosts = _userPosts.value[userId] ?: return
+        val updatedPosts = currentPosts.filter { it.id != postId }
+        _userPosts.value = _userPosts.value.toMutableMap().apply {
+            put(userId, updatedPosts)
+        }
+    }
+
+
+
+
+
 
 }
 
