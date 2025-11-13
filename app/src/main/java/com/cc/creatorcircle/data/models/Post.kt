@@ -72,3 +72,17 @@ sealed class PostCreationState {
     data class Error(val message: String) : PostCreationState()
 }
 
+
+// Models for delete post
+data class DeletePostResponse(
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("notifications_deleted") val notificationsDeleted: Int
+)
+
+sealed class PostDeletionState {
+    object Idle : PostDeletionState()
+    object Loading : PostDeletionState()
+    data class Success(val response: DeletePostResponse) : PostDeletionState()
+    data class Error(val message: String) : PostDeletionState()
+}

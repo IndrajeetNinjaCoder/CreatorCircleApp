@@ -27,7 +27,12 @@ sealed class Screen(val route: String) {
 
 
 
-    object ProfileWeb : Screen("profile")
+    object ProfileWeb : Screen("profileweb")
+    object ProfileScreen : Screen("profile")
+
+    object YourProfileScreen : Screen("yourprofile")
+
+
 
     object NotificationsWeb : Screen("notifications")
 

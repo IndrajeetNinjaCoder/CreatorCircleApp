@@ -29,8 +29,9 @@ class TokenManager(context: Context) {
             .apply()
     }
 
-    fun getUserId(): String {
-        return sharedPreferences.getString(USER_ID, "") ?: ""
+    fun getUserId(): Int? {
+//        return sharedPreferences.getString(USER_ID, "") ?: ""
+        return sharedPreferences.getInt("user_id", -1).takeIf { it != -1 }
     }
 
     fun clearTokens() {

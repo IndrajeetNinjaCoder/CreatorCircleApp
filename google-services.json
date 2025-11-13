@@ -38,6 +38,14 @@
           }
         },
         {
+          "client_id": "965728963593-pl81914plgdnv4664ihk6fslr0nqg2j7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cc.creatorcircle",
+            "certificate_hash": "6005e141865d11715834f60d3708db1c0bdb5184"
+          }
+        },
+        {
           "client_id": "965728963593-73o2kl524t3jhrsvgahfkrqhhmpoqdcf.apps.googleusercontent.com",
           "client_type": 3
         }

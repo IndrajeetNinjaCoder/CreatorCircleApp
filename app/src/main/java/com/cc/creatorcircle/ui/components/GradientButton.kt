@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -91,7 +92,7 @@ fun GradientButton(
 @Composable
 fun GradientIconButton(
     text: String,
-    icon: ImageVector,
+    icon: Int,
     modifier: Modifier = Modifier,
     gradientColors: List<Color> = listOf(Color(0xFF893BCF), Color(0xFFEA3BA1)), // purple → pink
     cornerRadius: Int = 8,
@@ -140,7 +141,7 @@ fun GradientIconButton(
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = icon,
+                painter = painterResource(id = icon),
                 contentDescription = null,
                 tint = finalIconTint,
                 modifier = Modifier.size(18.dp)

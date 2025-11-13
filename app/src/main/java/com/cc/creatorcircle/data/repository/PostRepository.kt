@@ -15,6 +15,7 @@ import com.cc.creatorcircle.utils.TokenManager
 import retrofit2.Response
 
 import android.util.Log
+import com.cc.creatorcircle.data.models.DeletePostResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -163,6 +164,25 @@ class PostsRepository(private val context: Context) {
                 Log.e("PostRepository", "Exception in createPost", e)
                 Result.failure(e)
             }
+        }
+    }
+
+
+    suspend fun getUserPosts(targetUserId: Int): Response<PostsResponse> {
+        val token = tokenManager.getToken()
+        return if (token.isNotEmpty()) {
+            apiService.getUserPosts(targetUserId, "Bearer $token")
+        } else {
+            throw Exception("Access token not found. Please log in again.")
+        }
+    }
+
+    suspend fun deletePost(postId: String): Response<DeletePostResponse> {
+        val token = tokenManager.getToken()
+        return if (token.isNotEmpty()) {
+            apiService.deletePost(postId, "Bearer $token")
+        } else {
+            throw Exception("Access token not found. Please log in again.")
         }
     }
 

@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 
 import androidx.lifecycle.viewModelScope
 import com.cc.creatorcircle.data.models.PostCreationState
+import com.cc.creatorcircle.data.models.PostDeletionState
 import com.cc.creatorcircle.data.models.PostRequest
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -85,6 +86,23 @@ class PostsViewModel(private val context: Context) : ViewModel() {
 
     private val _otherUserError = MutableStateFlow<Map<Int, String>>(emptyMap())
     val otherUserError: StateFlow<Map<Int, String>> = _otherUserError
+
+
+    // StateFlows for user-specific posts
+    private val _userPosts = MutableStateFlow<Map<Int, List<Post>>>(emptyMap())
+    val userPosts: StateFlow<Map<Int, List<Post>>> = _userPosts
+
+    private val _userPostsLoading = MutableStateFlow<Set<Int>>(emptySet())
+    val userPostsLoading: StateFlow<Set<Int>> = _userPostsLoading
+
+    private val _userPostsError = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val userPostsError: StateFlow<Map<Int, String>> = _userPostsError
+
+
+    // Add these StateFlows with other state declarations
+    private val _postDeletionState = MutableStateFlow<PostDeletionState>(PostDeletionState.Idle)
+    val postDeletionState: StateFlow<PostDeletionState> = _postDeletionState.asStateFlow()
+
 
 
 //    init {
@@ -519,6 +537,139 @@ class PostsViewModel(private val context: Context) : ViewModel() {
         return _otherUserProfiles.value[userId]?.following
     }
 
+
+
+
+    fun fetchUserPosts(userId: Int) {
+        // Don't fetch if already loading or already loaded
+        if (_userPostsLoading.value.contains(userId) || _userPosts.value.containsKey(userId)) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                Log.d("PostsViewModel", "Fetching posts for userId: $userId")
+                _userPostsLoading.value = _userPostsLoading.value + userId
+
+                val currentErrors = _userPostsError.value.toMutableMap()
+                currentErrors.remove(userId)
+                _userPostsError.value = currentErrors
+
+                val response = repository.getUserPosts(userId)
+                Log.d("PostsViewModel", "Repository response received for user $userId posts")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { postsResponse ->
+                        Log.d("PostsViewModel", "User posts data: ${postsResponse.data.size} posts")
+                        _userPosts.value = _userPosts.value + (userId to postsResponse.data)
+                        Log.d("PostsViewModel", "Posts data set successfully for user $userId")
+                    } ?: run {
+                        Log.e("PostsViewModel", "Response body is null for user $userId posts")
+                        val errors = _userPostsError.value.toMutableMap()
+                        errors[userId] = "Empty response body"
+                        _userPostsError.value = errors
+                    }
+                } else {
+                    Log.e(
+                        "PostsViewModel",
+                        "API call failed for user $userId posts: ${response.code()} - ${response.message()}"
+                    )
+                    val errors = _userPostsError.value.toMutableMap()
+                    errors[userId] = "Failed to fetch user posts: ${response.message()}"
+                    _userPostsError.value = errors
+                }
+            } catch (e: Exception) {
+                Log.e("PostsViewModel", "Exception in fetchUserPosts for user $userId", e)
+                val errors = _userPostsError.value.toMutableMap()
+                errors[userId] = "Network error: ${e.message}"
+                _userPostsError.value = errors
+            } finally {
+                _userPostsLoading.value = _userPostsLoading.value - userId
+            }
+        }
+    }
+
+    // Helper function to get posts for a specific user
+    fun getPostsForUser(userId: Int): List<Post>? {
+        return _userPosts.value[userId]
+    }
+
+    // Helper function to clear user posts
+    fun clearUserPosts() {
+        _userPosts.value = emptyMap()
+        _userPostsError.value = emptyMap()
+    }
+
+    // Helper function to refresh user posts
+    fun refreshUserPosts(userId: Int) {
+        val currentPosts = _userPosts.value.toMutableMap()
+        currentPosts.remove(userId)
+        _userPosts.value = currentPosts
+        fetchUserPosts(userId)
+    }
+
+
+    // Add this function to your PostsViewModel
+    fun updateUserPostLike(userId: Int, postId: String) {
+        val currentPosts = _userPosts.value[userId] ?: return
+        val updatedPosts = currentPosts.map { post ->
+            if (post.id == postId) {
+                post.copy(
+                    isLiked = !post.isLiked,
+                    likes = if (post.isLiked) post.likes - 1 else post.likes + 1
+                )
+            } else {
+                post
+            }
+        }
+        _userPosts.value = _userPosts.value.toMutableMap().apply {
+            put(userId, updatedPosts)
+        }
+    }
+
+
+
+    // Add this function
+    fun deletePost(postId: String, userId: Int? = null) {
+        viewModelScope.launch {
+            try {
+                _postDeletionState.value = PostDeletionState.Loading
+
+                val response = repository.deletePost(postId)
+
+                if (response.isSuccessful) {
+                    response.body()?.let { deleteResponse ->
+                        _postDeletionState.value = PostDeletionState.Success(deleteResponse)
+
+                        // Remove post from main posts list
+                        _posts.value = _posts.value.filter { it.id != postId }
+
+                        // Remove post from user-specific posts if userId is provided
+                        userId?.let { uid ->
+                            _userPosts.value[uid]?.let { userPostsList ->
+                                val updatedUserPosts = userPostsList.filter { it.id != postId }
+                                _userPosts.value = _userPosts.value.toMutableMap().apply {
+                                    put(uid, updatedUserPosts)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    _postDeletionState.value = PostDeletionState.Error(
+                        "Failed to delete post: ${response.message()}"
+                    )
+                }
+            } catch (e: Exception) {
+                _postDeletionState.value = PostDeletionState.Error(
+                    "Network error: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun clearDeletionState() {
+        _postDeletionState.value = PostDeletionState.Idle
+    }
 
 }
 

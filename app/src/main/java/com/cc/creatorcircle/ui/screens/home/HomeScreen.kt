@@ -44,6 +44,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.icons.Icons
@@ -130,7 +132,7 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import com.cc.creatorcircle.ui.navigation.Screen
-
+import androidx.compose.material.icons.filled.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -567,8 +569,8 @@ fun HomeScreen(
         }
     }
 }
-//
-//
+
+
 //@Composable
 //fun PostCardSection(
 //    post: Post,
@@ -620,6 +622,7 @@ fun HomeScreen(
 //    // Extract links from post content
 //    val links = extractLinksFromText(post.content)
 //
+//
 //    Card(
 //        modifier = Modifier
 //            .fillMaxWidth()
@@ -627,7 +630,10 @@ fun HomeScreen(
 //            .border(
 //                width = 1.dp,
 //                brush = Brush.horizontalGradient(
-//                    listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+//                    listOf(
+//                        Color(0xFFB726FF).copy(alpha = 0.5f),
+//                        Color(0xFFFB3D91).copy(alpha = 0.5f)
+//                    )
 //                ),
 //                shape = RoundedCornerShape(12.dp)
 //            ),
@@ -649,8 +655,8 @@ fun HomeScreen(
 //                        .size(36.dp)
 //                        .clip(CircleShape),
 //                    contentScale = ContentScale.Crop,
-//                    placeholder = painterResource(id = R.drawable.ic_profile),
-//                    error = painterResource(id = R.drawable.ic_profile)
+//                    placeholder = painterResource(id = R.drawable.ic_profile1),
+//                    error = painterResource(id = R.drawable.ic_profile1)
 //                )
 //            } else {
 //                Image(
@@ -771,10 +777,10 @@ fun HomeScreen(
 //                    Column {
 //                        Text(
 //                            text = post.content,
-//                            fontSize = 14.sp,
-//                            maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+//                            fontSize = 12.sp,
+//                            maxLines = if (isExpanded) Int.MAX_VALUE else 4,
 //                            overflow = TextOverflow.Ellipsis,
-//                            color = Color.Black,
+//                            color = Color(0xFF4B5563),
 //                            lineHeight = 20.sp
 //                        )
 //
@@ -844,18 +850,60 @@ fun HomeScreen(
 //                                    .clip(RoundedCornerShape(12.dp))
 //                            )
 //                        } else {
-//                            AsyncImage(
-//                                model = mediaUrl,
-//                                contentDescription = "Post Image",
+//                            // State to track image loading
+//                            var imageLoadState by remember {
+//                                mutableStateOf<ImageLoadState>(
+//                                    ImageLoadState.Loading
+//                                )
+//                            }
+//
+//                            Box(
 //                                modifier = Modifier
 //                                    .fillMaxWidth()
-////                                    .aspectRatio(9f / 16f) // Changed from fixed height to 9:16 aspect ratio
-//                                    .aspectRatio(4f / 5f) // Changed from fixed height to 9:16 aspect ratio
-//                                    .clip(RoundedCornerShape(12.dp)),
-//                                contentScale = ContentScale.Crop,
-//                                placeholder = painterResource(id = R.drawable.ic_post_image),
-//                                error = painterResource(id = R.drawable.ic_post_image)
-//                            )
+//                                    .aspectRatio(4f / 5f)
+//                                    .clip(RoundedCornerShape(12.dp))
+//                                    .background(
+//                                        if (imageLoadState is ImageLoadState.Error)
+//                                            Color(0xFFE0E0E0)
+//                                        else
+//                                            Color.Transparent
+//                                    ),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                when (imageLoadState) {
+//                                    is ImageLoadState.Loading, is ImageLoadState.Success -> {
+//                                        AsyncImage(
+//                                            model = mediaUrl,
+//                                            contentDescription = "Post Image",
+//                                            modifier = Modifier.fillMaxSize(),
+//                                            contentScale = ContentScale.Crop,
+//                                            onSuccess = { imageLoadState = ImageLoadState.Success },
+//                                            onError = { imageLoadState = ImageLoadState.Error }
+//                                        )
+//                                    }
+//
+//                                    is ImageLoadState.Error -> {
+//                                        // Show gray placeholder with icon
+//                                        Column(
+//                                            horizontalAlignment = Alignment.CenterHorizontally,
+//                                            verticalArrangement = Arrangement.Center
+//                                        ) {
+//                                            Icon(
+//                                                painter = painterResource(id = R.drawable.ic_cross),
+//                                                contentDescription = "Failed to load",
+//                                                tint = Color.Gray,
+//                                                modifier = Modifier.size(48.dp)
+//                                            )
+//                                            Spacer(modifier = Modifier.height(8.dp))
+//                                            Text(
+//                                                text = "Unable to load media",
+//                                                fontSize = 12.sp,
+//                                                color = Color.Gray
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            }
 //                        }
 //
 //                        if (index < post.media.size - 1) {
@@ -915,6 +963,8 @@ fun HomeScreen(
 //}
 
 
+
+
 @Composable
 fun PostCardSection(
     post: Post,
@@ -923,11 +973,17 @@ fun PostCardSection(
     onLikeClick: (String) -> Unit = {},
     onCommentClick: (Post) -> Unit = {},
     onShareClick: (Post) -> Unit = {},
-    onConnectClick: (Int) -> Unit = {}
+    onConnectClick: (Int) -> Unit = {},
+    onDeleteClick: (String) -> Unit = {},
+    onEditClick: (Post) -> Unit = {},
+    onViewPostClick: (Post) -> Unit = {}
 ) {
 
     // State to track if full content is shown
     var isExpanded by remember { mutableStateOf(false) }
+
+    // State for dropdown menu
+    var showDropdownMenu by remember { mutableStateOf(false) }
 
     // Check if user is already connected
     val isAlreadyConnected = userProfile?.accepted_connections?.users?.any {
@@ -966,21 +1022,7 @@ fun PostCardSection(
     // Extract links from post content
     val links = extractLinksFromText(post.content)
 
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(horizontal = 12.dp, vertical = 8.dp)
-//            .border(
-//                width = 1.dp,
-//                brush = Brush.horizontalGradient(
-//                    listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
-//                ),
-//                shape = RoundedCornerShape(12.dp)
-//            ),
-//        colors = CardDefaults.cardColors(containerColor = Color.White),
-//        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-//        shape = RoundedCornerShape(12.dp)
-//    ) {
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -998,7 +1040,8 @@ fun PostCardSection(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
-    ) {
+    )
+    {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1059,8 +1102,98 @@ fun PostCardSection(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Connect Button (only show if not author and not already connected)
-            if (!post.isAuthor && !isAlreadyConnected) {
+            // Three-dot menu (only show if user is author)
+            if (post.isAuthor) {
+                Box {
+                    androidx.compose.material3.IconButton(
+                        onClick = { showDropdownMenu = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    androidx.compose.material3.DropdownMenu(
+                        expanded = showDropdownMenu,
+                        onDismissRequest = { showDropdownMenu = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Edit",
+                                        fontSize = 14.sp,
+                                        color = Color.Black
+                                    )
+                                }
+                            },
+                            onClick = {
+                                showDropdownMenu = false
+                                onEditClick(post)
+                            }
+                        )
+
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Delete",
+                                        fontSize = 14.sp,
+                                        color = Color.Red
+                                    )
+                                }
+                            },
+                            onClick = {
+                                showDropdownMenu = false
+                                onDeleteClick(post.id)
+                            }
+                        )
+
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Visibility,
+                                        contentDescription = "View Post",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "View Post",
+                                        fontSize = 14.sp,
+                                        color = Color.Black
+                                    )
+                                }
+                            },
+                            onClick = {
+                                showDropdownMenu = false
+                                onViewPostClick(post)
+                            }
+                        )
+                    }
+                }
+            } else if (!post.isAuthor && !isAlreadyConnected) {
+                // Connect Button (only show if not author and not already connected)
                 Button(
                     onClick = {
                         if (!isConnectionSent && !connectionLoading && !isFollowing) {
@@ -1133,6 +1266,24 @@ fun PostCardSection(
                 // Post Content
                 if (post.content.isNotEmpty()) {
                     Column {
+                        // Check if text actually overflows by measuring
+                        var showButton by remember { mutableStateOf(false) }
+
+                        // Hidden text for measurement
+                        Box(modifier = Modifier.height(0.dp)) {
+                            Text(
+                                text = post.content,
+                                fontSize = 12.sp,
+                                maxLines = 4,
+                                color = Color.Transparent,
+                                lineHeight = 20.sp,
+                                onTextLayout = { textLayoutResult ->
+                                    showButton = textLayoutResult.hasVisualOverflow
+                                }
+                            )
+                        }
+
+                        // Visible text
                         Text(
                             text = post.content,
                             fontSize = 12.sp,
@@ -1142,20 +1293,6 @@ fun PostCardSection(
                             lineHeight = 20.sp
                         )
 
-                        // Check if text actually overflows 2 lines by measuring
-                        var showButton by remember { mutableStateOf(false) }
-
-                        Text(
-                            text = post.content,
-                            fontSize = 14.sp,
-                            maxLines = 2,
-                            color = Color.Transparent,
-                            lineHeight = 20.sp,
-                            onTextLayout = { textLayoutResult ->
-                                showButton = textLayoutResult.hasVisualOverflow
-                            }
-                        )
-
                         if (showButton) {
                             Text(
                                 text = if (isExpanded) "Show less" else "Show more",
@@ -1163,7 +1300,6 @@ fun PostCardSection(
                                 color = Color(0xFF1976D2),
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier
-//                                    .padding(top = 4.dp)
                                     .clickable {
                                         isExpanded = !isExpanded
                                     }
@@ -1320,12 +1456,633 @@ fun PostCardSection(
     }
 }
 
-// Helper sealed class to track image loading state
+// Helper sealed class for image loading state
 sealed class ImageLoadState {
     object Loading : ImageLoadState()
     object Success : ImageLoadState()
     object Error : ImageLoadState()
 }
+
+
+
+
+//@Composable
+//fun PostCardSection(
+//    post: Post,
+//    userProfile: UserProfile?,
+//    connectionViewModel: ConnectionViewModel,
+//    onLikeClick: (String) -> Unit = {},
+//    onCommentClick: (Post) -> Unit = {},
+//    onShareClick: (Post) -> Unit = {},
+//    onConnectClick: (Int) -> Unit = {},
+//    onDeleteClick: (String) -> Unit = {},
+//    onEditClick: (Post) -> Unit = {},
+//    onViewPostClick: (Post) -> Unit = {}
+//) {
+//
+//    // State to track if full content is shown
+//    var isExpanded by remember { mutableStateOf(false) }
+//
+//    // State for dropdown menu
+//    var showDropdownMenu by remember { mutableStateOf(false) }
+//
+//    // Check if user is already connected
+//    val isAlreadyConnected = userProfile?.accepted_connections?.users?.any {
+//        it.user_id == post.author.id
+//    } ?: false
+//
+//    // Check if user is following the post author
+//    val isFollowing = userProfile?.following?.users?.any {
+//        it.user_id == post.author.id
+//    } ?: false
+//
+//    // Check if connection request is already sent
+//    val isConnectionSent = connectionViewModel.isConnectionAlreadySent(post.author.id)
+//
+//    // Get connection loading state for this specific user
+//    val connectionLoading by connectionViewModel.isLoading.observeAsState(false)
+//
+//    // Get the connection for this user to check status
+//    val connection = connectionViewModel.getConnectionByUserId(post.author.id)
+//
+//    // Determine button text and state based on connection status
+//    val buttonText = when {
+//        isConnectionSent -> when (connection?.status) {
+//            "pending" -> "Pending"
+//            "accepted" -> "Connected"
+//            "rejected" -> "Rejected"
+//            else -> "Sent"
+//        }
+//
+//        isFollowing -> "Pending"  // Show "Pending" if following but not connected
+//        else -> "Connect"
+//    }
+//
+//    val buttonEnabled = !connectionLoading && !isConnectionSent && !isFollowing
+//
+//    // Extract links from post content
+//    val links = extractLinksFromText(post.content)
+//
+//
+//    Card(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 12.dp, vertical = 8.dp)
+//            .border(
+//                width = 1.dp,
+//                brush = Brush.horizontalGradient(
+//                    listOf(
+//                        Color(0xFFB726FF).copy(alpha = 0.5f),
+//                        Color(0xFFFB3D91).copy(alpha = 0.5f)
+//                    )
+//                ),
+//                shape = RoundedCornerShape(12.dp)
+//            ),
+//        colors = CardDefaults.cardColors(containerColor = Color.White),
+//        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//        shape = RoundedCornerShape(12.dp)
+//    )
+//    {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 8.dp, vertical = 12.dp)
+//        ) {
+//            // Profile Image
+//            if (post.author.avatar != null) {
+//                AsyncImage(
+//                    model = post.author.avatar,
+//                    contentDescription = "Profile",
+//                    modifier = Modifier
+//                        .size(36.dp)
+//                        .clip(CircleShape),
+//                    contentScale = ContentScale.Crop,
+//                    placeholder = painterResource(id = R.drawable.ic_profile1),
+//                    error = painterResource(id = R.drawable.ic_profile1)
+//                )
+//            } else {
+//                Image(
+//                    painter = painterResource(id = R.drawable.ic_profile),
+//                    contentDescription = "Profile",
+//                    modifier = Modifier
+//                        .size(36.dp)
+//                        .clip(CircleShape),
+//                    contentScale = ContentScale.Crop
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.width(10.dp))
+//
+//            // Name and description
+//            Column(modifier = Modifier.weight(1f)) {
+//                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Text(
+//                        text = post.author.name ?: post.author.role ?: "Anonymous",
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = 14.sp,
+//                        color = Color.Black
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text(
+//                        text = "• ${post.timestamp}",
+//                        fontSize = 10.sp,
+//                        color = Color.Gray
+//                    )
+//                }
+////                Spacer(modifier = Modifier.height(2.dp))
+//                if (post.author.role != null && post.author.role != post.author.name) {
+//                    Text(
+//                        text = "@${post.author.role}",
+//                        fontSize = 10.sp,
+//                        color = Color.Gray,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis,
+//                    )
+//                }
+//            }
+//
+//            Spacer(modifier = Modifier.width(12.dp))
+//
+//            // Three-dot menu (only show if user is author)
+////            if (post.isAuthor) {
+////                Box {
+////                    IconButton(
+////                        onClick = { showDropdownMenu = true },
+////                        modifier = Modifier.size(32.dp)
+////                    ) {
+////                        Icon(
+////                            painter = painterResource(id = R.drawable.ic_more_vert), // Use your three-dot icon
+////                            contentDescription = "More options",
+////                            tint = Color.Gray,
+////                            modifier = Modifier.size(20.dp)
+////                        )
+////                    }
+////
+////                    DropdownMenu(
+////                        expanded = showDropdownMenu,
+////                        onDismissRequest = { showDropdownMenu = false },
+////                        modifier = Modifier.background(Color.White)
+////                    ) {
+////                        DropdownMenuItem(
+////                            text = {
+////                                Row(verticalAlignment = Alignment.CenterVertically) {
+////                                    Icon(
+////                                        painter = painterResource(id = R.drawable.ic_edit),
+////                                        contentDescription = "Edit",
+////                                        tint = Color.Black,
+////                                        modifier = Modifier.size(20.dp)
+////                                    )
+////                                    Spacer(modifier = Modifier.width(8.dp))
+////                                    Text("Edit", fontSize = 14.sp, color = Color.Black)
+////                                }
+////                            },
+////                            onClick = {
+////                                showDropdownMenu = false
+////                                onEditClick(post)
+////                            }
+////                        )
+////
+////                        DropdownMenuItem(
+////                            text = {
+////                                Row(verticalAlignment = Alignment.CenterVertically) {
+////                                    Icon(
+////                                        painter = painterResource(id = R.drawable.ic_delete),
+////                                        contentDescription = "Delete",
+////                                        tint = Color.Red,
+////                                        modifier = Modifier.size(20.dp)
+////                                    )
+////                                    Spacer(modifier = Modifier.width(8.dp))
+////                                    Text("Delete", fontSize = 14.sp, color = Color.Red)
+////                                }
+////                            },
+////                            onClick = {
+////                                showDropdownMenu = false
+////                                onDeleteClick(post.id)
+////                            }
+////                        )
+////
+////                        DropdownMenuItem(
+////                            text = {
+////                                Row(verticalAlignment = Alignment.CenterVertically) {
+////                                    Icon(
+////                                        painter = painterResource(id = R.drawable.ic_eye),
+////                                        contentDescription = "View Post",
+////                                        tint = Color.Black,
+////                                        modifier = Modifier.size(20.dp)
+////                                    )
+////                                    Spacer(modifier = Modifier.width(8.dp))
+////                                    Text("View Post", fontSize = 14.sp, color = Color.Black)
+////                                }
+////                            },
+////                            onClick = {
+////                                showDropdownMenu = false
+////                                onViewPostClick(post)
+////                            }
+////                        )
+////                    }
+////                }
+////            } else if (!post.isAuthor && !isAlreadyConnected) {
+//            if (post.isAuthor) {
+//                Box {
+//                    IconButton(
+//                        onClick = { showDropdownMenu = true },
+//                        modifier = Modifier.size(32.dp)
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.MoreVert, // Use Material Icons instead
+//                            contentDescription = "More options",
+//                            tint = Color.Gray,
+//                            modifier = Modifier.size(20.dp)
+//                        )
+//                    }
+//
+//                    DropdownMenu(
+//                        expanded = showDropdownMenu,
+//                        onDismissRequest = { showDropdownMenu = false },
+//                        modifier = Modifier.background(Color.White)
+//                    ) {
+//                        DropdownMenuItem(
+//                            text = {
+//                                Row(verticalAlignment = Alignment.CenterVertically) {
+//                                    Icon(
+//                                        imageVector = Icons.Default.Edit,
+//                                        contentDescription = "Edit",
+//                                        tint = Color.Black,
+//                                        modifier = Modifier.size(20.dp)
+//                                    )
+//                                    Spacer(modifier = Modifier.width(8.dp))
+//                                    Text("Edit", fontSize = 14.sp, color = Color.Black)
+//                                }
+//                            },
+//                            onClick = {
+//                                showDropdownMenu = false
+//                                onEditClick(post)
+//                            }
+//                        )
+//
+//                        DropdownMenuItem(
+//                            text = {
+//                                Row(verticalAlignment = Alignment.CenterVertically) {
+//                                    Icon(
+//                                        imageVector = Icons.Default.Delete,
+//                                        contentDescription = "Delete",
+//                                        tint = Color.Red,
+//                                        modifier = Modifier.size(20.dp)
+//                                    )
+//                                    Spacer(modifier = Modifier.width(8.dp))
+//                                    Text("Delete", fontSize = 14.sp, color = Color.Red)
+//                                }
+//                            },
+//                            onClick = {
+//                                showDropdownMenu = false
+//                                onDeleteClick(post.id)
+//                            }
+//                        )
+//
+//                        DropdownMenuItem(
+//                            text = {
+//                                Row(verticalAlignment = Alignment.CenterVertically) {
+//                                    Icon(
+//                                        imageVector = Icons.Default.Visibility,
+//                                        contentDescription = "View Post",
+//                                        tint = Color.Black,
+//                                        modifier = Modifier.size(20.dp)
+//                                    )
+//                                    Spacer(modifier = Modifier.width(8.dp))
+//                                    Text("View Post", fontSize = 14.sp, color = Color.Black)
+//                                }
+//                            },
+//                            onClick = {
+//                                showDropdownMenu = false
+//                                onViewPostClick(post)
+//                            }
+//                        )
+//                    }
+//                }
+//            } else if (!post.isAuthor && !isAlreadyConnected) {
+//                // Connect Button (only show if not author and not already connected)
+//                Button(
+//                    onClick = {
+//                        if (!isConnectionSent && !connectionLoading && !isFollowing) {
+//                            onConnectClick(post.author.id)
+//                        }
+//                    },
+//                    enabled = !connectionLoading && !isConnectionSent && !isFollowing,
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = when {
+//                            isConnectionSent || isFollowing -> Color(0xFFE0E0E0)
+//                            else -> Color(0xFFEDE1FF)
+//                        },
+//                        disabledContainerColor = Color(0xFFE0E0E0)
+//                    ),
+//                    shape = RoundedCornerShape(6.dp),
+//                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+//                    modifier = Modifier
+//                        .height(32.dp)
+//                        .wrapContentWidth()
+//                        .padding(end = 8.dp),
+//                    border = BorderStroke(
+//                        1.dp,
+//                        when {
+//                            isConnectionSent || isFollowing -> Color.Gray
+//                            else -> Color(0xFF8B5CF6)
+//                        }
+//                    )
+//                ) {
+//                    if (connectionLoading) {
+//                        CircularProgressIndicator(
+//                            modifier = Modifier.size(12.dp),
+//                            strokeWidth = 2.dp,
+//                            color = Color(0xFF8B5CF6)
+//                        )
+//                    } else {
+//                        Text(
+//                            text = when {
+//                                isConnectionSent -> when (connection?.status) {
+//                                    "pending" -> "Pending"
+//                                    "accepted" -> "Connected"
+//                                    "rejected" -> "Rejected"
+//                                    else -> "Sent"
+//                                }
+//
+//                                isFollowing -> "Pending"
+//                                else -> "Connect"
+//                            },
+//                            color = when {
+//                                isConnectionSent || isFollowing -> Color.Gray
+//                                else -> Color(0xFF8B5CF6)
+//                            },
+//                            fontWeight = FontWeight.Medium,
+//                            fontSize = 12.sp
+//                        )
+//                    }
+//                }
+//            }
+//
+////            // Connect Button (only show if not author and not already connected)
+////            if (!post.isAuthor && !isAlreadyConnected) {
+////                Button(
+////                    onClick = {
+////                        if (!isConnectionSent && !connectionLoading && !isFollowing) {
+////                            onConnectClick(post.author.id)
+////                        }
+////                    },
+////                    enabled = !connectionLoading && !isConnectionSent && !isFollowing,
+////                    colors = ButtonDefaults.buttonColors(
+////                        containerColor = when {
+////                            isConnectionSent || isFollowing -> Color(0xFFE0E0E0)
+////                            else -> Color(0xFFEDE1FF)
+////                        },
+////                        disabledContainerColor = Color(0xFFE0E0E0)
+////                    ),
+////                    shape = RoundedCornerShape(6.dp),
+////                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+////                    modifier = Modifier
+////                        .height(32.dp)
+////                        .wrapContentWidth()
+////                        .padding(end = 8.dp),
+////                    border = BorderStroke(
+////                        1.dp,
+////                        when {
+////                            isConnectionSent || isFollowing -> Color.Gray
+////                            else -> Color(0xFF8B5CF6)
+////                        }
+////                    )
+////                ) {
+////                    if (connectionLoading) {
+////                        CircularProgressIndicator(
+////                            modifier = Modifier.size(12.dp),
+////                            strokeWidth = 2.dp,
+////                            color = Color(0xFF8B5CF6)
+////                        )
+////                    } else {
+////                        Text(
+////                            text = when {
+////                                isConnectionSent -> when (connection?.status) {
+////                                    "pending" -> "Pending"
+////                                    "accepted" -> "Connected"
+////                                    "rejected" -> "Rejected"
+////                                    else -> "Sent"
+////                                }
+////
+////                                isFollowing -> "Pending"
+////                                else -> "Connect"
+////                            },
+////                            color = when {
+////                                isConnectionSent || isFollowing -> Color.Gray
+////                                else -> Color(0xFF8B5CF6)
+////                            },
+////                            fontWeight = FontWeight.Medium,
+////                            fontSize = 12.sp
+////                        )
+////                    }
+////                }
+////            }
+//        }
+//
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth(),
+//            colors = CardDefaults.cardColors(containerColor = Color.White),
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp)
+//            ) {
+//                // Post Content
+//                if (post.content.isNotEmpty()) {
+//                    Column {
+//                        Text(
+//                            text = post.content,
+//                            fontSize = 12.sp,
+//                            maxLines = if (isExpanded) Int.MAX_VALUE else 4,
+//                            overflow = TextOverflow.Ellipsis,
+//                            color = Color(0xFF4B5563),
+//                            lineHeight = 20.sp
+//                        )
+//
+//                        // Check if text actually overflows 2 lines by measuring
+//                        var showButton by remember { mutableStateOf(false) }
+//
+//                        Text(
+//                            text = post.content,
+//                            fontSize = 14.sp,
+//                            maxLines = 2,
+//                            color = Color.Transparent,
+//                            lineHeight = 20.sp,
+//                            onTextLayout = { textLayoutResult ->
+//                                showButton = textLayoutResult.hasVisualOverflow
+//                            }
+//                        )
+//
+//                        if (showButton) {
+//                            Text(
+//                                text = if (isExpanded) "Show less" else "Show more",
+//                                fontSize = 14.sp,
+//                                color = Color(0xFF1976D2),
+//                                fontWeight = FontWeight.Medium,
+//                                modifier = Modifier
+////                                    .padding(top = 4.dp)
+//                                    .clickable {
+//                                        isExpanded = !isExpanded
+//                                    }
+//                            )
+//                        }
+//                    }
+//                }
+//
+//
+//                // Display Links if any
+//                if (links.isNotEmpty()) {
+//                    Spacer(modifier = Modifier.height(8.dp))
+//
+//                    LazyRow(
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        itemsIndexed(links) { index, link ->
+//                            LinkChip(
+//                                link = link,
+//                                linkNumber = index + 1
+//                            )
+//                        }
+//                    }
+//                }
+//
+//                // Post Media (Images and Videos)
+//                if (post.media.isNotEmpty()) {
+//                    Spacer(modifier = Modifier.height(12.dp))
+//
+//                    post.media.forEachIndexed { index, mediaUrl ->
+//                        val isVideo = isVideoUrl(mediaUrl)
+//
+//                        if (isVideo) {
+//                            VideoPlayer(
+//                                videoUrl = mediaUrl,
+//                                // Create unique videoId using post ID and media index
+//                                videoId = "${post.id}_media_$index",
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .aspectRatio(9f / 16f) // 9:16 aspect ratio
+//                                    .clip(RoundedCornerShape(12.dp))
+//                            )
+//                        } else {
+//                            // State to track image loading
+//                            var imageLoadState by remember {
+//                                mutableStateOf<ImageLoadState>(
+//                                    ImageLoadState.Loading
+//                                )
+//                            }
+//
+//                            Box(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .aspectRatio(4f / 5f)
+//                                    .clip(RoundedCornerShape(12.dp))
+//                                    .background(
+//                                        if (imageLoadState is ImageLoadState.Error)
+//                                            Color(0xFFE0E0E0)
+//                                        else
+//                                            Color.Transparent
+//                                    ),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                when (imageLoadState) {
+//                                    is ImageLoadState.Loading, is ImageLoadState.Success -> {
+//                                        AsyncImage(
+//                                            model = mediaUrl,
+//                                            contentDescription = "Post Image",
+//                                            modifier = Modifier.fillMaxSize(),
+//                                            contentScale = ContentScale.Crop,
+//                                            onSuccess = { imageLoadState = ImageLoadState.Success },
+//                                            onError = { imageLoadState = ImageLoadState.Error }
+//                                        )
+//                                    }
+//
+//                                    is ImageLoadState.Error -> {
+//                                        // Show gray placeholder with icon
+//                                        Column(
+//                                            horizontalAlignment = Alignment.CenterHorizontally,
+//                                            verticalArrangement = Arrangement.Center
+//                                        ) {
+//                                            Icon(
+//                                                painter = painterResource(id = R.drawable.ic_cross),
+//                                                contentDescription = "Failed to load",
+//                                                tint = Color.Gray,
+//                                                modifier = Modifier.size(48.dp)
+//                                            )
+//                                            Spacer(modifier = Modifier.height(8.dp))
+//                                            Text(
+//                                                text = "Unable to load media",
+//                                                fontSize = 12.sp,
+//                                                color = Color.Gray
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//
+//                        if (index < post.media.size - 1) {
+//                            Spacer(modifier = Modifier.height(8.dp))
+//                        }
+//                    }
+//                }
+//
+////                Spacer(modifier = Modifier.height(12.dp))
+//
+//                // Likes and Comments count
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        text = if (post.likes > 0) "${post.likes} likes" else "",
+//                        fontSize = 12.sp,
+//                        color = Color.Gray
+//                    )
+//                    Text(
+//                        text = if (post.comments > 0) "${post.comments} Comments" else "",
+//                        fontSize = 12.sp,
+//                        color = Color.Gray
+//                    )
+//                }
+//
+////                Spacer(modifier = Modifier.height(12.dp))
+//
+//                // Action buttons
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    LikeButton(
+//                        post = post,
+//                        text = "Like",
+//                        onClick = { onLikeClick(post.id) }
+//                    )
+//
+//                    // Updated ActionButton calls
+//                    ActionButton(
+//                        iconRes = R.drawable.ic_comment,
+//                        text = "Comment",
+//                        onClick = { onCommentClick(post) }
+//                    )
+//                    ActionButton(
+//                        iconRes = R.drawable.ic_share,
+//                        text = "Share",
+//                        onClick = { onShareClick(post) }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
+
+
+
+
 
 // Improved video URL detection function
 fun isVideoUrl(url: String): Boolean {
@@ -1407,33 +2164,6 @@ fun extractLinksFromText(text: String): List<String> {
     return urlPattern.findAll(text).map { it.value }.toList()
 }
 
-// Alternative regex pattern that's more comprehensive
-fun extractLinksFromTextAdvanced(text: String): List<String> {
-    val patterns = listOf(
-        // HTTP/HTTPS URLs
-        """https?://[^\s<>"{}|\\^`\[\]]+""",
-        // www URLs
-        """www\.[^\s<>"{}|\\^`\[\]]+""",
-        // Domain.com URLs
-        """[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}"""
-    )
-
-    val allLinks = mutableSetOf<String>()
-
-    patterns.forEach { pattern ->
-        val regex = Regex(pattern)
-        regex.findAll(text).forEach { match ->
-            var link = match.value.trim()
-            // Add protocol if missing
-            if (!link.startsWith("http://") && !link.startsWith("https://")) {
-                link = "https://$link"
-            }
-            allLinks.add(link)
-        }
-    }
-
-    return allLinks.toList()
-}
 
 
 @Composable
@@ -1473,48 +2203,7 @@ fun IconButton(
 }
 
 
-@Composable
-fun HeartIcon(
-    isLiked: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
-) {
-    val gradientBrush = Brush.linearGradient(
-        colors = listOf(Color(0xCC7921A4), Color(0xFFD6559D)),
-        start = Offset(0f, 0f),
-        end = Offset(100f, 100f)
-    )
 
-    if (isLiked) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_heart_filled),
-            contentDescription = "Unlike",
-            tint = Color.Unspecified,
-            modifier = modifier
-                .size(18.dp)
-                .graphicsLayer {
-                    compositingStrategy = CompositingStrategy.Offscreen
-                }
-                .drawWithContent {
-                    drawContent()
-                    drawRect(
-                        brush = gradientBrush,
-                        blendMode = BlendMode.SrcIn
-                    )
-                }
-                .clickable { onClick() }
-        )
-    } else {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_heart),
-            contentDescription = "Like",
-            tint = Color.Gray,
-            modifier = modifier
-                .size(18.dp)
-                .clickable { onClick() }
-        )
-    }
-}
 
 @Composable
 fun LikeButton(
@@ -1582,228 +2271,6 @@ fun ActionButton(
 }
 
 
-// Usage example for Instagram-like feed
-@Composable
-fun VideoFeedItem(
-    videoUrl: String,
-    isVisible: Boolean = true,
-    onLike: () -> Unit = {},
-    onComment: () -> Unit = {},
-    onShare: () -> Unit = {}
-) {
-    var isMuted by remember { mutableStateOf(true) }
-    var isLiked by remember { mutableStateOf(false) }
-
-    VideoPlayer(
-        videoUrl = videoUrl,
-        autoPlay = isVisible,
-        isMuted = isMuted,
-        onMuteToggle = { isMuted = it },
-        onDoubleTap = {
-            isLiked = true
-            onLike()
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(9f / 16f) // Instagram story/reel ratio
-    )
-}
-
-// Helper function to determine if URL is a video
-//private fun isVideoUrl(url: String): Boolean {
-//    val videoExtensions = listOf("mp4", "avi", "mov", "mkv", "3gp", "webm", "m4v", "wmv", "flv")
-//    val extension = url.substringAfterLast('.', "").lowercase()
-//    return videoExtensions.contains(extension)
-//}
-
-
-@Composable
-fun ShareBottomSheetContent(
-    post: Post,
-    context: Context,
-    onDismiss: () -> Unit
-) {
-    var searchQuery by remember { mutableStateOf("") }
-
-    // Mock contact data - replace with actual contact data
-    val contacts = remember {
-        listOf(
-            Contact("Nisha___119", R.drawable.ic_profile1),
-            Contact("Nisha___119", R.drawable.ic_profile1),
-            Contact("Nisha___119", R.drawable.ic_profile1),
-            Contact("Nisha___119", R.drawable.ic_profile1),
-            Contact("Nisha___119", R.drawable.ic_profile1),
-            Contact("Nisha___119", R.drawable.ic_profile1)
-        )
-    }
-
-    val filteredContacts = remember(searchQuery) {
-        if (searchQuery.isEmpty()) {
-            contacts
-        } else {
-            contacts.filter { it.name.contains(searchQuery, ignoreCase = true) }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(16.dp)
-    ) {
-        // Handle bar
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(40.dp)
-                    .height(4.dp)
-                    .background(
-                        Color.Gray.copy(alpha = 0.3f),
-                        RoundedCornerShape(2.dp)
-                    )
-            )
-        }
-
-        // Title
-        Text(
-            text = "Share",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        // Search Bar
-        TextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = { Text("Search", color = Color.Gray) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = Color.Gray
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color(0xFFF5F5F5),
-                unfocusedContainerColor = Color(0xFFF5F5F5)
-            ),
-            singleLine = true
-        )
-
-        // Contacts Grid
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(bottom = 16.dp)
-        ) {
-            items(filteredContacts) { contact ->
-                ContactItem(
-                    contact = contact,
-                    onContactClick = { selectedContact ->
-                        // Handle sharing to specific contact
-                        shareToContact(context, post, selectedContact.name)
-                        onDismiss()
-                    }
-                )
-            }
-        }
-
-        // External Sharing Options
-        LazyRow(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp)
-        ) {
-            item {
-                ExternalShareOption(
-                    icon = R.drawable.ic_whatsapp, // You'll need to add this drawable
-                    label = "WhatsApp",
-                    backgroundColor = Color(0xFF25D366),
-                    onClick = {
-                        shareToWhatsApp(context, post)
-                        onDismiss()
-                    }
-                )
-            }
-            item { Spacer(modifier = Modifier.width(24.dp)) }
-            item {
-                ExternalShareOption(
-                    icon = R.drawable.ic_gmail, // You'll need to add this drawable
-                    label = "Mail",
-                    backgroundColor = Color(0xFFEA4335),
-                    onClick = {
-                        shareToEmail(context, post)
-                        onDismiss()
-                    }
-                )
-            }
-            item { Spacer(modifier = Modifier.width(24.dp)) }
-            item {
-                ExternalShareOption(
-                    icon = Icons.Default.Share,
-                    label = "Share",
-                    backgroundColor = Color.Gray,
-                    onClick = {
-                        shareToOtherApps(context, post)
-                        onDismiss()
-                    }
-                )
-            }
-            item { Spacer(modifier = Modifier.width(24.dp)) }
-            item {
-                ExternalShareOption(
-                    icon = Icons.Default.Link,
-                    label = "Copy link",
-                    backgroundColor = Color.Gray,
-                    onClick = {
-                        copyLinkToClipboard(context, post)
-                        onDismiss()
-                    }
-                )
-            }
-        }
-
-        // Page indicators
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(4) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            if (index == 0) Color(0xFF8B5CF6) else Color.Gray.copy(alpha = 0.3f),
-                            CircleShape
-                        )
-                )
-                if (index < 3) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun ContactItem(
@@ -2365,117 +2832,6 @@ fun CommentItem(
     }
 }
 
-
-@Composable
-fun GoodMorningNotification(
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .wrapContentWidth()
-            .widthIn(max = 220.dp)
-            .shadow(8.dp, RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .wrapContentWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Good morning ❤️".let { text ->
-                        if (text.length > 16) {
-                            text.take(13) + "..."
-                        } else {
-                            text
-                        }
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black,
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Profile image
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(
-                            color = Color.Gray,
-                            shape = CircleShape
-                        )
-                ) {
-                    // You can replace this with actual profile image
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_profile1), // Replace with actual profile image
-                        contentDescription = "Profile",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
-        }
-
-        // Action buttons row
-        Row(
-            modifier = Modifier
-                .wrapContentWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Reply button
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { /* Handle reply */ }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_reply), // Replace with reply icon
-                    contentDescription = "Reply",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Reply",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-
-            // Share button
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { /* Handle share */ }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_share), // Replace with share icon
-                    contentDescription = "Share",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Share",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-        }
-    }
-}
 
 
 @Composable
@@ -3213,6 +3569,420 @@ fun AttachmentButton(
         )
     }
 }
+
+
+
+// Alternative regex pattern that's more comprehensive
+fun extractLinksFromTextAdvanced(text: String): List<String> {
+    val patterns = listOf(
+        // HTTP/HTTPS URLs
+        """https?://[^\s<>"{}|\\^`\[\]]+""",
+        // www URLs
+        """www\.[^\s<>"{}|\\^`\[\]]+""",
+        // Domain.com URLs
+        """[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}"""
+    )
+
+    val allLinks = mutableSetOf<String>()
+
+    patterns.forEach { pattern ->
+        val regex = Regex(pattern)
+        regex.findAll(text).forEach { match ->
+            var link = match.value.trim()
+            // Add protocol if missing
+            if (!link.startsWith("http://") && !link.startsWith("https://")) {
+                link = "https://$link"
+            }
+            allLinks.add(link)
+        }
+    }
+
+    return allLinks.toList()
+}
+
+
+@Composable
+fun HeartIcon(
+    isLiked: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    val gradientBrush = Brush.linearGradient(
+        colors = listOf(Color(0xCC7921A4), Color(0xFFD6559D)),
+        start = Offset(0f, 0f),
+        end = Offset(100f, 100f)
+    )
+
+    if (isLiked) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_heart_filled),
+            contentDescription = "Unlike",
+            tint = Color.Unspecified,
+            modifier = modifier
+                .size(18.dp)
+                .graphicsLayer {
+                    compositingStrategy = CompositingStrategy.Offscreen
+                }
+                .drawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = gradientBrush,
+                        blendMode = BlendMode.SrcIn
+                    )
+                }
+                .clickable { onClick() }
+        )
+    } else {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_heart),
+            contentDescription = "Like",
+            tint = Color.Gray,
+            modifier = modifier
+                .size(18.dp)
+                .clickable { onClick() }
+        )
+    }
+}
+
+
+// Usage example for Instagram-like feed
+@Composable
+fun VideoFeedItem(
+    videoUrl: String,
+    isVisible: Boolean = true,
+    onLike: () -> Unit = {},
+    onComment: () -> Unit = {},
+    onShare: () -> Unit = {}
+) {
+    var isMuted by remember { mutableStateOf(true) }
+    var isLiked by remember { mutableStateOf(false) }
+
+    VideoPlayer(
+        videoUrl = videoUrl,
+        autoPlay = isVisible,
+        isMuted = isMuted,
+        onMuteToggle = { isMuted = it },
+        onDoubleTap = {
+            isLiked = true
+            onLike()
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(9f / 16f) // Instagram story/reel ratio
+    )
+}
+
+// Helper function to determine if URL is a video
+//private fun isVideoUrl(url: String): Boolean {
+//    val videoExtensions = listOf("mp4", "avi", "mov", "mkv", "3gp", "webm", "m4v", "wmv", "flv")
+//    val extension = url.substringAfterLast('.', "").lowercase()
+//    return videoExtensions.contains(extension)
+//}
+
+
+@Composable
+fun ShareBottomSheetContent(
+    post: Post,
+    context: Context,
+    onDismiss: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Mock contact data - replace with actual contact data
+    val contacts = remember {
+        listOf(
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1),
+            Contact("Nisha___119", R.drawable.ic_profile1)
+        )
+    }
+
+    val filteredContacts = remember(searchQuery) {
+        if (searchQuery.isEmpty()) {
+            contacts
+        } else {
+            contacts.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(16.dp)
+    ) {
+        // Handle bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(4.dp)
+                    .background(
+                        Color.Gray.copy(alpha = 0.3f),
+                        RoundedCornerShape(2.dp)
+                    )
+            )
+        }
+
+        // Title
+        Text(
+            text = "Share",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Search Bar
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search", color = Color.Gray) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.Gray
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color(0xFFF5F5F5),
+                unfocusedContainerColor = Color(0xFFF5F5F5)
+            ),
+            singleLine = true
+        )
+
+        // Contacts Grid
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(bottom = 16.dp)
+        ) {
+            items(filteredContacts) { contact ->
+                ContactItem(
+                    contact = contact,
+                    onContactClick = { selectedContact ->
+                        // Handle sharing to specific contact
+                        shareToContact(context, post, selectedContact.name)
+                        onDismiss()
+                    }
+                )
+            }
+        }
+
+        // External Sharing Options
+        LazyRow(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        ) {
+            item {
+                ExternalShareOption(
+                    icon = R.drawable.ic_whatsapp, // You'll need to add this drawable
+                    label = "WhatsApp",
+                    backgroundColor = Color(0xFF25D366),
+                    onClick = {
+                        shareToWhatsApp(context, post)
+                        onDismiss()
+                    }
+                )
+            }
+            item { Spacer(modifier = Modifier.width(24.dp)) }
+            item {
+                ExternalShareOption(
+                    icon = R.drawable.ic_gmail, // You'll need to add this drawable
+                    label = "Mail",
+                    backgroundColor = Color(0xFFEA4335),
+                    onClick = {
+                        shareToEmail(context, post)
+                        onDismiss()
+                    }
+                )
+            }
+            item { Spacer(modifier = Modifier.width(24.dp)) }
+            item {
+                ExternalShareOption(
+                    icon = Icons.Default.Share,
+                    label = "Share",
+                    backgroundColor = Color.Gray,
+                    onClick = {
+                        shareToOtherApps(context, post)
+                        onDismiss()
+                    }
+                )
+            }
+            item { Spacer(modifier = Modifier.width(24.dp)) }
+            item {
+                ExternalShareOption(
+                    icon = Icons.Default.Link,
+                    label = "Copy link",
+                    backgroundColor = Color.Gray,
+                    onClick = {
+                        copyLinkToClipboard(context, post)
+                        onDismiss()
+                    }
+                )
+            }
+        }
+
+        // Page indicators
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(4) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            if (index == 0) Color(0xFF8B5CF6) else Color.Gray.copy(alpha = 0.3f),
+                            CircleShape
+                        )
+                )
+                if (index < 3) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+@Composable
+fun GoodMorningNotification(
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .wrapContentWidth()
+            .widthIn(max = 220.dp)
+            .shadow(8.dp, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Good morning ❤️".let { text ->
+                        if (text.length > 16) {
+                            text.take(13) + "..."
+                        } else {
+                            text
+                        }
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Profile image
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = Color.Gray,
+                            shape = CircleShape
+                        )
+                ) {
+                    // You can replace this with actual profile image
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_profile1), // Replace with actual profile image
+                        contentDescription = "Profile",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
+
+        // Action buttons row
+        Row(
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Reply button
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { /* Handle reply */ }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_reply), // Replace with reply icon
+                    contentDescription = "Reply",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Reply",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+
+            // Share button
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { /* Handle share */ }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_share), // Replace with share icon
+                    contentDescription = "Share",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Share",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        }
+    }
+}
+
 
 
 /*

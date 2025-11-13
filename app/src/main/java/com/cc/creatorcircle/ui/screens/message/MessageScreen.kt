@@ -72,7 +72,8 @@ fun MessageScreen(
     val messageDeleteError by viewModel.messageDeleteError.collectAsState()
 
     // Get current user ID from token
-    val currentotherUserId = remember { tokenManager.getUserId()?.toIntOrNull() }
+//    val currentotherUserId = remember { tokenManager.getUserId()?.toIntOrNull() }
+    val currentotherUserId = remember { tokenManager.getUserId() }
 
     // Fetch conversation on initial load
     LaunchedEffect(otherUserId) {

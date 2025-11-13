@@ -24,6 +24,7 @@ import com.cc.creatorcircle.data.models.CreateChatSessionResponse
 import com.cc.creatorcircle.data.models.DeleteChatProfileResponse
 import com.cc.creatorcircle.data.models.DeleteChatSessionResponse
 import com.cc.creatorcircle.data.models.DeleteMessageResponse
+import com.cc.creatorcircle.data.models.DeletePostResponse
 import com.cc.creatorcircle.data.models.InfluencerFilterRequest
 import com.cc.creatorcircle.data.models.Influencers
 import com.cc.creatorcircle.data.models.InfluencersResponse
@@ -444,5 +445,23 @@ interface ApiService {
         @Path("sessionId") sessionId: Int,
         @Header("Authorization") token: String
     ): Response<DeleteChatSessionResponse>
+
+    @GET("posts/user_posts")
+    suspend fun getUserPosts(
+        @Query("target_user_id") targetUserId: Int,
+        @Header("Authorization") token: String
+    ): Response<PostsResponse>
+
+
+
+    @DELETE("posts/{postId}")
+    suspend fun deletePost(
+        @Path("postId") postId: String,
+        @Header("Authorization") token: String
+    ): Response<DeletePostResponse>
+
+
+
+
 
 }

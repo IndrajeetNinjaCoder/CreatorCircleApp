@@ -783,7 +783,7 @@ fun MentorSection(
 //                            GradientButton("Provide Guidance") {
 //                                navController.navigate(Screen.MySessionScreen.route)
 //                            }
-                            GradientIconButton("Guidance", Icons.Outlined.Edit, modifier = Modifier.weight(1f)) {
+                            GradientIconButton("Guidance", R.drawable.ic_edit, modifier = Modifier.weight(1f)) {
                                 navController.navigate(Screen.MySessionScreen.route)
                             }
                         }

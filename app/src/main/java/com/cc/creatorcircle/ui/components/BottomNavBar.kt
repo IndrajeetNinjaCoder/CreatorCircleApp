@@ -167,7 +167,8 @@ fun BottomNavBar(
                 userProfilePic = userProfile?.profile_pic,
                 onClick = {
                     if (currentRoute != Screen.ProfileWeb.route) {
-                        navController.navigate(Screen.ProfileWeb.route) {
+//                        navController.navigate(Screen.ProfileWeb.route) {
+                        navController.navigate(Screen.ProfileScreen.route) {
                             popUpTo(navController.graph.startDestinationId)
                             launchSingleTop = true
                         }

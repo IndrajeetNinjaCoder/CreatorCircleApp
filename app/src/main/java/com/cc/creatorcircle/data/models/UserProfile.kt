@@ -49,19 +49,3 @@ data class UserInfo(
     val connection_status: String?,
     val connection_id: Int?
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
