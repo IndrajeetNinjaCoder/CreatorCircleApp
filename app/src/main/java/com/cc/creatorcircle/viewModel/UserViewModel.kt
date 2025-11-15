@@ -27,6 +27,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
 import com.cc.creatorcircle.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+
+
 
 sealed class UserUpdateState {
     object Idle : UserUpdateState()
@@ -106,6 +116,148 @@ class UserViewModel(private val context: Context) : ViewModel() {
     }
 
     // Updated method with structured data support
+//    fun updateUser(
+//        fullName: String? = null,
+//        password: String? = null,
+//        mobileNumber: String? = null,
+//        platformFollowers: PlatformFollowers? = null,
+//        username: String? = null,
+//        socialMediaLinks: SocialMediaLinks? = null,
+//        onboardingStatus: Boolean? = null,
+//        categories: List<String>? = null,
+//        bio: String? = null,
+//        age: Int? = null
+//    ) {
+//        viewModelScope.launch {
+//            _updateState.value = UserUpdateState.Loading
+//
+//            // Convert categories list to JSON string
+//            val categoriesJson = categories?.takeIf { it.isNotEmpty() }?.let {
+//                gson.toJson(it)
+//            }
+//
+//            val updateRequest = UserUpdateRequest(
+//                fullName = fullName?.takeIf { it.isNotBlank() },
+//                password = password?.takeIf { it.isNotBlank() },
+//                mobileNumber = mobileNumber?.takeIf { it.isNotBlank() },
+//                platformFollowers = platformFollowers,
+//                username = username?.takeIf { it.isNotBlank() },
+//                socialMediaLinks = socialMediaLinks,
+//                onboardingStatus = onboardingStatus,
+//                categories = categoriesJson,
+//                bio = bio?.takeIf { it.isNotBlank() },
+//                age = age?.takeIf { it > 0 },
+//                profilePicFile = _selectedProfilePic.value
+//            )
+//
+//            repository.updateUser(updateRequest)
+//                .onSuccess { response ->
+//                    _updateState.value = UserUpdateState.Success(response)
+//                    // Refresh user profile after successful update
+//                    fetchUserProfile()
+//                    // Clear selected profile pic after successful update
+//                    _selectedProfilePic.value = null
+//                }
+//                .onFailure { exception ->
+//                    _updateState.value = UserUpdateState.Error(
+//                        exception.message ?: "Failed to update user"
+//                    )
+//                }
+//        }
+//    }
+//
+
+
+//    suspend fun updateUser(updateRequest: UserUpdateRequest): Result<SocialMediaResponse> {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                // Get token from TokenManager
+//                val token = tokenManager.getToken()
+//                if (token.isEmpty()) {
+//                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
+//                }
+//
+//                // Convert nested objects to JSON strings using Gson
+//                val platformFollowersJson = updateRequest.platformFollowers?.let {
+//                    gson.toJson(it)
+//                }
+//                val socialMediaLinksJson = updateRequest.socialMediaLinks?.let {
+//                    gson.toJson(it)
+//                }
+//
+//                // Create RequestBody instances for text fields
+//                val fullNameBody = updateRequest.fullName?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val passwordBody = updateRequest.password?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val mobileNumberBody = updateRequest.mobileNumber?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val platformFollowersBody = platformFollowersJson?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val usernameBody = updateRequest.username?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val socialMediaLinksBody = socialMediaLinksJson?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val onboardingStatusBody = updateRequest.onboardingStatus?.let {
+//                    it.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val categoriesBody = updateRequest.categories?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val bioBody = updateRequest.bio?.let {
+//                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//                val ageBody = updateRequest.age?.let {
+//                    it.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+//                }
+//
+//                // Create MultipartBody.Part for profile picture if file exists
+//                val profilePicPart = updateRequest.profilePicFile?.let { file ->
+//                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+//                    MultipartBody.Part.createFormData("profile_pic", file.name, requestFile)
+//                }
+//
+//                // Call API with converted data
+//                val response = apiService.updateUser(
+//                    token = "Bearer $token",
+//                    fullName = fullNameBody,
+//                    password = passwordBody,
+//                    mobileNumber = mobileNumberBody,
+//                    platformFollowers = platformFollowersBody,
+//                    username = usernameBody,
+//                    socialMediaLinks = socialMediaLinksBody,
+//                    onboardingStatus = onboardingStatusBody,
+//                    categories = categoriesBody,
+//                    bio = bioBody,
+//                    age = ageBody,
+//                    profile_pic = profilePicPart
+//                )
+//
+//                if (response.isSuccessful) {
+//                    response.body()?.let { updateResponse ->
+//                        Log.d("UserRepository", "User updated successfully")
+//                        Result.success(updateResponse)
+//                    } ?: Result.failure(Exception("Empty response body"))
+//                } else {
+//                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+//                    Log.e("UserRepository", "API Error: ${response.code()} - $errorMessage")
+//                    Result.failure(Exception("Failed to update user: ${response.code()} - $errorMessage"))
+//                }
+//            } catch (e: Exception) {
+//                Log.e("UserRepository", "Exception in updateUser", e)
+//                Result.failure(e)
+//            }
+//        }
+//    }
+
+
+    // Updated method with structured data support
     fun updateUser(
         fullName: String? = null,
         password: String? = null,
@@ -155,6 +307,7 @@ class UserViewModel(private val context: Context) : ViewModel() {
                 }
         }
     }
+
 
     // Convenience method for updating social media followers
     fun updatePlatformFollowers(

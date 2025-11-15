@@ -233,23 +233,40 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<SocialMediaResponse>
 
-    @FormUrlEncoded
+//    @FormUrlEncoded
+//    @POST("user/update-user")
+//    suspend fun updateUser(
+//        @Header("Authorization") token: String,
+//        @Field("full_name") fullName: String? = null,
+//        @Field("password") password: String? = null,
+//        @Field("mobile_number") mobileNumber: String? = null,
+//        @Field("platform_followers") platformFollowers: String? = null,
+//        @Field("username") username: String? = null,
+//        @Field("social_media_links") socialMediaLinks: String? = null,
+//        @Field("onboardingStatus") onboardingStatus: Boolean? = false,
+//        @Field("categories") categories: String? = null,
+//        @Field("bio") bio: String? = null,
+//        @Field("age") age: Int? = null
+//    ): Response<SocialMediaResponse>
+//
+
+
+    @Multipart
     @POST("user/update-user")
     suspend fun updateUser(
         @Header("Authorization") token: String,
-        @Field("full_name") fullName: String? = null,
-        @Field("password") password: String? = null,
-        @Field("mobile_number") mobileNumber: String? = null,
-        @Field("platform_followers") platformFollowers: String? = null,
-        @Field("username") username: String? = null,
-        @Field("social_media_links") socialMediaLinks: String? = null,
-        @Field("onboardingStatus") onboardingStatus: Boolean? = false,
-        @Field("categories") categories: String? = null,
-        @Field("bio") bio: String? = null,
-        @Field("age") age: Int? = null
+        @Part("full_name") fullName: RequestBody? = null,
+        @Part("password") password: RequestBody? = null,
+        @Part("mobile_number") mobileNumber: RequestBody? = null,
+        @Part("platform_followers") platformFollowers: RequestBody? = null,
+        @Part("username") username: RequestBody? = null,
+        @Part("social_media_links") socialMediaLinks: RequestBody? = null,
+        @Part("onboardingStatus") onboardingStatus: RequestBody? = null,
+        @Part("categories") categories: RequestBody? = null,
+        @Part("bio") bio: RequestBody? = null,
+        @Part("age") age: RequestBody? = null,
+        @Part profile_pic: MultipartBody.Part? = null  // For file upload
     ): Response<SocialMediaResponse>
-
-
 
 
     // Chat API endpoints

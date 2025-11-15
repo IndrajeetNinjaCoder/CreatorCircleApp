@@ -32,6 +32,11 @@ sealed class Screen(val route: String) {
 
     object YourProfileScreen : Screen("yourprofile")
 
+//    object YourProfileScreen : Screen("yourprofile/{userId}") {
+//        fun createRoute(userId: Int) = "yourprofile/$userId"
+//    }
+
+
 
 
     object NotificationsWeb : Screen("notifications")

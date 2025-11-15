@@ -6,10 +6,16 @@ import com.cc.creatorcircle.data.api.RetrofitInstance
 import com.cc.creatorcircle.data.models.SocialMediaResponse
 import com.cc.creatorcircle.data.models.UserProfile
 import com.cc.creatorcircle.utils.TokenManager
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.io.File
+
 
 // Data classes for nested structures
 data class PlatformFollower(
@@ -56,6 +62,7 @@ class UserRepository(private val context: Context) {
 
     private val apiService = RetrofitInstance.api
     private val tokenManager = TokenManager(context)
+    private val gson = Gson()  // Add this line
 
     suspend fun getUserProfile(): Response<UserProfile> {
         val token = tokenManager.getToken()
@@ -66,6 +73,56 @@ class UserRepository(private val context: Context) {
         }
     }
 
+//    suspend fun updateUser(updateRequest: UserUpdateRequest): Result<SocialMediaResponse> {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                // Get token from TokenManager
+//                val token = tokenManager.getToken()
+//                if (token.isEmpty()) {
+//                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
+//                }
+//
+//                // Convert nested objects to JSON strings if they exist
+//                val platformFollowersJson = updateRequest.platformFollowers?.let {
+//                    convertPlatformFollowersToJson(it)
+//                }
+//                val socialMediaLinksJson = updateRequest.socialMediaLinks?.let {
+//                    convertSocialMediaLinksToJson(it)
+//                }
+//
+//                // Call API with converted JSON strings
+//                val response = apiService.updateUser(
+//                    token = "Bearer $token",
+//                    fullName = updateRequest.fullName,
+//                    password = updateRequest.password,
+//                    mobileNumber = updateRequest.mobileNumber,
+//                    platformFollowers = platformFollowersJson,
+//                    username = updateRequest.username,
+//                    socialMediaLinks = socialMediaLinksJson,
+//                    onboardingStatus = updateRequest.onboardingStatus,
+//                    categories = updateRequest.categories,
+//                    bio = updateRequest.bio,
+//                    age = updateRequest.age
+//                )
+//
+//                if (response.isSuccessful) {
+//                    response.body()?.let { updateResponse ->
+//                        Log.d("UserRepository", "User updated successfully")
+//                        Result.success(updateResponse)
+//                    } ?: Result.failure(Exception("Empty response body"))
+//                } else {
+//                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+//                    Log.e("UserRepository", "API Error: ${response.code()} - $errorMessage")
+//                    Result.failure(Exception("Failed to update user: ${response.code()} - $errorMessage"))
+//                }
+//            } catch (e: Exception) {
+//                Log.e("UserRepository", "Exception in updateUser", e)
+//                Result.failure(e)
+//            }
+//        }
+//    }
+
+
     suspend fun updateUser(updateRequest: UserUpdateRequest): Result<SocialMediaResponse> {
         return withContext(Dispatchers.IO) {
             try {
@@ -75,27 +132,66 @@ class UserRepository(private val context: Context) {
                     return@withContext Result.failure(Exception("Access token not found. Please log in again."))
                 }
 
-                // Convert nested objects to JSON strings if they exist
+                // Convert nested objects to JSON strings using Gson
                 val platformFollowersJson = updateRequest.platformFollowers?.let {
-                    convertPlatformFollowersToJson(it)
+                    gson.toJson(it)
                 }
                 val socialMediaLinksJson = updateRequest.socialMediaLinks?.let {
-                    convertSocialMediaLinksToJson(it)
+                    gson.toJson(it)
                 }
 
-                // Call API with converted JSON strings
+                // Create RequestBody instances for text fields
+                val fullNameBody = updateRequest.fullName?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val passwordBody = updateRequest.password?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val mobileNumberBody = updateRequest.mobileNumber?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val platformFollowersBody = platformFollowersJson?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val usernameBody = updateRequest.username?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val socialMediaLinksBody = socialMediaLinksJson?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val onboardingStatusBody = updateRequest.onboardingStatus?.let {
+                    it.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val categoriesBody = updateRequest.categories?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val bioBody = updateRequest.bio?.let {
+                    it.toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+                val ageBody = updateRequest.age?.let {
+                    it.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                }
+
+                // Create MultipartBody.Part for profile picture if file exists
+                val profilePicPart = updateRequest.profilePicFile?.let { file ->
+                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("profile_pic", file.name, requestFile)
+                }
+
+                // Call API with converted data
                 val response = apiService.updateUser(
                     token = "Bearer $token",
-                    fullName = updateRequest.fullName,
-                    password = updateRequest.password,
-                    mobileNumber = updateRequest.mobileNumber,
-                    platformFollowers = platformFollowersJson,
-                    username = updateRequest.username,
-                    socialMediaLinks = socialMediaLinksJson,
-                    onboardingStatus = updateRequest.onboardingStatus,
-                    categories = updateRequest.categories,
-                    bio = updateRequest.bio,
-                    age = updateRequest.age
+                    fullName = fullNameBody,
+                    password = passwordBody,
+                    mobileNumber = mobileNumberBody,
+                    platformFollowers = platformFollowersBody,
+                    username = usernameBody,
+                    socialMediaLinks = socialMediaLinksBody,
+                    onboardingStatus = onboardingStatusBody,
+                    categories = categoriesBody,
+                    bio = bioBody,
+                    age = ageBody,
+                    profile_pic = profilePicPart
                 )
 
                 if (response.isSuccessful) {
@@ -114,6 +210,9 @@ class UserRepository(private val context: Context) {
             }
         }
     }
+
+
+
 
     // Helper function to convert PlatformFollowers to JSON string
     private fun convertPlatformFollowersToJson(platformFollowers: PlatformFollowers): String {
