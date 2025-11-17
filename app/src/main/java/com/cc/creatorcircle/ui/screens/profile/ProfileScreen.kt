@@ -2,6 +2,7 @@
 
 package com.cc.creatorcircle.ui.screens.profile
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -52,6 +54,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +66,8 @@ import com.cc.creatorcircle.R
 import com.cc.creatorcircle.data.models.Post
 import com.cc.creatorcircle.data.models.PostDeletionState
 import com.cc.creatorcircle.ui.components.BottomNavBar
+import com.cc.creatorcircle.ui.components.CustomOutlinedButton
+import com.cc.creatorcircle.ui.components.GradientButton
 import com.cc.creatorcircle.ui.components.ShareBottomSheetContent
 import com.cc.creatorcircle.ui.navigation.Screen
 import com.cc.creatorcircle.ui.screens.home.CommentBottomSheetContent
@@ -69,14 +75,22 @@ import com.cc.creatorcircle.ui.screens.home.PostCardSection
 import com.cc.creatorcircle.viewModel.ConnectionViewModel
 import com.cc.creatorcircle.viewModel.PostsViewModel
 import com.cc.creatorcircle.viewModel.PostsViewModelFactory
+import com.cc.creatorcircle.viewModel.UserViewModel
+import com.cc.creatorcircle.viewModel.UserViewModelFactory
 
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavController) {
     val context = LocalContext.current
     val postsViewModel: PostsViewModel = viewModel(
         factory = PostsViewModelFactory(context)
+    )
+
+
+    val userViewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(context)
     )
 
     // Collect states from ViewModel
@@ -160,7 +174,8 @@ fun ProfileScreen(navController: NavController) {
                         postsViewModel = postsViewModel,
                         userPosts = currentUserPosts,
                         userPostsLoading = currentUserPostsLoading,
-                        userPostsError = currentUserPostsError
+                        userPostsError = currentUserPostsError,
+                        userViewModel = userViewModel
                     )
                 }
 
@@ -176,8 +191,9 @@ fun ProfileScreen(navController: NavController) {
             // Show Account Screen as overlay
             if (showAccountScreen) {
                 AccountScreen(
-                    onDismiss = { showAccountScreen = false },
-                    navController = navController
+                    navController = navController,
+                    userViewModel = userViewModel,
+                    onDismiss = { showAccountScreen = false }
                 )
             }
         }
@@ -194,7 +210,8 @@ fun ProfileContent(
     postsViewModel: PostsViewModel,
     userPosts: List<com.cc.creatorcircle.data.models.Post>,
     userPostsLoading: Boolean,
-    userPostsError: String?
+    userPostsError: String?,
+    userViewModel: UserViewModel
 ) {
     val context = LocalContext.current
 
@@ -773,11 +790,189 @@ fun ProfileContent(
 }
 
 
+//@Composable
+//fun AccountScreen(
+//    navController: NavController,
+//    userViewModel: UserViewModel,
+//    onDismiss: () -> Unit,
+//) {
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color(0xFFFAF8F8))
+//    ) {
+//        Column(
+//            modifier = Modifier.fillMaxSize()
+//        ) {
+//            // Top Bar with Back Arrow
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 16.dp, vertical = 16.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.ic_left_arrow),
+//                    contentDescription = "Back",
+//                    modifier = Modifier
+//                        .size(26.dp)
+//                        .clickable { onDismiss() },
+//                    tint = Color.Black
+//                )
+//                Spacer(modifier = Modifier.width(16.dp))
+//                Text(
+//                    text = "Account",
+//                    fontSize = 22.sp,
+//                    fontWeight = FontWeight.SemiBold,
+//                    color = Color.Black
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.height(32.dp))
+//
+//            // Menu Items
+//            AccountMenuItem(
+//                icon = R.drawable.ic_profile_icon,
+//                text = "Your profile",
+//                onClick = { navController.navigate(Screen.YourProfileScreen.route) }
+//            )
+//
+//            AccountMenuItem(
+//                icon = R.drawable.ic_edit,
+//                text = "Personal Information",
+//                onClick = { navController.navigate(Screen.PersonalInfoScreen.route) }
+//            )
+//
+//            AccountMenuItem(
+//                icon = R.drawable.ic_lock,
+//                text = "Account privacy",
+//                onClick = { /* Navigate to privacy */ }
+//            )
+//
+//            AccountMenuItem(
+//                icon = R.drawable.ic_security,
+//                text = "Password & security",
+//                onClick = { /* Navigate to security */ }
+//            )
+//
+//            AccountMenuItem(
+//                icon = R.drawable.ic_block,
+//                text = "Blocked",
+//                onClick = { /* Navigate to blocked users */ }
+//            )
+//
+//            AccountMenuItem(
+//                icon = R.drawable.ic_info,
+//                text = "About",
+//                onClick = { /* Navigate to about */ }
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Logout Item (Different styling)
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable { /* Handle logout */ }
+//                    .padding(horizontal = 24.dp, vertical = 20.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.ic_logout),
+//                    contentDescription = "Logout",
+//                    modifier = Modifier.size(28.dp),
+//                    tint = Color(0xFFE53935)
+//                )
+//                Spacer(modifier = Modifier.width(20.dp))
+//                Text(
+//                    text = "Logout",
+//                    fontSize = 16.sp,
+//                    color = Color(0xFFE53935),
+//                    fontWeight = FontWeight.Medium
+//                )
+//            }
+//        }
+//    }
+//}
+
+
 @Composable
 fun AccountScreen(
+    navController: NavController,
+    userViewModel: UserViewModel,
     onDismiss: () -> Unit,
-    navController: NavController
 ) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // Logout Confirmation Dialog
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showLogoutDialog = false
+            },
+            title = {
+                Text(
+                    text = "Log out?",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Color.Black
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to log out?",
+                    fontSize = 14.sp,
+                    color = Color(0xFF666666)
+                )
+            },
+            buttons = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Cancel button on the left
+                    CustomOutlinedButton(
+                        "Cancel",
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = "Cancel logout"
+                            }
+                            .padding(end = 8.dp)
+                    ) {
+                        showLogoutDialog = false
+                    }
+
+                    GradientButton("Log out") {
+                        Log.d("LOGOUT", "Button clicked")
+                        showLogoutDialog = false
+                        Log.d("LOGOUT", "Dialog dismissed")
+
+                        // Simply call the ViewModel's logout method
+                        // The ViewModel will handle everything: API logout, Google sign-out, and local data clearing
+                        userViewModel.logout(performGoogleSignOut = true)
+
+                        // Navigate to login screen
+                        navController.navigate("login") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            backgroundColor = Color.White,
+            modifier = Modifier
+                .padding(bottom = 6.dp)
+                .semantics {
+                    contentDescription = "Logout confirmation dialog"
+                }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -822,32 +1017,32 @@ fun AccountScreen(
             AccountMenuItem(
                 icon = R.drawable.ic_edit,
                 text = "Personal Information",
-                onClick = { /* Navigate to personal info */ }
+                onClick = { navController.navigate(Screen.PersonalInfoScreen.route) }
             )
 
-            AccountMenuItem(
-                icon = R.drawable.ic_lock,
-                text = "Account privacy",
-                onClick = { /* Navigate to privacy */ }
-            )
+//            AccountMenuItem(
+//                icon = R.drawable.ic_lock,
+//                text = "Account privacy",
+//                onClick = { navController.navigate(Screen.YourProfileScreen.route) }
+//            )
 
             AccountMenuItem(
                 icon = R.drawable.ic_security,
                 text = "Password & security",
-                onClick = { /* Navigate to security */ }
+                onClick = { navController.navigate(Screen.PasswordSecurityScreen.route) }
             )
 
-            AccountMenuItem(
-                icon = R.drawable.ic_block,
-                text = "Blocked",
-                onClick = { /* Navigate to blocked users */ }
-            )
-
-            AccountMenuItem(
-                icon = R.drawable.ic_info,
-                text = "About",
-                onClick = { /* Navigate to about */ }
-            )
+//            AccountMenuItem(
+//                icon = R.drawable.ic_block,
+//                text = "Blocked",
+//                onClick = { /* Navigate to blocked users */ }
+//            )
+//
+//            AccountMenuItem(
+//                icon = R.drawable.ic_info,
+//                text = "About",
+//                onClick = { /* Navigate to about */ }
+//            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -855,7 +1050,9 @@ fun AccountScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { /* Handle logout */ }
+                    .clickable {
+                        showLogoutDialog = true
+                    }
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

@@ -32,6 +32,13 @@ sealed class Screen(val route: String) {
 
     object YourProfileScreen : Screen("yourprofile")
 
+    object PersonalInfoScreen : Screen("personalinfo")
+
+    object PasswordSecurityScreen : Screen("password_screen")
+
+
+
+
 //    object YourProfileScreen : Screen("yourprofile/{userId}") {
 //        fun createRoute(userId: Int) = "yourprofile/$userId"
 //    }
