@@ -86,3 +86,25 @@ sealed class PostDeletionState {
     data class Success(val response: DeletePostResponse) : PostDeletionState()
     data class Error(val message: String) : PostDeletionState()
 }
+
+
+
+// Models for update post
+data class UpdatePostResponse(
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: Post
+)
+
+data class UpdatePostRequest(
+    val content: String,
+    val existing_media_urls: List<String> = emptyList(),
+    val mediaFiles: List<File> = emptyList()
+)
+
+sealed class PostUpdateState {
+    object Idle : PostUpdateState()
+    object Loading : PostUpdateState()
+    data class Success(val response: UpdatePostResponse) : PostUpdateState()
+    data class Error(val message: String) : PostUpdateState()
+}

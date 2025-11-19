@@ -464,8 +464,8 @@ fun ProfileContent(
                             ProfileStat("${displayPosts.size}", "Posts")
                             Spacer(modifier = Modifier.width(20.dp))
                             ProfileStat("${profile.accepted_connections.count}", "Connection")
-                            Spacer(modifier = Modifier.width(20.dp))
-                            ProfileStat("${profile.following.count}", "Following")
+//                            Spacer(modifier = Modifier.width(20.dp))
+//                            ProfileStat("${profile.following.count}", "Following")
                         }
                     }
                 }
@@ -788,113 +788,6 @@ fun ProfileContent(
         }
     }
 }
-
-
-//@Composable
-//fun AccountScreen(
-//    navController: NavController,
-//    userViewModel: UserViewModel,
-//    onDismiss: () -> Unit,
-//) {
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(Color(0xFFFAF8F8))
-//    ) {
-//        Column(
-//            modifier = Modifier.fillMaxSize()
-//        ) {
-//            // Top Bar with Back Arrow
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(horizontal = 16.dp, vertical = 16.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.ic_left_arrow),
-//                    contentDescription = "Back",
-//                    modifier = Modifier
-//                        .size(26.dp)
-//                        .clickable { onDismiss() },
-//                    tint = Color.Black
-//                )
-//                Spacer(modifier = Modifier.width(16.dp))
-//                Text(
-//                    text = "Account",
-//                    fontSize = 22.sp,
-//                    fontWeight = FontWeight.SemiBold,
-//                    color = Color.Black
-//                )
-//            }
-//
-//            Spacer(modifier = Modifier.height(32.dp))
-//
-//            // Menu Items
-//            AccountMenuItem(
-//                icon = R.drawable.ic_profile_icon,
-//                text = "Your profile",
-//                onClick = { navController.navigate(Screen.YourProfileScreen.route) }
-//            )
-//
-//            AccountMenuItem(
-//                icon = R.drawable.ic_edit,
-//                text = "Personal Information",
-//                onClick = { navController.navigate(Screen.PersonalInfoScreen.route) }
-//            )
-//
-//            AccountMenuItem(
-//                icon = R.drawable.ic_lock,
-//                text = "Account privacy",
-//                onClick = { /* Navigate to privacy */ }
-//            )
-//
-//            AccountMenuItem(
-//                icon = R.drawable.ic_security,
-//                text = "Password & security",
-//                onClick = { /* Navigate to security */ }
-//            )
-//
-//            AccountMenuItem(
-//                icon = R.drawable.ic_block,
-//                text = "Blocked",
-//                onClick = { /* Navigate to blocked users */ }
-//            )
-//
-//            AccountMenuItem(
-//                icon = R.drawable.ic_info,
-//                text = "About",
-//                onClick = { /* Navigate to about */ }
-//            )
-//
-//            Spacer(modifier = Modifier.height(16.dp))
-//
-//            // Logout Item (Different styling)
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .clickable { /* Handle logout */ }
-//                    .padding(horizontal = 24.dp, vertical = 20.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.ic_logout),
-//                    contentDescription = "Logout",
-//                    modifier = Modifier.size(28.dp),
-//                    tint = Color(0xFFE53935)
-//                )
-//                Spacer(modifier = Modifier.width(20.dp))
-//                Text(
-//                    text = "Logout",
-//                    fontSize = 16.sp,
-//                    color = Color(0xFFE53935),
-//                    fontWeight = FontWeight.Medium
-//                )
-//            }
-//        }
-//    }
-//}
-
 
 @Composable
 fun AccountScreen(

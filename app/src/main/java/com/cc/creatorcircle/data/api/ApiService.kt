@@ -48,6 +48,7 @@ import com.cc.creatorcircle.data.models.SignUpResponse
 import com.cc.creatorcircle.data.models.SocialMediaResponse
 import com.cc.creatorcircle.data.models.UpdateMentorConfigurationRequest
 import com.cc.creatorcircle.data.models.UpdateMentorConfigurationResponse
+import com.cc.creatorcircle.data.models.UpdatePostResponse
 import com.cc.creatorcircle.data.models.UserDiscoveryResponse
 import com.cc.creatorcircle.data.models.UserProfile
 import com.cc.creatorcircle.data.repository.GoogleSignUpRequest
@@ -73,6 +74,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
+import retrofit2.http.PartMap
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -233,22 +235,6 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<SocialMediaResponse>
 
-//    @FormUrlEncoded
-//    @POST("user/update-user")
-//    suspend fun updateUser(
-//        @Header("Authorization") token: String,
-//        @Field("full_name") fullName: String? = null,
-//        @Field("password") password: String? = null,
-//        @Field("mobile_number") mobileNumber: String? = null,
-//        @Field("platform_followers") platformFollowers: String? = null,
-//        @Field("username") username: String? = null,
-//        @Field("social_media_links") socialMediaLinks: String? = null,
-//        @Field("onboardingStatus") onboardingStatus: Boolean? = false,
-//        @Field("categories") categories: String? = null,
-//        @Field("bio") bio: String? = null,
-//        @Field("age") age: Int? = null
-//    ): Response<SocialMediaResponse>
-//
 
 
     @Multipart
@@ -478,6 +464,47 @@ interface ApiService {
     ): Response<DeletePostResponse>
 
 
+//    @Multipart
+//    @PUT("posts/{post_id}")
+//    suspend fun updatePost(
+//        @Header("Authorization") authorization: String,
+//        @Path("post_id") postId: String,
+//        @Part("content") content: RequestBody,
+//        @Part("existing_media_urls") existingMediaUrls: List<RequestBody>? = null,
+//        @Part new_media_files: List<MultipartBody.Part>? = null
+//    ): Response<UpdatePostResponse>
+
+//    @Multipart
+//    @PUT("posts/{post_id}")
+//    suspend fun updatePost(
+//        @Header("Authorization") authorization: String,
+//        @Path("post_id") postId: String,
+//        @Part("content") content: RequestBody,
+//        @PartMap existingMediaUrls: Map<String, RequestBody>,
+//        @Part new_media_files: List<MultipartBody.Part>? = null
+//    ): Response<UpdatePostResponse>
+
+
+//    @Multipart
+//    @PUT("posts/{post_id}")
+//    suspend fun updatePost(
+//        @Header("Authorization") authorization: String,
+//        @Path("post_id") postId: String,
+//        @Part("content") content: RequestBody,
+//        @PartMap existingMediaUrls: Map<String, @JvmSuppressWildcards RequestBody>, // Add @JvmSuppressWildcards
+//        @Part new_media_files: List<MultipartBody.Part>? = null
+//    ): Response<UpdatePostResponse>
+
+
+    @Multipart
+    @PUT("posts/{post_id}")
+    suspend fun updatePost(
+        @Header("Authorization") authorization: String,
+        @Path("post_id") postId: String,
+        @Part("content") content: RequestBody,
+        @Part("existing_media_urls") existingMediaUrls: RequestBody?, // Send as JSON array string
+        @Part new_media_files: List<MultipartBody.Part>? = null
+    ): Response<UpdatePostResponse>
 
 
 

@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.cc.creatorcircle.data.models.PostCreationState
 import com.cc.creatorcircle.data.models.PostDeletionState
 import com.cc.creatorcircle.data.models.PostRequest
+import com.cc.creatorcircle.data.models.PostUpdateState
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
@@ -102,6 +103,18 @@ class PostsViewModel(private val context: Context) : ViewModel() {
     // Add these StateFlows with other state declarations
     private val _postDeletionState = MutableStateFlow<PostDeletionState>(PostDeletionState.Idle)
     val postDeletionState: StateFlow<PostDeletionState> = _postDeletionState.asStateFlow()
+
+
+    // StateFlow for post update
+    private val _postUpdateState = MutableStateFlow<PostUpdateState>(PostUpdateState.Idle)
+    val postUpdateState: StateFlow<PostUpdateState> = _postUpdateState.asStateFlow()
+
+    // StateFlow for media management during update
+    private val _selectedUpdateMediaFiles = MutableStateFlow<List<File>>(emptyList())
+    val selectedUpdateMediaFiles: StateFlow<List<File>> = _selectedUpdateMediaFiles.asStateFlow()
+
+    private val _existingMediaUrls = MutableStateFlow<List<String>>(emptyList())
+    val existingMediaUrls: StateFlow<List<String>> = _existingMediaUrls.asStateFlow()
 
 
 
@@ -665,15 +678,6 @@ class PostsViewModel(private val context: Context) : ViewModel() {
 
 
 
-
-
-
-
-
-
-
-
-
     // Add this function to your PostsViewModel class
 
     /**
@@ -690,10 +694,121 @@ class PostsViewModel(private val context: Context) : ViewModel() {
 
 
 
+    /**
+     * Update an existing post
+     */
+    fun updatePost(postId: String, content: String) {
+        if (content.isBlank()) {
+            _postUpdateState.value = PostUpdateState.Error("Post content cannot be empty")
+            return
+        }
+
+        viewModelScope.launch {
+            _postUpdateState.value = PostUpdateState.Loading
+
+            repository.updatePost(
+                postId = postId,
+                content = content.trim(),
+                existingMediaUrls = _existingMediaUrls.value,
+                newMediaFiles = _selectedUpdateMediaFiles.value
+            )
+                .onSuccess { response ->
+                    _postUpdateState.value = PostUpdateState.Success(response)
+
+                    // Update the post in the main posts list
+                    _posts.value = _posts.value.map { post ->
+                        if (post.id == postId) response.data else post
+                    }
+
+                    // Update the post in user posts list if it exists
+                    val currentUserProfile = _userProfile.value
+                    currentUserProfile?.let { profile ->
+                        val userId = profile.id
+                        _userPosts.value[userId]?.let { userPostsList ->
+                            val updatedUserPosts = userPostsList.map { post ->
+                                if (post.id == postId) response.data else post
+                            }
+                            _userPosts.value = _userPosts.value.toMutableMap().apply {
+                                put(userId, updatedUserPosts)
+                            }
+                        }
+                    }
+
+                    // Clear update media after successful update
+                    clearUpdateMedia()
+                }
+                .onFailure { exception ->
+                    _postUpdateState.value = PostUpdateState.Error(
+                        exception.message ?: "Failed to update post"
+                    )
+                }
+        }
+    }
+
+    /**
+     * Initialize media for editing a post
+     */
+    fun initializePostForEdit(existingMedia: List<String>) {
+        _existingMediaUrls.value = existingMedia
+        _selectedUpdateMediaFiles.value = emptyList()
+    }
+
+    /**
+     * Add new media file for update
+     */
+    fun addUpdateMediaFile(file: File) {
+        val currentFiles = _selectedUpdateMediaFiles.value.toMutableList()
+        val totalMediaCount = _existingMediaUrls.value.size + currentFiles.size
+
+        if (!currentFiles.contains(file) && totalMediaCount < 5) { // Limit to 5 total files
+            currentFiles.add(file)
+            _selectedUpdateMediaFiles.value = currentFiles
+        }
+    }
+
+    /**
+     * Remove new media file from update
+     */
+    fun removeUpdateMediaFile(file: File) {
+        val currentFiles = _selectedUpdateMediaFiles.value.toMutableList()
+        currentFiles.remove(file)
+        _selectedUpdateMediaFiles.value = currentFiles
+    }
+
+    /**
+     * Remove existing media URL
+     */
+    fun removeExistingMediaUrl(url: String) {
+        val currentUrls = _existingMediaUrls.value.toMutableList()
+        currentUrls.remove(url)
+        _existingMediaUrls.value = currentUrls
+    }
+
+    /**
+     * Clear all update media
+     */
+    fun clearUpdateMedia() {
+        _selectedUpdateMediaFiles.value = emptyList()
+        _existingMediaUrls.value = emptyList()
+    }
+
+    /**
+     * Clear update error state
+     */
+    fun clearUpdateError() {
+        if (_postUpdateState.value is PostUpdateState.Error) {
+            _postUpdateState.value = PostUpdateState.Idle
+        }
+    }
+
+    /**
+     * Reset update state
+     */
+    fun resetUpdateState() {
+        _postUpdateState.value = PostUpdateState.Idle
+        clearUpdateMedia()
+    }
+
 
 
 }
-
-
-
-
