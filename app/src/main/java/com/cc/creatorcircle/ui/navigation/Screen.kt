@@ -36,6 +36,8 @@ sealed class Screen(val route: String) {
 
     object PasswordSecurityScreen : Screen("password_screen")
 
+    object AccountsScreen : Screen("Accounts_screen")
+
 
 
 

@@ -25,6 +25,7 @@ data class PlatformFollower(
 
 data class SocialMediaLink(
     val link: String,
+    val username: String = "",
     val is_primary: Boolean = true
 )
 

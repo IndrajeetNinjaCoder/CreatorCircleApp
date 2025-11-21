@@ -26,6 +26,7 @@ import com.cc.creatorcircle.ui.screens.message.MessageScreen
 import com.cc.creatorcircle.ui.screens.message.MessageWeb
 import com.cc.creatorcircle.ui.screens.notification.NotificationsWeb
 import com.cc.creatorcircle.ui.screens.onboarding.SignupOnboarding
+import com.cc.creatorcircle.ui.screens.profile.AccountsScreen
 import com.cc.creatorcircle.ui.screens.profile.PasswordSecurityScreen
 import com.cc.creatorcircle.ui.screens.profile.PersonalInfoScreen
 import com.cc.creatorcircle.ui.screens.profile.ProfileScreen
@@ -159,6 +160,15 @@ fun NavigationHost(navController: NavHostController) {
 
         composable(Screen.PasswordSecurityScreen.route) {
             PasswordSecurityScreen(
+                navController,
+                onDismiss = {
+                    navController.navigateUp()
+                }
+            )
+        }
+
+        composable(Screen.AccountsScreen.route) {
+            AccountsScreen(
                 navController,
                 onDismiss = {
                     navController.navigateUp()

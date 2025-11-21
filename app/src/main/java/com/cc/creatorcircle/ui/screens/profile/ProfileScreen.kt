@@ -110,7 +110,7 @@ fun ProfileScreen(navController: NavController) {
     val currentUserPostsError = currentUserId?.let { userPostsErrorMap[it] }
 
     // State to control Account screen visibility
-    var showAccountScreen by remember { mutableStateOf(false) }
+    var showAccount by remember { mutableStateOf(false) }
 
     // Fetch user profile when screen loads
     LaunchedEffect(Unit) {
@@ -170,7 +170,7 @@ fun ProfileScreen(navController: NavController) {
                     ProfileContent(
                         navController = navController,
                         profile = userProfile!!,
-                        onMenuClick = { showAccountScreen = true },
+                        onMenuClick = { showAccount = true },
                         postsViewModel = postsViewModel,
                         userPosts = currentUserPosts,
                         userPostsLoading = currentUserPostsLoading,
@@ -189,11 +189,11 @@ fun ProfileScreen(navController: NavController) {
             }
 
             // Show Account Screen as overlay
-            if (showAccountScreen) {
-                AccountScreen(
+            if (showAccount) {
+                Account(
                     navController = navController,
                     userViewModel = userViewModel,
-                    onDismiss = { showAccountScreen = false }
+                    onDismiss = { showAccount = false }
                 )
             }
         }
@@ -790,7 +790,7 @@ fun ProfileContent(
 }
 
 @Composable
-fun AccountScreen(
+fun Account(
     navController: NavController,
     userViewModel: UserViewModel,
     onDismiss: () -> Unit,
@@ -913,11 +913,11 @@ fun AccountScreen(
                 onClick = { navController.navigate(Screen.PersonalInfoScreen.route) }
             )
 
-//            AccountMenuItem(
-//                icon = R.drawable.ic_lock,
-//                text = "Account privacy",
-//                onClick = { navController.navigate(Screen.YourProfileScreen.route) }
-//            )
+            AccountMenuItem(
+                icon = R.drawable.ic_profile_icon,
+                text = "Accounts",
+                onClick = { navController.navigate(Screen.AccountsScreen.route) }
+            )
 
             AccountMenuItem(
                 icon = R.drawable.ic_security,
