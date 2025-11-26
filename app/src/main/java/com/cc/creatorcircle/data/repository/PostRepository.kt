@@ -392,7 +392,7 @@ class PostsRepository(private val context: Context) {
 //        }
 //    }
 
-
+/*
     suspend fun updatePost(
         postId: String,
         content: String,
@@ -472,10 +472,240 @@ class PostsRepository(private val context: Context) {
             }
         }
     }
+ */
+
+
+//    suspend fun updatePost(
+//        postId: String,
+//        content: String,
+//        existingMediaUrls: List<String>,
+//        newMediaFiles: List<File>
+//    ): Result<UpdatePostResponse> {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val token = tokenManager.getToken()
+//                if (token.isEmpty()) {
+//                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
+//                }
+//
+//                val contentRequestBody = content.toRequestBody("text/plain".toMediaTypeOrNull())
+//
+//                // Convert existing media URLs to RequestBody - SEND AS PLAIN TEXT, NOT JSON
+//                val existingMediaRequestBody = if (existingMediaUrls.isNotEmpty()) {
+//                    // Join URLs with comma or newline depending on what your API expects
+//                    existingMediaUrls.joinToString(",").toRequestBody("text/plain".toMediaTypeOrNull())
+//                } else {
+//                    null
+//                }
+//
+//                // Convert new media files to MultipartBody.Part list
+//                val newMediaParts = newMediaFiles.mapNotNull { file ->
+//                    if (file.exists()) {
+//                        val mimeType = when (file.extension.lowercase()) {
+//                            "jpg", "jpeg" -> "image/jpeg"
+//                            "png" -> "image/png"
+//                            "gif" -> "image/gif"
+//                            "mp4" -> "video/mp4"
+//                            "mov" -> "video/quicktime"
+//                            "avi" -> "video/x-msvideo"
+//                            else -> "application/octet-stream"
+//                        }
+//
+//                        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
+//                        MultipartBody.Part.createFormData("new_media_files", file.name, requestFile)
+//                    } else {
+//                        Log.e("PostRepository", "File does not exist: ${file.absolutePath}")
+//                        null
+//                    }
+//                }.ifEmpty { null }
+//
+//                Log.d("PostRepository", "Updating post with:")
+//                Log.d("PostRepository", "- Content: $content")
+//                Log.d("PostRepository", "- Existing media count: ${existingMediaUrls.size}")
+//                Log.d("PostRepository", "- Existing media URLs: $existingMediaUrls")
+//                Log.d("PostRepository", "- New media files count: ${newMediaFiles.size}")
+//
+//                val response = apiService.updatePost(
+//                    "Bearer $token",
+//                    postId,
+//                    contentRequestBody,
+//                    existingMediaRequestBody,
+//                    newMediaParts
+//                )
+//
+//                if (response.isSuccessful) {
+//                    response.body()?.let { updateResponse ->
+//                        Log.d("PostRepository", "Post updated successfully")
+//                        Result.success(updateResponse)
+//                    } ?: Result.failure(Exception("Empty response body"))
+//                } else {
+//                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+//                    Log.e("PostRepository", "API Error: ${response.code()} - $errorMessage")
+//                    Result.failure(Exception("Failed to update post: ${response.code()} - $errorMessage"))
+//                }
+//            } catch (e: Exception) {
+//                Log.e("PostRepository", "Exception in updatePost", e)
+//                Result.failure(e)
+//            }
+//        }
+//    }
+//
 
 
 
+//    suspend fun updatePost(
+//        postId: String,
+//        content: String,
+//        existingMediaUrls: List<String>,
+//        newMediaFiles: List<File>
+//    ): Result<UpdatePostResponse> {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val token = tokenManager.getToken()
+//                if (token.isEmpty()) {
+//                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
+//                }
+//
+//                val contentRequestBody = content.toRequestBody("text/plain".toMediaTypeOrNull())
+//
+//                // Convert existing media URLs to proper multipart format
+//                // Send each URL as a separate form field with the same name
+//                val existingMediaParts = mutableListOf<MultipartBody.Part>()
+//                existingMediaUrls.forEach { url ->
+//                    val urlRequestBody = url.toRequestBody("text/plain".toMediaTypeOrNull())
+//                    existingMediaParts.add(
+//                        MultipartBody.Part.createFormData("existing_media_urls", url, urlRequestBody)
+//                    )
+//                }
+//
+//                // Convert new media files to MultipartBody.Part list
+//                val newMediaParts = newMediaFiles.mapNotNull { file ->
+//                    if (file.exists()) {
+//                        val mimeType = when (file.extension.lowercase()) {
+//                            "jpg", "jpeg" -> "image/jpeg"
+//                            "png" -> "image/png"
+//                            "gif" -> "image/gif"
+//                            "mp4" -> "video/mp4"
+//                            "mov" -> "video/quicktime"
+//                            "avi" -> "video/x-msvideo"
+//                            else -> "application/octet-stream"
+//                        }
+//
+//                        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
+//                        MultipartBody.Part.createFormData("new_media_files", file.name, requestFile)
+//                    } else {
+//                        Log.e("PostRepository", "File does not exist: ${file.absolutePath}")
+//                        null
+//                    }
+//                }
+//
+//                Log.d("PostRepository", "Updating post with:")
+//                Log.d("PostRepository", "- Content: $content")
+//                Log.d("PostRepository", "- Existing media count: ${existingMediaUrls.size}")
+//                Log.d("PostRepository", "- Existing media URLs: $existingMediaUrls")
+//                Log.d("PostRepository", "- New media files count: ${newMediaFiles.size}")
+//
+//                val response = apiService.updatePost(
+//                    "Bearer $token",
+//                    postId,
+//                    contentRequestBody,
+//                    existingMediaParts,  // Pass as List<MultipartBody.Part>
+//                    newMediaParts.ifEmpty { null }
+//                )
+//
+//                if (response.isSuccessful) {
+//                    response.body()?.let { updateResponse ->
+//                        Log.d("PostRepository", "Post updated successfully")
+//                        Result.success(updateResponse)
+//                    } ?: Result.failure(Exception("Empty response body"))
+//                } else {
+//                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+//                    Log.e("PostRepository", "API Error: ${response.code()} - $errorMessage")
+//                    Result.failure(Exception("Failed to update post: ${response.code()} - $errorMessage"))
+//                }
+//            } catch (e: Exception) {
+//                Log.e("PostRepository", "Exception in updatePost", e)
+//                Result.failure(e)
+//            }
+//        }
+//    }
+//
 
+
+
+    suspend fun updatePost(
+        postId: String,
+        content: String,
+        existingMediaUrls: List<String>,
+        newMediaFiles: List<File>
+    ): Result<UpdatePostResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = tokenManager.getToken()
+                if (token.isEmpty()) {
+                    return@withContext Result.failure(Exception("Access token not found. Please log in again."))
+                }
+
+                // Build multipart body manually
+                val bodyBuilder = MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("content", content)
+
+                // Add each existing media URL as a separate form field with same name
+                existingMediaUrls.forEach { url ->
+                    bodyBuilder.addFormDataPart("existing_media_urls", url)
+                }
+
+                // Add new media files
+                newMediaFiles.forEach { file ->
+                    if (file.exists()) {
+                        val mimeType = when (file.extension.lowercase()) {
+                            "jpg", "jpeg" -> "image/jpeg"
+                            "png" -> "image/png"
+                            "gif" -> "image/gif"
+                            "mp4" -> "video/mp4"
+                            "mov" -> "video/quicktime"
+                            "avi" -> "video/x-msvideo"
+                            else -> "application/octet-stream"
+                        }
+
+                        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
+                        bodyBuilder.addFormDataPart("new_media_files", file.name, requestFile)
+                    } else {
+                        Log.e("PostRepository", "File does not exist: ${file.absolutePath}")
+                    }
+                }
+
+                val body = bodyBuilder.build()
+
+                Log.d("PostRepository", "Updating post with:")
+                Log.d("PostRepository", "- Content: $content")
+                Log.d("PostRepository", "- Existing media count: ${existingMediaUrls.size}")
+                Log.d("PostRepository", "- Existing media URLs: $existingMediaUrls")
+                Log.d("PostRepository", "- New media files count: ${newMediaFiles.size}")
+
+                val response = apiService.updatePostRaw(
+                    "Bearer $token",
+                    postId,
+                    body
+                )
+
+                if (response.isSuccessful) {
+                    response.body()?.let { updateResponse ->
+                        Log.d("PostRepository", "Post updated successfully")
+                        Result.success(updateResponse)
+                    } ?: Result.failure(Exception("Empty response body"))
+                } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+                    Log.e("PostRepository", "API Error: ${response.code()} - $errorMessage")
+                    Result.failure(Exception("Failed to update post: ${response.code()} - $errorMessage"))
+                }
+            } catch (e: Exception) {
+                Log.e("PostRepository", "Exception in updatePost", e)
+                Result.failure(e)
+            }
+        }
+    }
 
 
 }

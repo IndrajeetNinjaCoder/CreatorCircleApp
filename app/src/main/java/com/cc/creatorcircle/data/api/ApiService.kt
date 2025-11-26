@@ -496,16 +496,45 @@ interface ApiService {
 //    ): Response<UpdatePostResponse>
 
 
-    @Multipart
+//    @Multipart
+//    @PUT("posts/{post_id}")
+//    suspend fun updatePost(
+//        @Header("Authorization") authorization: String,
+//        @Path("post_id") postId: String,
+//        @Part("content") content: RequestBody,
+//        @Part("existing_media_urls") existingMediaUrls: RequestBody?, // Send as JSON array string
+//        @Part new_media_files: List<MultipartBody.Part>? = null
+//    ): Response<UpdatePostResponse>
+
+
+//    @Multipart
+//    @PUT("posts/{post_id}")
+//    suspend fun updatePost(
+//        @Header("Authorization") authorization: String,
+//        @Path("post_id") postId: String,
+//        @Part("content") content: RequestBody,
+//        @Part("existing_media_urls") existingMediaUrls: RequestBody?, // Changed from JSON to plain text
+//        @Part new_media_files: List<MultipartBody.Part>? = null
+//    ): Response<UpdatePostResponse>
+//
+
+
+//    @Multipart
+//    @PUT("posts/{post_id}")
+//    suspend fun updatePost(
+//        @Header("Authorization") authorization: String,
+//        @Path("post_id") postId: String,
+//        @Part("content") content: RequestBody,
+//        @Part existingMediaUrls: List<MultipartBody.Part>?,  // Changed to List<MultipartBody.Part>
+//        @Part new_media_files: List<MultipartBody.Part>? = null
+//    ): Response<UpdatePostResponse>
+
+
     @PUT("posts/{post_id}")
-    suspend fun updatePost(
+    suspend fun updatePostRaw(
         @Header("Authorization") authorization: String,
         @Path("post_id") postId: String,
-        @Part("content") content: RequestBody,
-        @Part("existing_media_urls") existingMediaUrls: RequestBody?, // Send as JSON array string
-        @Part new_media_files: List<MultipartBody.Part>? = null
+        @Body body: MultipartBody
     ): Response<UpdatePostResponse>
-
-
 
 }
