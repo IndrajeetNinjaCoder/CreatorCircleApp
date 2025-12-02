@@ -131,6 +131,13 @@ object FirebaseAnalyticsHelper {
         }
     }
 
+    fun logConnectionRequestInitiated(targetUserId: Int, source: String = "unknown") {
+        analytics.logEvent("connection_request_initiated") {
+            param("target_user_id", targetUserId.toString())
+            param("source", source)
+        }
+    }
+
     fun logConnectionRequestSuccess(targetUserId: Int) {
         analytics.logEvent("connection_request_success") {
             param("target_user_id", targetUserId.toString())
@@ -141,6 +148,52 @@ object FirebaseAnalyticsHelper {
         analytics.logEvent("connection_request_error") {
             param("target_user_id", targetUserId.toString())
             param("error_message", errorMessage)
+        }
+    }
+
+    fun logConnectionRequestCancelled(targetUserId: Int, source: String = "unknown") {
+        analytics.logEvent("connection_request_cancelled") {
+            param("target_user_id", targetUserId.toString())
+            param("source", source)
+        }
+    }
+
+    fun logConnectionRequestAccepted(connectionId: String, source: String = "unknown") {
+        analytics.logEvent("connection_request_accepted") {
+            param("connection_id", connectionId)
+            param("source", source)
+        }
+    }
+
+    fun logConnectionRequestRejected(connectionId: String, source: String = "unknown") {
+        analytics.logEvent("connection_request_rejected") {
+            param("connection_id", connectionId)
+            param("source", source)
+        }
+    }
+
+    fun logConnectionRemoved(targetUserId: Int, source: String = "unknown") {
+        analytics.logEvent("connection_removed") {
+            param("target_user_id", targetUserId.toString())
+            param("source", source)
+        }
+    }
+
+    fun logRecommendationViewed(userId: Int, score: Float = 0f) {
+        analytics.logEvent("recommendation_viewed") {
+            param("user_id", userId.toString())
+            if (score > 0f) {
+                param("compatibility_score", String.format("%.2f", score))
+            }
+        }
+    }
+
+    fun logSentConnectionViewed(targetUserId: Int, username: String = "") {
+        analytics.logEvent("sent_connection_viewed") {
+            param("target_user_id", targetUserId.toString())
+            if (username.isNotEmpty()) {
+                param("username", username)
+            }
         }
     }
 
@@ -310,6 +363,117 @@ object FirebaseAnalyticsHelper {
             param("duration_ms", durationMs)
         }
     }
+
+    // Comment Events
+    fun logCommentAdded(postId: String, commentLength: Int) {
+        analytics.logEvent("comment_added") {
+            param("post_id", postId)
+            param("comment_length", commentLength.toLong())
+        }
+    }
+
+    fun logReplyAdded(postId: String, parentCommentId: Int) {
+        analytics.logEvent("reply_added") {
+            param("post_id", postId)
+            param("parent_comment_id", parentCommentId.toString())
+        }
+    }
+
+    fun logCommentLiked(postId: String, commentId: Int) {
+        analytics.logEvent("comment_liked") {
+            param("post_id", postId)
+            param("comment_id", commentId.toString())
+        }
+    }
+
+    // Profile Events - NEW FUNCTIONS TO FIX ERRORS
+    fun logProfileLoadStarted() {
+        analytics.logEvent("profile_load_started") {
+            param("timestamp", System.currentTimeMillis())
+        }
+    }
+
+    fun logProfileLoaded(userId: Int, postCount: Int, connectionCount: Int) {
+        analytics.logEvent("profile_loaded") {
+            param("user_id", userId.toString())
+            param("post_count", postCount.toLong())
+            param("connection_count", connectionCount.toLong())
+        }
+    }
+
+    fun logProfileError(errorMessage: String) {
+        analytics.logEvent("profile_load_error") {
+            param("error_message", errorMessage)
+        }
+    }
+
+    fun logProfileMenuOpened(userId: Int) {
+        analytics.logEvent("profile_menu_opened") {
+            param("user_id", userId.toString())
+        }
+    }
+
+    fun logUserPostsLoadStarted(userId: Int) {
+        analytics.logEvent("user_posts_load_started") {
+            param("user_id", userId.toString())
+        }
+    }
+
+    fun logUserPostsError(errorMessage: String) {
+        analytics.logEvent("user_posts_load_error") {
+            param("error_message", errorMessage)
+        }
+    }
+
+
+    // Influencer Events - Type-safe methods
+    fun logInfluencerBookingInitiated(
+        influencerId: String,
+        influencerName: String,
+        username: String,
+        price: String,
+        durationMin: String,
+        hasAvailability: Boolean
+    ) {
+        analytics.logEvent("influencer_booking_initiated") {
+            param("influencer_id", influencerId)
+            param("influencer_name", influencerName)
+            param("username", username)
+            param("price", price)
+            param("duration_min", durationMin)
+            param("has_availability", if (hasAvailability) "yes" else "no")
+        }
+    }
+
+    fun logInfluencerProfileViewed(
+        influencerId: String,
+        influencerName: String,
+        username: String,
+        from: String
+    ) {
+        analytics.logEvent("influencer_profile_viewed") {
+            param("influencer_id", influencerId)
+            param("influencer_name", influencerName)
+            param("username", username)
+            param("from", from)
+        }
+    }
+
+    fun logTrendingInfluencerBookingInitiated(
+        influencerId: String,
+        influencerName: String,
+        username: String,
+        price: String,
+        durationMin: String
+    ) {
+        analytics.logEvent("trending_influencer_booking_initiated") {
+            param("influencer_id", influencerId)
+            param("influencer_name", influencerName)
+            param("username", username)
+            param("price", price)
+            param("duration_min", durationMin)
+        }
+    }
 }
 
 
@@ -337,8 +501,7 @@ object FirebaseAnalyticsHelper {
 
 
 
-//
-// package com.cc.creatorcircle.utils
+//package com.cc.creatorcircle.utils
 //
 //import android.os.Bundle
 //import com.google.firebase.analytics.FirebaseAnalytics
@@ -354,6 +517,15 @@ object FirebaseAnalyticsHelper {
 //
 //    private val analytics: FirebaseAnalytics by lazy {
 //        Firebase.analytics
+//    }
+//
+//    // Generic Event Logging
+//    fun logEvent(eventName: String, params: Map<String, String> = emptyMap()) {
+//        analytics.logEvent(eventName) {
+//            params.forEach { (key, value) ->
+//                param(key, value)
+//            }
+//        }
 //    }
 //
 //    // Screen View Events
@@ -462,6 +634,13 @@ object FirebaseAnalyticsHelper {
 //        }
 //    }
 //
+//    fun logConnectionRequestInitiated(targetUserId: Int, source: String = "unknown") {
+//        analytics.logEvent("connection_request_initiated") {
+//            param("target_user_id", targetUserId.toString())
+//            param("source", source)
+//        }
+//    }
+//
 //    fun logConnectionRequestSuccess(targetUserId: Int) {
 //        analytics.logEvent("connection_request_success") {
 //            param("target_user_id", targetUserId.toString())
@@ -472,6 +651,52 @@ object FirebaseAnalyticsHelper {
 //        analytics.logEvent("connection_request_error") {
 //            param("target_user_id", targetUserId.toString())
 //            param("error_message", errorMessage)
+//        }
+//    }
+//
+//    fun logConnectionRequestCancelled(targetUserId: Int, source: String = "unknown") {
+//        analytics.logEvent("connection_request_cancelled") {
+//            param("target_user_id", targetUserId.toString())
+//            param("source", source)
+//        }
+//    }
+//
+//    fun logConnectionRequestAccepted(connectionId: String, source: String = "unknown") {
+//        analytics.logEvent("connection_request_accepted") {
+//            param("connection_id", connectionId)
+//            param("source", source)
+//        }
+//    }
+//
+//    fun logConnectionRequestRejected(connectionId: String, source: String = "unknown") {
+//        analytics.logEvent("connection_request_rejected") {
+//            param("connection_id", connectionId)
+//            param("source", source)
+//        }
+//    }
+//
+//    fun logConnectionRemoved(targetUserId: Int, source: String = "unknown") {
+//        analytics.logEvent("connection_removed") {
+//            param("target_user_id", targetUserId.toString())
+//            param("source", source)
+//        }
+//    }
+//
+//    fun logRecommendationViewed(userId: Int, score: Float = 0f) {
+//        analytics.logEvent("recommendation_viewed") {
+//            param("user_id", userId.toString())
+//            if (score > 0f) {
+//                param("compatibility_score", String.format("%.2f", score))
+//            }
+//        }
+//    }
+//
+//    fun logSentConnectionViewed(targetUserId: Int, username: String = "") {
+//        analytics.logEvent("sent_connection_viewed") {
+//            param("target_user_id", targetUserId.toString())
+//            if (username.isNotEmpty()) {
+//                param("username", username)
+//            }
 //        }
 //    }
 //
@@ -639,6 +864,30 @@ object FirebaseAnalyticsHelper {
 //        analytics.logEvent("performance_metric") {
 //            param("metric_name", metricName)
 //            param("duration_ms", durationMs)
+//        }
+//    }
+//
+//
+//    // Add these functions to the FirebaseAnalyticsHelper object
+//
+//    fun logCommentAdded(postId: String, commentLength: Int) {
+//        analytics.logEvent("comment_added") {
+//            param("post_id", postId)
+//            param("comment_length", commentLength.toLong())
+//        }
+//    }
+//
+//    fun logReplyAdded(postId: String, parentCommentId: Int) {
+//        analytics.logEvent("reply_added") {
+//            param("post_id", postId)
+//            param("parent_comment_id", parentCommentId.toString())
+//        }
+//    }
+//
+//    fun logCommentLiked(postId: String, commentId: Int) {
+//        analytics.logEvent("comment_liked") {
+//            param("post_id", postId)
+//            param("comment_id", commentId.toString())
 //        }
 //    }
 //}

@@ -99,7 +99,7 @@ fun SignupScreen(
         .build()
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
 
-    // Google launcher
+    // Google launcher (navigate to saboAI after signup is done)
     val googleLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -165,23 +165,6 @@ fun SignupScreen(
 
 
 
-                                // ✅ Navigate on Main Thread
-//                                CoroutineScope(Dispatchers.Main).launch {
-//                                    navController.navigate(Screen.Webhome.route) {
-//                                        popUpTo(Screen.Login.route) { inclusive = true }
-//                                    }
-//                                }
-
-                                // ✅ Use navigation instead of Intent
-//                                navController.navigate(Screen.Webhome.route) {
-//                                    popUpTo(Screen.Login.route) { inclusive = true }
-//                                }
-
-//                                val activity = context as Activity
-//                                val intent = Intent(activity, MainActivity2::class.java)
-////                                intent.putExtra("token", accessToken)
-//                                activity.startActivity(intent)
-//                                activity.finish()
 
                             } catch (e: Exception) {
                                 Log.e("AUTH_PARSE_ERROR", e.toString())
@@ -202,55 +185,141 @@ fun SignupScreen(
 
 
 
-    // Handle success state - Show dialog when signup is successful and navigate after success
+//    (navigate to WebHome after signup is done)
+//    val googleLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartActivityForResult()
+//    ) { result ->
+//        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+//        handleGoogleSignInResult(
+//            task,
+//            onSuccess = { googleIdToken ->
+//                val sharedPref = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
+//                sharedPref.edit().putBoolean("isLoggedIn", true).apply()
+//
+//                Toast.makeText(context, "Google Login Success", Toast.LENGTH_SHORT).show()
+//
+//                Log.d("AUTH-TOKEN-GOOGLE", "LoginScreen: $googleIdToken")
+//
+//                try {
+//                    val client = OkHttpClient()
+//                    val mediaType = "application/json; charset=utf-8".toMediaType()
+//
+//                    val jsonBody = JSONObject().apply {
+//                        put("token", googleIdToken)
+//                        put("config", "firebase")
+//                    }
+//
+//                    val requestBody = jsonBody.toString().toRequestBody(mediaType)
+//
+//                    val request = Request.Builder()
+//                        .url("https://creatorcircle.in/api/auth/google")
+//                        .post(requestBody)
+//                        .build()
+//
+//                    client.newCall(request).enqueue(object : Callback {
+//                        override fun onFailure(call: Call, e: IOException) {
+//                            Log.e("AUTH", "POST failed: ${e.message}")
+//                            CoroutineScope(Dispatchers.Main).launch {
+//                                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+//                            }
+//                        }
+//
+//                        override fun onResponse(call: Call, response: okhttp3.Response) {
+//                            val responseBody = response.body?.string()
+//                            Log.d("AUTH_RESPONSE", responseBody ?: "")
+//
+//                            try {
+//                                val jsonObj = JSONObject(responseBody ?: "")
+//
+//                                val accessToken = if (jsonObj.has("access_token")) {
+//                                    jsonObj.getString("access_token")
+//                                } else {
+//                                    val userObj = jsonObj.getJSONObject("user")
+//                                    userObj.getString("access_token")
+//                                }
+//
+//                                sharedPref.edit().putString("access_token", accessToken).apply()
+//
+//                                Log.d("ACCESS-TOKEN", accessToken)
+//
+//                                CoroutineScope(Dispatchers.Main).launch {
+//                                    navController.navigate(Screen.Webhome.route) {
+//                                        popUpTo(Screen.Signup.route) { inclusive = true }
+//                                    }
+//                                }
+//
+//                            } catch (e: Exception) {
+//                                Log.e("AUTH_PARSE_ERROR", e.toString())
+//                                CoroutineScope(Dispatchers.Main).launch {
+//                                    Toast.makeText(context, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
+//                                }
+//                            }
+//                        }
+//                    })
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                    Toast.makeText(context, "Error while sending token", Toast.LENGTH_SHORT).show()
+//                }
+//            },
+//            onError = { error ->
+//                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+//            }
+//        )
+//    }
+
+
+//    (navigate to saboAI after signup is done)
+//    // Handle success state - Show dialog when signup is successful and navigate after success
+//    LaunchedEffect(uiState.isSuccess) {
+//        if (uiState.isSuccess) {
+//            showDialog = true // Show success dialog
+//
+//            // Store login state and access token
+//            val sharedPref = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
+//            sharedPref.edit().apply {
+//                putBoolean("isLoggedIn", true)
+//                // Store access token from the signup response
+//                uiState.signUpResponse?.access_token?.let { token ->
+//                    putString("access_token", token)
+//                }
+//                apply()
+//            }
+//
+//
+//            CoroutineScope(Dispatchers.Main).launch {
+//                navController.navigate(Screen.SignupOnboarding.route) {
+//                    popUpTo(Screen.Signup.route) { inclusive = true }
+//                }
+//            }
+//        }
+//    }
+
+
+//    (navigate to WebHome after signup is done)
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            showDialog = true // Show success dialog
+            showDialog = true
 
-            // Store login state and access token
             val sharedPref = context.getSharedPreferences("CCPrefs", Context.MODE_PRIVATE)
             sharedPref.edit().apply {
                 putBoolean("isLoggedIn", true)
-                // Store access token from the signup response
                 uiState.signUpResponse?.access_token?.let { token ->
                     putString("access_token", token)
                 }
                 apply()
             }
 
-
             CoroutineScope(Dispatchers.Main).launch {
-                navController.navigate(Screen.SignupOnboarding.route) {
+                navController.navigate(Screen.Webhome.route) {
                     popUpTo(Screen.Signup.route) { inclusive = true }
                 }
             }
-
-            // ✅ Navigate on Main Thread
-//            CoroutineScope(Dispatchers.Main).launch {
-//                navController.navigate(Screen.Webhome.route) {
-//                    popUpTo(Screen.Login.route) { inclusive = true }
-//                }
-//            }
-
-            // ✅ Use navigation instead of Intent
-//            navController.navigate(Screen.Webhome.route) {
-//                popUpTo(Screen.Signup.route) { inclusive = true }
-//            }
-
-            // Navigate to main activity after successful signup
-//            try {
-//                val activity = context as Activity
-//                val intent = Intent(activity, MainActivity2::class.java)
-//                uiState.signUpResponse?.access_token?.let { token ->
-//                    intent.putExtra("token", token)
-//                }
-//                activity.startActivity(intent)
-//                activity.finish() // Close current activity
-//            } catch (e: Exception) {
-//                Log.e("NAVIGATION_ERROR", "Error navigating to MainActivity2", e)
-//            }
         }
     }
+
+
+
 
     // Handle error messages - removed auto-clear and toast to show persistent error display
     // Error will be displayed in the UI and user can dismiss it manually
