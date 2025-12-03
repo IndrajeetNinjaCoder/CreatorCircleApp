@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,8 +32,11 @@ import coil.compose.AsyncImage
 import com.cc.creatorcircle.ui.components.BottomNavBar
 import com.cc.creatorcircle.ui.components.TopBar
 import com.cc.creatorcircle.ui.navigation.Screen
+import com.cc.creatorcircle.utils.FirebaseAnalyticsHelper
 import com.cc.creatorcircle.viewModel.PostsViewModel
 import com.cc.creatorcircle.viewModel.PostsViewModelFactory
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.analytics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +46,8 @@ fun MessageConnections(
     onMessageClick: (Int, String) -> Unit = { _, _ -> } // userId and userName
 ) {
     val context = LocalContext.current
+    val firebaseAnalytics = remember { Firebase.analytics }
+
     val postsViewModel: PostsViewModel = viewModel(
         factory = PostsViewModelFactory(context)
     )
@@ -54,8 +60,9 @@ fun MessageConnections(
     // Get accepted connections with detailed logging
     val acceptedConnections = userProfile?.accepted_connections?.users ?: emptyList()
 
-    // Fetch user profile on first composition
+    // Track screen view
     LaunchedEffect(Unit) {
+        FirebaseAnalyticsHelper.logScreenView("MessageConnections", "MessageConnections")
         Log.d("MessageConnections", "LaunchedEffect: Fetching user profile")
         postsViewModel.fetchUserProfile()
     }
@@ -64,6 +71,13 @@ fun MessageConnections(
     LaunchedEffect(acceptedConnections) {
         Log.d("MessageConnections", "=== Connections Update ===")
         Log.d("MessageConnections", "Total connections count: ${acceptedConnections.size}")
+
+        // Track connections loaded
+        FirebaseAnalyticsHelper.logEvent(
+            "message_connections_loaded",
+            mapOf("connection_count" to acceptedConnections.size.toString())
+        )
+
         acceptedConnections.forEachIndexed { index, connection ->
             Log.d("MessageConnections", "Connection $index: userId=${connection.user_id}, username=${connection.username}, name=${connection.full_name}")
         }
@@ -83,6 +97,8 @@ fun MessageConnections(
                 profileLoading -> {
                     // Loading state
                     Log.d("MessageConnections", "Showing loading state")
+                    FirebaseAnalyticsHelper.logEvent("message_connections_loading")
+
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -93,6 +109,12 @@ fun MessageConnections(
                 profileError != null -> {
                     // Error state
                     Log.e("MessageConnections", "Error state: $profileError")
+
+                    FirebaseAnalyticsHelper.logEvent(
+                        "message_connections_error",
+                        mapOf("error" to (profileError ?: "Unknown error"))
+                    )
+
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -115,6 +137,7 @@ fun MessageConnections(
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(onClick = {
                                 Log.d("MessageConnections", "Retry button clicked")
+                                FirebaseAnalyticsHelper.logFeatureUsed("message_connections_retry")
                                 postsViewModel.fetchUserProfile()
                             }) {
                                 Text("Retry")
@@ -125,6 +148,8 @@ fun MessageConnections(
                 acceptedConnections.isEmpty() -> {
                     // Empty state
                     Log.d("MessageConnections", "Showing empty state")
+                    FirebaseAnalyticsHelper.logEvent("message_connections_empty_state")
+
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -151,6 +176,12 @@ fun MessageConnections(
                 else -> {
                     // List of connections
                     Log.d("MessageConnections", "Rendering ${acceptedConnections.size} connections")
+
+                    FirebaseAnalyticsHelper.logEvent(
+                        "message_connections_displayed",
+                        mapOf("connection_count" to acceptedConnections.size.toString())
+                    )
+
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 8.dp)
@@ -167,6 +198,18 @@ fun MessageConnections(
                                 profileImageUrl = connection.profile_pic,
                                 onClick = {
                                     Log.d("MessageConnections", "Clicked on user: ${connection.user_id}")
+
+                                    // Track message click
+                                    FirebaseAnalyticsHelper.logFeatureUsed("message_connection_clicked")
+                                    FirebaseAnalyticsHelper.logEvent(
+                                        "message_connection_opened",
+                                        mapOf(
+                                            "user_id" to connection.user_id.toString(),
+                                            "username" to (connection.username ?: "unknown"),
+                                            "has_profile_pic" to (connection.profile_pic != null).toString()
+                                        )
+                                    )
+
                                     navController.navigate(
                                         Screen.MessageScreen.createRoute(
                                             userId = connection.user_id,
@@ -275,6 +318,11 @@ fun MessageItemRow(
 
 
 
+
+
+
+
+
 //package com.cc.creatorcircle.ui.screens.message
 //
 //import android.util.Log
@@ -328,12 +376,22 @@ fun MessageItemRow(
 //    val profileLoading by postsViewModel.profileLoading.collectAsState()
 //    val profileError by postsViewModel.profileError.collectAsState()
 //
-//    // Get accepted connections
+//    // Get accepted connections with detailed logging
 //    val acceptedConnections = userProfile?.accepted_connections?.users ?: emptyList()
 //
 //    // Fetch user profile on first composition
 //    LaunchedEffect(Unit) {
+//        Log.d("MessageConnections", "LaunchedEffect: Fetching user profile")
 //        postsViewModel.fetchUserProfile()
+//    }
+//
+//    // Log connection data whenever it changes
+//    LaunchedEffect(acceptedConnections) {
+//        Log.d("MessageConnections", "=== Connections Update ===")
+//        Log.d("MessageConnections", "Total connections count: ${acceptedConnections.size}")
+//        acceptedConnections.forEachIndexed { index, connection ->
+//            Log.d("MessageConnections", "Connection $index: userId=${connection.user_id}, username=${connection.username}, name=${connection.full_name}")
+//        }
 //    }
 //
 //    Scaffold(
@@ -341,7 +399,6 @@ fun MessageItemRow(
 //        bottomBar = { BottomNavBar(navController = navController) },
 //        modifier = Modifier.fillMaxSize()
 //    ) { paddingValues ->
-//        Log.d("MessageConnections", "Connection Counts: " + userProfile?.accepted_connections?.count)
 //        Box(
 //            modifier = Modifier
 //                .fillMaxSize()
@@ -350,6 +407,7 @@ fun MessageItemRow(
 //            when {
 //                profileLoading -> {
 //                    // Loading state
+//                    Log.d("MessageConnections", "Showing loading state")
 //                    Box(
 //                        modifier = Modifier.fillMaxSize(),
 //                        contentAlignment = Alignment.Center
@@ -359,6 +417,7 @@ fun MessageItemRow(
 //                }
 //                profileError != null -> {
 //                    // Error state
+//                    Log.e("MessageConnections", "Error state: $profileError")
 //                    Box(
 //                        modifier = Modifier.fillMaxSize(),
 //                        contentAlignment = Alignment.Center
@@ -373,7 +432,16 @@ fun MessageItemRow(
 //                                color = Color.Gray
 //                            )
 //                            Spacer(modifier = Modifier.height(8.dp))
-//                            Button(onClick = { postsViewModel.fetchUserProfile() }) {
+//                            Text(
+//                                text = profileError ?: "Unknown error",
+//                                fontSize = 12.sp,
+//                                color = Color.Gray
+//                            )
+//                            Spacer(modifier = Modifier.height(16.dp))
+//                            Button(onClick = {
+//                                Log.d("MessageConnections", "Retry button clicked")
+//                                postsViewModel.fetchUserProfile()
+//                            }) {
 //                                Text("Retry")
 //                            }
 //                        }
@@ -381,6 +449,7 @@ fun MessageItemRow(
 //                }
 //                acceptedConnections.isEmpty() -> {
 //                    // Empty state
+//                    Log.d("MessageConnections", "Showing empty state")
 //                    Box(
 //                        modifier = Modifier.fillMaxSize(),
 //                        contentAlignment = Alignment.Center
@@ -406,19 +475,23 @@ fun MessageItemRow(
 //                }
 //                else -> {
 //                    // List of connections
-//                    Log.d("MessageConnections", "UserId: " + acceptedConnections)
+//                    Log.d("MessageConnections", "Rendering ${acceptedConnections.size} connections")
 //                    LazyColumn(
 //                        modifier = Modifier.fillMaxSize(),
 //                        contentPadding = PaddingValues(vertical = 8.dp)
 //                    ) {
-//                        items(acceptedConnections) { connection ->
-//                            Log.d("MessageConnections", "UserId: " + connection.user_id)
+//                        items(
+//                            items = acceptedConnections,
+//                            key = { connection -> connection.user_id }
+//                        ) { connection ->
+//                            Log.d("MessageConnections", "Rendering item: userId=${connection.user_id}, username=${connection.username}")
 //                            MessageItemRow(
 //                                userId = connection.user_id,
-//                                name = connection.full_name ?: "",
+//                                name = connection.full_name ?: connection.username ?: "Unknown User",
 //                                username = connection.username ?: "",
 //                                profileImageUrl = connection.profile_pic,
 //                                onClick = {
+//                                    Log.d("MessageConnections", "Clicked on user: ${connection.user_id}")
 //                                    navController.navigate(
 //                                        Screen.MessageScreen.createRoute(
 //                                            userId = connection.user_id,
@@ -426,14 +499,22 @@ fun MessageItemRow(
 //                                            profilePic = connection.profile_pic
 //                                        )
 //                                    )
-//                                    onMessageClick(connection.user_id, connection.username)
+//                                    onMessageClick(connection.user_id, connection.username ?: "")
 //                                }
 //                            )
+//
+//                            // Add divider between items
+//                            if (connection != acceptedConnections.last()) {
+//                                Divider(
+//                                    modifier = Modifier.padding(start = 88.dp),
+//                                    color = Color(0xFFE0E0E0),
+//                                    thickness = 0.5.dp
+//                                )
+//                            }
 //                        }
 //                    }
 //                }
 //            }
-//
 //        }
 //    }
 //}
@@ -496,7 +577,7 @@ fun MessageItemRow(
 //            Spacer(modifier = Modifier.height(4.dp))
 //            if (username.isNotEmpty()) {
 //                Text(
-//                    text = "@$username $userId",
+//                    text = "@$username",
 //                    fontSize = 14.sp,
 //                    fontWeight = FontWeight.Normal,
 //                    color = Color(0xFF9E9E9E)
@@ -513,3 +594,4 @@ fun MessageItemRow(
 //        )
 //    }
 //}
+//
