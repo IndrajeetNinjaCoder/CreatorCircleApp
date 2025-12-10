@@ -13,17 +13,16 @@ import androidx.navigation.navArgument
 import com.cc.creatorcircle.MainActivity2
 import com.cc.creatorcircle.data.api.ApiService
 import com.cc.creatorcircle.data.api.RetrofitInstance
+import com.cc.creatorcircle.ui.screens.PostScreen
 import com.cc.creatorcircle.ui.screens.brandcollab.BrandCollab
-import com.cc.creatorcircle.ui.screens.brandcollab.BrandCollabScreen
 import com.cc.creatorcircle.ui.screens.creatorcoin.CreatorCoin
 import com.cc.creatorcircle.ui.screens.home.HomeScreen
-import com.cc.creatorcircle.ui.screens.livesession.AboutSection
-import com.cc.creatorcircle.ui.screens.livesession.BookingSlot
-import com.cc.creatorcircle.ui.screens.livesession.LiveSession
-import com.cc.creatorcircle.ui.screens.livesession.MySessionScreen
+import com.cc.creatorcircle.ui.screens.mentor_circle.AboutSection
+import com.cc.creatorcircle.ui.screens.mentor_circle.BookingSlot
+import com.cc.creatorcircle.ui.screens.mentor_circle.MySessionScreen
 import com.cc.creatorcircle.ui.screens.message.MessageConnections
 import com.cc.creatorcircle.ui.screens.message.MessageScreen
-import com.cc.creatorcircle.ui.screens.message.MessageWeb
+import com.cc.creatorcircle.ui.screens.notification.NotificationScreen
 import com.cc.creatorcircle.ui.screens.notification.NotificationsWeb
 import com.cc.creatorcircle.ui.screens.onboarding.SignupOnboarding
 import com.cc.creatorcircle.ui.screens.profile.AccountsScreen
@@ -32,12 +31,11 @@ import com.cc.creatorcircle.ui.screens.profile.PersonalInfoScreen
 import com.cc.creatorcircle.ui.screens.profile.ProfileScreen
 import com.cc.creatorcircle.ui.screens.profile.ProfileWeb
 import com.cc.creatorcircle.ui.screens.profile.UserProfile
+import com.cc.creatorcircle.ui.screens.profile.UserProfileScreen
 import com.cc.creatorcircle.ui.screens.profile.YourProfileScreen
 import com.cc.creatorcircle.ui.screens.resourcehub.ResourceHub
-import com.cc.creatorcircle.ui.screens.sabo.ChatScreen
 import com.cc.creatorcircle.ui.screens.sabo.SaboAIScreen
 //import com.cc.creatorcircle.ui.screens.sabo.SaboAIScreen
-import com.cc.creatorcircle.ui.screens.sabo.SaboWeb
 import com.cc.creatorcircleapp.ui.screens.login.LoginScreen
 import com.cc.creatorcircleapp.ui.screens.signup.SignupScreen
 import com.example.app.ConnectionsScreen
@@ -184,8 +182,13 @@ fun NavigationHost(navController: NavHostController) {
 
 
 
-        composable(Screen.NotificationsWeb.route) {
-            NotificationsWeb(navController)
+//        composable(Screen.NotificationsWeb.route) {
+//            NotificationsWeb(navController)
+//        }
+
+
+        composable(Screen.Notifications.route) {
+            NotificationScreen(navController)
         }
 
         composable(Screen.CreatorCoin.route) {
@@ -214,6 +217,16 @@ fun NavigationHost(navController: NavHostController) {
             val userId = backStackEntry.arguments?.getInt("userId") ?: 0
             UserProfile(navController, userId = userId)
         }
+
+        composable(
+            route = "userprofilescreen/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            UserProfileScreen(navController, InfluencerId = userId)
+        }
+
+
 
 //        composable(
 //            route = "booking_slot/{userId}",
@@ -287,9 +300,34 @@ fun NavigationHost(navController: NavHostController) {
                 userName = userName,
                 profilePic = profilePic
             )
+        }
 
-//            MessageWeb(navController = navController)
+        // Route with only userId
+        composable(
+            route = "message_screen/{userId}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+
+            MessageScreen(
+                navController = navController,
+                otherUserId = userId,
+                userName = null, // or empty string ""
+                profilePic = null
+            )
+        }
+
+
+        composable(
+            route = "postscreen/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+            PostScreen(navController, postId = postId)
         }
 
     }
 }
+

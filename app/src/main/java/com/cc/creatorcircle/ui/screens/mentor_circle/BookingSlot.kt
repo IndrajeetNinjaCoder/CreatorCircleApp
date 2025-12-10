@@ -1,4 +1,4 @@
-package com.cc.creatorcircle.ui.screens.livesession
+package com.cc.creatorcircle.ui.screens.mentor_circle
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -1804,5 +1804,3 @@ fun getDaySuffix(day: Int): String {
         else -> "th"
     }
 }
-
-

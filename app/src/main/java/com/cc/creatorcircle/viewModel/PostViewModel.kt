@@ -118,6 +118,21 @@ class PostsViewModel(private val context: Context) : ViewModel() {
 
 
 
+    // Add these StateFlows with other state declarations in PostsViewModel
+
+    private val _singlePost = MutableStateFlow<Post?>(null)
+    val singlePost: StateFlow<Post?> = _singlePost
+
+    private val _singlePostLoading = MutableStateFlow(false)
+    val singlePostLoading: StateFlow<Boolean> = _singlePostLoading
+
+    private val _singlePostError = MutableStateFlow<String?>(null)
+    val singlePostError: StateFlow<String?> = _singlePostError
+
+
+
+
+
 //    init {
 //        fetchPosts()
 //    }
@@ -809,6 +824,51 @@ class PostsViewModel(private val context: Context) : ViewModel() {
         clearUpdateMedia()
     }
 
+
+
+
+    // Add this function to PostsViewModel class
+
+    fun fetchPostById(postId: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("PostsViewModel", "Fetching post with id: $postId")
+                _singlePostLoading.value = true
+                _singlePostError.value = null
+
+                val response = repository.getPostById(postId)
+                Log.d("PostsViewModel", "Repository response received for post $postId")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { postResponse ->
+                        Log.d("PostsViewModel", "Post data: ${postResponse.data}")
+                        _singlePost.value = postResponse.data
+                        Log.d("PostsViewModel", "Post data set successfully")
+                    } ?: run {
+                        Log.e("PostsViewModel", "Response body is null for post $postId")
+                        _singlePostError.value = "Empty response body"
+                    }
+                } else {
+                    Log.e(
+                        "PostsViewModel",
+                        "API call failed for post $postId: ${response.code()} - ${response.message()}"
+                    )
+                    _singlePostError.value = "Failed to fetch post: ${response.message()}"
+                }
+            } catch (e: Exception) {
+                Log.e("PostsViewModel", "Exception in fetchPostById for post $postId", e)
+                _singlePostError.value = "Network error: ${e.message}"
+            } finally {
+                _singlePostLoading.value = false
+            }
+        }
+    }
+
+    // Helper function to clear single post data
+    fun clearSinglePost() {
+        _singlePost.value = null
+        _singlePostError.value = null
+    }
 
 
 }

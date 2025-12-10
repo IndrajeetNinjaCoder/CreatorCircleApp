@@ -27,33 +27,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import com.cc.creatorcircle.R
 import com.cc.creatorcircle.ui.navigation.Screen
-import com.cc.creatorcircle.viewModel.PostsViewModel
-import com.cc.creatorcircle.viewModel.PostsViewModelFactory
+import com.cc.creatorcircle.utils.UserDataManager
 
 @Composable
 fun BottomNavBar(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    // Get context and create viewModel to fetch user profile
+    // Get user profile from UserDataManager
     val context = LocalContext.current
-    val viewModel: PostsViewModel = viewModel(
-        factory = PostsViewModelFactory(context)
-    )
-
-    // User profile states
-    val userProfile by viewModel.userProfile.collectAsState()
-
-    // Fetch user profile when BottomNavBar is first created
-    LaunchedEffect(Unit) {
-        viewModel.fetchUserProfile()
-    }
+    val userDataManager = remember { UserDataManager(context) }
+    val userData = remember { userDataManager.getUserData() }
 
     // Get current route to determine active tab
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -68,7 +57,7 @@ fun BottomNavBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(horizontal = 8.dp), // Reduced from vertical = 2.dp
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -88,23 +77,6 @@ fun BottomNavBar(
                 }
             )
 
-//            BottomNavItem(
-//                iconRes = R.drawable.ic_connections,
-//                label = "Connections",
-//                isActive = currentRoute == Screen.Connections.route,
-//                activeTint = Color(0xFFB726FF),
-//                inactiveTint = Color(0xFF6B7280),
-//                onClick = {
-//                    if (currentRoute != Screen.Connections.route) {
-//                        navController.navigate(Screen.Connections.route) {
-//                            popUpTo(navController.graph.startDestinationId)
-//                            launchSingleTop = true
-//                        }
-//                    }
-//                }
-//            )
-
-
             BottomNavItem(
                 iconRes = R.drawable.ic_brand_collab,
                 label = "Brand Collab",
@@ -121,9 +93,6 @@ fun BottomNavBar(
                     }
                 }
             )
-
-
-
 
             BottomNavItem(
                 iconRes = R.drawable.ic_sabo_ai,
@@ -159,12 +128,12 @@ fun BottomNavBar(
 
             // For profile icon in circle with user's actual profile picture
             BottomNavProfileItem(
-                iconRes = R.drawable.ic_profile1,
+                iconRes = R.drawable.ic_profile,
                 label = "You",
                 isActive = currentRoute == Screen.ProfileWeb.route,
                 activeTint = Color(0xFFB726FF),
                 inactiveTint = Color(0xFF6B7280),
-                userProfilePic = userProfile?.profile_pic,
+                userProfilePic = userData.profilePic,
                 onClick = {
                     if (currentRoute != Screen.ProfileWeb.route) {
 //                        navController.navigate(Screen.ProfileWeb.route) {
@@ -217,7 +186,7 @@ fun BottomNavItem(
                     color = activeTint
                 )
             ) { onClick() }
-            .padding(horizontal = 6.dp, vertical = 2.dp) // Reduced from vertical = 4.dp
+            .padding(horizontal = 6.dp, vertical = 2.dp)
             .scale(animatedScale)
     ) {
         Image(
@@ -227,7 +196,7 @@ fun BottomNavItem(
             colorFilter = ColorFilter.tint(animatedTintColor)
         )
 
-        Spacer(modifier = Modifier.height(2.dp)) // Reduced from 4.dp
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = label,
@@ -237,7 +206,6 @@ fun BottomNavItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-
     }
 }
 
@@ -280,7 +248,7 @@ fun BottomNavProfileItem(
                     color = activeTint
                 )
             ) { onClick() }
-            .padding(horizontal = 12.dp, vertical = 2.dp) // Reduced from vertical = 8.dp
+            .padding(horizontal = 12.dp, vertical = 2.dp)
             .scale(animatedScale)
     ) {
         ProfileIcon(
@@ -290,7 +258,7 @@ fun BottomNavProfileItem(
             userProfilePic = userProfilePic
         )
 
-        Spacer(modifier = Modifier.height(2.dp)) // Reduced from 4.dp
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = label,
@@ -300,7 +268,6 @@ fun BottomNavProfileItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-
     }
 }
 
@@ -311,7 +278,6 @@ fun ProfileIcon(
     isActive: Boolean,
     userProfilePic: String? = null
 ) {
-//    val borderWidth = if (isActive) 3.dp else 2.dp
     val iconSize = if (isActive) 32.dp else 30.dp
 
     // Animated border color
@@ -329,7 +295,6 @@ fun ProfileIcon(
             modifier = Modifier
                 .size(iconSize)
                 .clip(CircleShape)
-//                .border(borderWidth, animatedBorderColor, CircleShape)
                 .background(Color.White, CircleShape),
             placeholder = painterResource(id = iconRes),
             error = painterResource(id = iconRes),
@@ -340,7 +305,6 @@ fun ProfileIcon(
             modifier = Modifier
                 .size(iconSize)
                 .clip(CircleShape)
-//                .border(borderWidth, animatedBorderColor, CircleShape)
                 .background(Color.White, CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -365,14 +329,15 @@ fun ProfileIcon(
 
 
 
+
 //package com.cc.creatorcircle.ui.components
 //
+//import android.util.Log
 //import androidx.compose.animation.animateColorAsState
 //import androidx.compose.animation.core.animateFloatAsState
 //import androidx.compose.animation.core.tween
 //import androidx.compose.foundation.Image
 //import androidx.compose.foundation.background
-//import androidx.compose.foundation.border
 //import androidx.compose.foundation.clickable
 //import androidx.compose.foundation.interaction.MutableInteractionSource
 //import androidx.compose.foundation.layout.*
@@ -385,7 +350,6 @@ fun ProfileIcon(
 //import androidx.compose.ui.Modifier
 //import androidx.compose.ui.draw.clip
 //import androidx.compose.ui.draw.scale
-//import androidx.compose.ui.graphics.Brush
 //import androidx.compose.ui.graphics.Color
 //import androidx.compose.ui.graphics.ColorFilter
 //import androidx.compose.ui.layout.ContentScale
@@ -435,7 +399,8 @@ fun ProfileIcon(
 //        Row(
 //            modifier = Modifier
 //                .fillMaxWidth()
-//                .padding(vertical = 2.dp, horizontal = 8.dp),
+//                .height(60.dp)
+//                .padding(horizontal = 8.dp), // Reduced from vertical = 2.dp
 //            horizontalArrangement = Arrangement.SpaceEvenly,
 //            verticalAlignment = Alignment.CenterVertically
 //        ) {
@@ -456,14 +421,15 @@ fun ProfileIcon(
 //            )
 //
 //            BottomNavItem(
-//                iconRes = R.drawable.ic_connections,
-//                label = "Connections",
-//                isActive = currentRoute == Screen.Connections.route,
+//                iconRes = R.drawable.ic_brand_collab,
+//                label = "Brand Collab",
+//                isActive = currentRoute == Screen.BrandCollab.route,
 //                activeTint = Color(0xFFB726FF),
 //                inactiveTint = Color(0xFF6B7280),
 //                onClick = {
-//                    if (currentRoute != Screen.Connections.route) {
-//                        navController.navigate(Screen.Connections.route) {
+//                    Log.d("BottomNav", "Brand Collab clicked")
+//                    if (currentRoute != Screen.BrandCollab.route) {
+//                        navController.navigate(Screen.BrandCollab.route) {
 //                            popUpTo(navController.graph.startDestinationId)
 //                            launchSingleTop = true
 //                        }
@@ -471,9 +437,12 @@ fun ProfileIcon(
 //                }
 //            )
 //
+//
+//
+//
 //            BottomNavItem(
 //                iconRes = R.drawable.ic_sabo_ai,
-//                label = "Sabo AI",
+//                label = "SABO AI",
 //                isActive = currentRoute == Screen.SaboAI.route,
 //                activeTint = Color(0xFFFF6600),
 //                inactiveTint = Color(0xFFFF6600),
@@ -489,7 +458,7 @@ fun ProfileIcon(
 //
 //            BottomNavItem(
 //                iconRes = R.drawable.ic_video,
-//                label = "Live Session",
+//                label = "Mentor Circle",
 //                isActive = currentRoute == Screen.LiveSession.route,
 //                activeTint = Color(0xFFB726FF),
 //                inactiveTint = Color(0xFF6B7280),
@@ -505,7 +474,7 @@ fun ProfileIcon(
 //
 //            // For profile icon in circle with user's actual profile picture
 //            BottomNavProfileItem(
-//                iconRes = R.drawable.ic_profile,
+//                iconRes = R.drawable.ic_profile1,
 //                label = "You",
 //                isActive = currentRoute == Screen.ProfileWeb.route,
 //                activeTint = Color(0xFFB726FF),
@@ -513,7 +482,8 @@ fun ProfileIcon(
 //                userProfilePic = userProfile?.profile_pic,
 //                onClick = {
 //                    if (currentRoute != Screen.ProfileWeb.route) {
-//                        navController.navigate(Screen.ProfileWeb.route) {
+////                        navController.navigate(Screen.ProfileWeb.route) {
+//                        navController.navigate(Screen.ProfileScreen.route) {
 //                            popUpTo(navController.graph.startDestinationId)
 //                            launchSingleTop = true
 //                        }
@@ -562,7 +532,7 @@ fun ProfileIcon(
 //                    color = activeTint
 //                )
 //            ) { onClick() }
-//            .padding(horizontal = 6.dp, vertical = 4.dp)
+//            .padding(horizontal = 6.dp, vertical = 2.dp) // Reduced from vertical = 4.dp
 //            .scale(animatedScale)
 //    ) {
 //        Image(
@@ -572,7 +542,7 @@ fun ProfileIcon(
 //            colorFilter = ColorFilter.tint(animatedTintColor)
 //        )
 //
-//        Spacer(modifier = Modifier.height(4.dp))
+//        Spacer(modifier = Modifier.height(2.dp)) // Reduced from 4.dp
 //
 //        Text(
 //            text = label,
@@ -625,7 +595,7 @@ fun ProfileIcon(
 //                    color = activeTint
 //                )
 //            ) { onClick() }
-//            .padding(horizontal = 12.dp, vertical = 8.dp)
+//            .padding(horizontal = 12.dp, vertical = 2.dp) // Reduced from vertical = 8.dp
 //            .scale(animatedScale)
 //    ) {
 //        ProfileIcon(
@@ -635,7 +605,7 @@ fun ProfileIcon(
 //            userProfilePic = userProfilePic
 //        )
 //
-//        Spacer(modifier = Modifier.height(4.dp))
+//        Spacer(modifier = Modifier.height(2.dp)) // Reduced from 4.dp
 //
 //        Text(
 //            text = label,
@@ -656,8 +626,8 @@ fun ProfileIcon(
 //    isActive: Boolean,
 //    userProfilePic: String? = null
 //) {
-//    val borderWidth = if (isActive) 3.dp else 2.dp
-//    val iconSize = if (isActive) 34.dp else 32.dp
+////    val borderWidth = if (isActive) 3.dp else 2.dp
+//    val iconSize = if (isActive) 32.dp else 30.dp
 //
 //    // Animated border color
 //    val animatedBorderColor by animateColorAsState(
@@ -674,7 +644,7 @@ fun ProfileIcon(
 //            modifier = Modifier
 //                .size(iconSize)
 //                .clip(CircleShape)
-//                .border(borderWidth, animatedBorderColor, CircleShape)
+////                .border(borderWidth, animatedBorderColor, CircleShape)
 //                .background(Color.White, CircleShape),
 //            placeholder = painterResource(id = iconRes),
 //            error = painterResource(id = iconRes),
@@ -685,7 +655,7 @@ fun ProfileIcon(
 //            modifier = Modifier
 //                .size(iconSize)
 //                .clip(CircleShape)
-//                .border(borderWidth, animatedBorderColor, CircleShape)
+////                .border(borderWidth, animatedBorderColor, CircleShape)
 //                .background(Color.White, CircleShape),
 //            contentAlignment = Alignment.Center
 //        ) {
@@ -699,23 +669,3 @@ fun ProfileIcon(
 //    }
 //}
 //
-
-
-
-
-
-
-// Active indicator dot
-//        if (isActive) {
-//            Spacer(modifier = Modifier.height(2.dp))
-//            Box(
-//                modifier = Modifier
-//                    .size(4.dp)
-//                    .background(
-//                        brush = Brush.radialGradient(
-//                            colors = listOf(activeTint, activeTint.copy(alpha = 0.7f))
-//                        ),
-//                        shape = CircleShape
-//                    )
-//            )
-//        }

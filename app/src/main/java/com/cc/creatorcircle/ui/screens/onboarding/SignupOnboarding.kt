@@ -66,6 +66,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.cc.creatorcircle.R
 import com.cc.creatorcircle.ui.components.GradientButton
+import com.cc.creatorcircle.utils.FirebaseAnalyticsHelper
 import com.cc.creatorcircle.viewModel.UserUpdateState
 import com.cc.creatorcircle.viewModel.UserViewModel
 import kotlinx.coroutines.delay
@@ -82,18 +83,23 @@ enum class OnboardingStep {
 
 @Composable
 fun SignupOnboarding(navController: NavController) {
-
-
     val context = LocalContext.current
-
     val userViewModel = remember { UserViewModel(context) }
-
     var showDialog by remember { mutableStateOf(true) }
+
+    // Track onboarding screen view
+    LaunchedEffect(Unit) {
+        FirebaseAnalyticsHelper.logScreenView("SignupOnboarding", "SignupOnboarding")
+        FirebaseAnalyticsHelper.logEvent("onboarding_started")
+    }
 
     if (showDialog) {
         OnboardingFlowDialog(
             userViewModel = userViewModel,
             onDismiss = {
+                FirebaseAnalyticsHelper.logEvent("onboarding_dismissed", mapOf(
+                    "completion_status" to "incomplete"
+                ))
                 showDialog = false
                 navController.navigate("saboai")
             },
@@ -101,6 +107,14 @@ fun SignupOnboarding(navController: NavController) {
                 println("Selected categories: $categories")
                 println("Personal info - Name: $name, Age: $age")
                 println("Instagram handle: $instagramHandle")
+
+                FirebaseAnalyticsHelper.logEvent("onboarding_completed", mapOf(
+                    "categories_count" to categories.size.toString(),
+                    "has_name" to if (name.isNotBlank()) "yes" else "no",
+                    "has_age" to if (age > 0) "yes" else "no",
+                    "has_instagram" to if (instagramHandle.isNotBlank()) "yes" else "no"
+                ))
+
                 showDialog = false
             }
         )
@@ -119,22 +133,37 @@ fun OnboardingFlowDialog(
     var age by remember { mutableStateOf(0) }
     var instagramHandle by remember { mutableStateOf("") }
 
-    // Observe ViewModel states using collectAsState for StateFlow
     val isLoading by userViewModel.isLoading.collectAsState()
-//    val profileUpdateLoading by userViewModel.profileUpdateLoading.collectAsState()
     val error by userViewModel.error.collectAsState()
-//    val successMessage by userViewModel.successMessage.collectAsState()
-//    val updateSuccess by userViewModel.updateSuccess.collectAsState()
 
-    // Show error message if any
-    LaunchedEffect(error) {
-        if (!error.isNullOrEmpty()) {
-            // You can show a toast or snackbar here
-            println("Error: $error")
+    // Track step changes
+    LaunchedEffect(currentStep) {
+        val stepName = when (currentStep) {
+            OnboardingStep.CATEGORY_SELECTION -> "category_selection"
+            OnboardingStep.PERSONAL_INFORMATION -> "personal_information"
+            OnboardingStep.INSTAGRAM_CONNECTION -> "instagram_connection"
         }
+        FirebaseAnalyticsHelper.logEvent("onboarding_step_viewed", mapOf(
+            "step" to stepName,
+            "step_number" to when (currentStep) {
+                OnboardingStep.CATEGORY_SELECTION -> "1"
+                OnboardingStep.PERSONAL_INFORMATION -> "2"
+                OnboardingStep.INSTAGRAM_CONNECTION -> "3"
+            }
+        ))
     }
 
-
+    // Track errors
+    LaunchedEffect(error) {
+        error?.let { errorMsg ->
+            FirebaseAnalyticsHelper.logError(
+                errorType = "onboarding_error",
+                errorMessage = errorMsg,
+                context = "OnboardingFlowDialog"
+            )
+            println("Error: $errorMsg")
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -147,18 +176,20 @@ fun OnboardingFlowDialog(
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             when (currentStep) {
-
                 OnboardingStep.CATEGORY_SELECTION -> {
                     CategorySelectionStep(
                         userViewModel = userViewModel,
-//      isLoading = profileUpdateLoading,
                         onDismiss = onDismiss,
                         onNext = { categories ->
                             selectedCategories = categories
-                            // Update user categories with list instead of comma-separated string
-                            userViewModel.updateUser(
-                                categories = categories
-                            )
+
+                            // Track category selection
+                            FirebaseAnalyticsHelper.logEvent("onboarding_categories_selected", mapOf(
+                                "categories_count" to categories.size.toString(),
+                                "categories" to categories.joinToString(",")
+                            ))
+
+                            userViewModel.updateUser(categories = categories)
                             currentStep = OnboardingStep.PERSONAL_INFORMATION
                         }
                     )
@@ -170,20 +201,36 @@ fun OnboardingFlowDialog(
                         isLoading = isLoading,
                         onDismiss = onDismiss,
                         onBack = {
+                            FirebaseAnalyticsHelper.logEvent("onboarding_step_back", mapOf(
+                                "from_step" to "personal_information",
+                                "to_step" to "category_selection"
+                            ))
                             currentStep = OnboardingStep.CATEGORY_SELECTION
                         },
                         onNext = { name, ageValue ->
-                            // Store the values
                             fullName = name
                             age = ageValue
 
-                            // Update user with the provided name and age
+                            // Track personal information submission
+                            FirebaseAnalyticsHelper.logEvent("onboarding_personal_info_submitted", mapOf(
+                                "has_name" to if (name.isNotBlank()) "yes" else "no",
+                                "has_age" to if (ageValue > 0) "yes" else "no",
+                                "age_range" to when {
+                                    ageValue == 0 -> "not_provided"
+                                    ageValue < 18 -> "under_18"
+                                    ageValue in 18..24 -> "18_24"
+                                    ageValue in 25..34 -> "25_34"
+                                    ageValue in 35..44 -> "35_44"
+                                    ageValue >= 45 -> "45_plus"
+                                    else -> "unknown"
+                                }
+                            ))
+
                             userViewModel.updateUser(
                                 fullName = if (name.isNotBlank()) name else null,
                                 age = if (ageValue > 0) ageValue else null
                             )
 
-                            // Navigate to next step
                             currentStep = OnboardingStep.INSTAGRAM_CONNECTION
                         }
                     )
@@ -192,12 +239,16 @@ fun OnboardingFlowDialog(
                 OnboardingStep.INSTAGRAM_CONNECTION -> {
                     InstagramConnectionStep(
                         userViewModel = userViewModel,
-//                        isLoading = updateState is UserUpdateState.Loading,
                         onDismiss = onDismiss,
                         onBack = {
+                            FirebaseAnalyticsHelper.logEvent("onboarding_step_back", mapOf(
+                                "from_step" to "instagram_connection",
+                                "to_step" to "personal_information"
+                            ))
                             currentStep = OnboardingStep.PERSONAL_INFORMATION
                         },
                         onComplete = {
+                            FirebaseAnalyticsHelper.logEvent("onboarding_instagram_completed")
                         }
                     )
                 }
@@ -205,16 +256,13 @@ fun OnboardingFlowDialog(
         }
     }
 
-    // Show error snackbar if needed
     error?.let { errorMsg ->
         LaunchedEffect(errorMsg) {
-            // You can implement a snackbar here
             delay(3000)
             userViewModel.clearError()
         }
     }
 }
-
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -225,6 +273,15 @@ fun CategorySelectionStep(
     onNext: (List<String>) -> Unit
 ) {
     var selectedCategories by remember { mutableStateOf(setOf<String>()) }
+
+    // Track category interactions
+    LaunchedEffect(selectedCategories) {
+        if (selectedCategories.isNotEmpty()) {
+            FirebaseAnalyticsHelper.logEvent("onboarding_category_interaction", mapOf(
+                "selected_count" to selectedCategories.size.toString()
+            ))
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -242,6 +299,10 @@ fun CategorySelectionStep(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable {
+                    FirebaseAnalyticsHelper.logEvent("onboarding_step_skipped", mapOf(
+                        "step" to "category_selection",
+                        "categories_selected" to selectedCategories.size.toString()
+                    ))
                     userViewModel.updateUser(onboardingStatus = false)
                     if (!isLoading) onDismiss()
                 }
@@ -250,7 +311,6 @@ fun CategorySelectionStep(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Title and description
         Text(
             text = "Step 1: Category",
             fontSize = 18.sp,
@@ -269,7 +329,6 @@ fun CategorySelectionStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Category selection takes up available space
         CategorySelection(
             modifier = Modifier.weight(1f),
             enabled = !isLoading,
@@ -280,7 +339,6 @@ fun CategorySelectionStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -290,7 +348,12 @@ fun CategorySelectionStep(
                 enabled = !isLoading,
             ) {
                 Log.d("Selected-categories", "CategorySelectionStep: " + selectedCategories)
-                // Convert categories to JSON array format
+
+                FirebaseAnalyticsHelper.logEvent("onboarding_step_next_clicked", mapOf(
+                    "step" to "category_selection",
+                    "categories_count" to selectedCategories.size.toString()
+                ))
+
                 val categoriesList = selectedCategories.toList()
                 if (!isLoading) {
                     onNext(categoriesList)
@@ -299,7 +362,6 @@ fun CategorySelectionStep(
         }
     }
 }
-
 
 @Composable
 fun PersonalInformationStep(
@@ -315,11 +377,32 @@ fun PersonalInformationStep(
 
     val isFormValid = fullName.isNotBlank() || age != 0
 
+    // Track field interactions
+    LaunchedEffect(fullName) {
+        if (fullName.length >= 3) {
+            FirebaseAnalyticsHelper.logEvent("onboarding_name_entered")
+        }
+    }
+
+    LaunchedEffect(age) {
+        if (age > 0) {
+            FirebaseAnalyticsHelper.logEvent("onboarding_age_entered", mapOf(
+                "age_range" to when {
+                    age < 18 -> "under_18"
+                    age in 18..24 -> "18_24"
+                    age in 25..34 -> "25_34"
+                    age in 35..44 -> "35_44"
+                    age >= 45 -> "45_plus"
+                    else -> "unknown"
+                }
+            ))
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-
     ) {
         // Top bar with skip button
         Row(
@@ -332,6 +415,12 @@ fun PersonalInformationStep(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable {
+                    FirebaseAnalyticsHelper.logEvent("onboarding_step_skipped", mapOf(
+                        "step" to "personal_information",
+                        "has_name" to if (fullName.isNotBlank()) "yes" else "no",
+                        "has_age" to if (age > 0) "yes" else "no"
+                    ))
+
                     if (!isLoading) {
                         userViewModel.updateUser(onboardingStatus = false)
                         onDismiss()
@@ -342,7 +431,6 @@ fun PersonalInformationStep(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Title and description
         Text(
             text = "Step 2: Personal Information",
             fontSize = 18.sp,
@@ -361,10 +449,8 @@ fun PersonalInformationStep(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Form fields
         Column(
-            modifier = Modifier
-                .weight(1f),
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Full Name field
@@ -396,7 +482,6 @@ fun PersonalInformationStep(
                 CustomTextField(
                     value = ageText,
                     onValueChange = { newAgeText ->
-                        // Only allow numeric input and limit to 3 digits
                         if (newAgeText.all { it.isDigit() } && newAgeText.length <= 3) {
                             ageText = newAgeText
                             age = newAgeText.toIntOrNull() ?: 0
@@ -409,7 +494,6 @@ fun PersonalInformationStep(
             }
         }
 
-        // Note section
         if (!isFormValid) {
             Card(
                 modifier = Modifier
@@ -431,14 +515,17 @@ fun PersonalInformationStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Bottom buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
         ) {
-            // Back button
             TextButton(
-                onClick = onBack,
+                onClick = {
+                    FirebaseAnalyticsHelper.logEvent("onboarding_back_clicked", mapOf(
+                        "from_step" to "personal_information"
+                    ))
+                    onBack()
+                },
                 enabled = !isLoading,
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = Color(0xFF666666)
@@ -447,18 +534,534 @@ fun PersonalInformationStep(
                 Text("Back")
             }
 
-            // Next button - Only calls onNext
             GradientButton(
                 text = if (isLoading) "Loading..." else "Next",
                 enabled = isFormValid && !isLoading
             ) {
                 if (isFormValid && !isLoading) {
+                    FirebaseAnalyticsHelper.logEvent("onboarding_step_next_clicked", mapOf(
+                        "step" to "personal_information",
+                        "has_name" to if (fullName.isNotBlank()) "yes" else "no",
+                        "has_age" to if (age > 0) "yes" else "no",
+                        "name_length" to fullName.length.toString()
+                    ))
+
                     onNext(fullName, age)
                 }
             }
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Without Firebase Events
+//@file:OptIn(ExperimentalLayoutApi::class)
+//
+//package com.cc.creatorcircle.ui.screens.onboarding
+//
+//
+//import android.util.Log
+//import androidx.compose.animation.AnimatedVisibility
+//import androidx.compose.animation.fadeIn
+//import androidx.compose.animation.fadeOut
+//import androidx.compose.animation.slideInVertically
+//import androidx.compose.animation.slideOutVertically
+//import androidx.compose.foundation.BorderStroke
+//import androidx.compose.foundation.Image
+//import androidx.compose.foundation.background
+//import androidx.compose.foundation.border
+//import androidx.compose.foundation.clickable
+//import androidx.compose.foundation.layout.Arrangement
+//import androidx.compose.foundation.layout.Box
+//import androidx.compose.foundation.layout.Column
+//import androidx.compose.foundation.layout.ExperimentalLayoutApi
+//import androidx.compose.foundation.layout.Row
+//import androidx.compose.foundation.layout.Spacer
+//import androidx.compose.foundation.layout.fillMaxHeight
+//import androidx.compose.foundation.layout.fillMaxSize
+//import androidx.compose.foundation.layout.fillMaxWidth
+//import androidx.compose.foundation.layout.height
+//import androidx.compose.foundation.layout.padding
+//import androidx.compose.foundation.layout.size
+//import androidx.compose.foundation.rememberScrollState
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.foundation.text.BasicTextField
+//import androidx.compose.foundation.text.KeyboardOptions
+//import androidx.compose.foundation.verticalScroll
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.CheckCircle
+//import androidx.compose.material.icons.filled.Error
+//import androidx.compose.material.icons.filled.Shield
+//import androidx.compose.material3.Button
+//import androidx.compose.material3.ButtonDefaults
+//import androidx.compose.material3.Card
+//import androidx.compose.material3.CardDefaults
+//import androidx.compose.material3.Icon
+//import androidx.compose.material3.OutlinedButton
+//import androidx.compose.material3.Text
+//import androidx.compose.material3.TextButton
+//import androidx.compose.runtime.Composable
+//import androidx.compose.runtime.LaunchedEffect
+//import androidx.compose.runtime.collectAsState
+//import androidx.compose.runtime.getValue
+//import androidx.compose.runtime.mutableStateOf
+//import androidx.compose.runtime.remember
+//import androidx.compose.runtime.setValue
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.graphics.Color
+//import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.res.painterResource
+//import androidx.compose.ui.text.TextStyle
+//import androidx.compose.ui.text.font.FontWeight
+//import androidx.compose.ui.text.input.ImeAction
+//import androidx.compose.ui.text.input.KeyboardType
+//import androidx.compose.ui.text.style.TextAlign
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.unit.sp
+//import androidx.compose.ui.window.Dialog
+//import androidx.navigation.NavController
+//import com.cc.creatorcircle.R
+//import com.cc.creatorcircle.ui.components.GradientButton
+//import com.cc.creatorcircle.viewModel.UserUpdateState
+//import com.cc.creatorcircle.viewModel.UserViewModel
+//import kotlinx.coroutines.delay
+//import androidx.compose.ui.graphics.Brush
+//import androidx.compose.ui.graphics.SolidColor
+//import androidx.compose.ui.text.style.TextOverflow
+//import androidx.compose.ui.draw.alpha
+//
+//enum class OnboardingStep {
+//    CATEGORY_SELECTION,
+//    PERSONAL_INFORMATION,
+//    INSTAGRAM_CONNECTION
+//}
+//
+//@Composable
+//fun SignupOnboarding(navController: NavController) {
+//
+//
+//    val context = LocalContext.current
+//
+//    val userViewModel = remember { UserViewModel(context) }
+//
+//    var showDialog by remember { mutableStateOf(true) }
+//
+//    if (showDialog) {
+//        OnboardingFlowDialog(
+//            userViewModel = userViewModel,
+//            onDismiss = {
+//                showDialog = false
+//                navController.navigate("saboai")
+//            },
+//            onComplete = { categories, name, age, instagramHandle ->
+//                println("Selected categories: $categories")
+//                println("Personal info - Name: $name, Age: $age")
+//                println("Instagram handle: $instagramHandle")
+//                showDialog = false
+//            }
+//        )
+//    }
+//}
+//
+//@Composable
+//fun OnboardingFlowDialog(
+//    userViewModel: UserViewModel,
+//    onDismiss: () -> Unit,
+//    onComplete: (List<String>, String, Int, String) -> Unit
+//) {
+//    var currentStep by remember { mutableStateOf(OnboardingStep.CATEGORY_SELECTION) }
+//    var selectedCategories by remember { mutableStateOf(listOf<String>()) }
+//    var fullName by remember { mutableStateOf("") }
+//    var age by remember { mutableStateOf(0) }
+//    var instagramHandle by remember { mutableStateOf("") }
+//
+//    // Observe ViewModel states using collectAsState for StateFlow
+//    val isLoading by userViewModel.isLoading.collectAsState()
+////    val profileUpdateLoading by userViewModel.profileUpdateLoading.collectAsState()
+//    val error by userViewModel.error.collectAsState()
+////    val successMessage by userViewModel.successMessage.collectAsState()
+////    val updateSuccess by userViewModel.updateSuccess.collectAsState()
+//
+//    // Show error message if any
+//    LaunchedEffect(error) {
+//        if (!error.isNullOrEmpty()) {
+//            // You can show a toast or snackbar here
+//            println("Error: $error")
+//        }
+//    }
+//
+//
+//
+//    Dialog(onDismissRequest = onDismiss) {
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .fillMaxHeight(0.9f)
+//                .padding(6.dp),
+//            shape = RoundedCornerShape(16.dp),
+//            colors = CardDefaults.cardColors(containerColor = Color.White),
+//            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+//        ) {
+//            when (currentStep) {
+//
+//                OnboardingStep.CATEGORY_SELECTION -> {
+//                    CategorySelectionStep(
+//                        userViewModel = userViewModel,
+////      isLoading = profileUpdateLoading,
+//                        onDismiss = onDismiss,
+//                        onNext = { categories ->
+//                            selectedCategories = categories
+//                            // Update user categories with list instead of comma-separated string
+//                            userViewModel.updateUser(
+//                                categories = categories
+//                            )
+//                            currentStep = OnboardingStep.PERSONAL_INFORMATION
+//                        }
+//                    )
+//                }
+//
+//                OnboardingStep.PERSONAL_INFORMATION -> {
+//                    PersonalInformationStep(
+//                        userViewModel = userViewModel,
+//                        isLoading = isLoading,
+//                        onDismiss = onDismiss,
+//                        onBack = {
+//                            currentStep = OnboardingStep.CATEGORY_SELECTION
+//                        },
+//                        onNext = { name, ageValue ->
+//                            // Store the values
+//                            fullName = name
+//                            age = ageValue
+//
+//                            // Update user with the provided name and age
+//                            userViewModel.updateUser(
+//                                fullName = if (name.isNotBlank()) name else null,
+//                                age = if (ageValue > 0) ageValue else null
+//                            )
+//
+//                            // Navigate to next step
+//                            currentStep = OnboardingStep.INSTAGRAM_CONNECTION
+//                        }
+//                    )
+//                }
+//
+//                OnboardingStep.INSTAGRAM_CONNECTION -> {
+//                    InstagramConnectionStep(
+//                        userViewModel = userViewModel,
+////                        isLoading = updateState is UserUpdateState.Loading,
+//                        onDismiss = onDismiss,
+//                        onBack = {
+//                            currentStep = OnboardingStep.PERSONAL_INFORMATION
+//                        },
+//                        onComplete = {
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//
+//    // Show error snackbar if needed
+//    error?.let { errorMsg ->
+//        LaunchedEffect(errorMsg) {
+//            // You can implement a snackbar here
+//            delay(3000)
+//            userViewModel.clearError()
+//        }
+//    }
+//}
+//
+//
+//@OptIn(ExperimentalLayoutApi::class)
+//@Composable
+//fun CategorySelectionStep(
+//    userViewModel: UserViewModel,
+//    isLoading: Boolean = false,
+//    onDismiss: () -> Unit,
+//    onNext: (List<String>) -> Unit
+//) {
+//    var selectedCategories by remember { mutableStateOf(setOf<String>()) }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp)
+//    ) {
+//        // Top bar with skip button
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.End
+//        ) {
+//            Text(
+//                text = "Skip",
+//                color = Color(0xFFE91E63),
+//                fontSize = 14.sp,
+//                fontWeight = FontWeight.Medium,
+//                modifier = Modifier.clickable {
+//                    userViewModel.updateUser(onboardingStatus = false)
+//                    if (!isLoading) onDismiss()
+//                }
+//            )
+//        }
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // Title and description
+//        Text(
+//            text = "Step 1: Category",
+//            fontSize = 18.sp,
+//            fontWeight = FontWeight.SemiBold,
+//            color = Color.Black
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        Text(
+//            text = "Select one or more categories that best reflect your content or areas of interest",
+//            fontSize = 14.sp,
+//            color = Color(0xFF666666),
+//            lineHeight = 20.sp
+//        )
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        // Category selection takes up available space
+//        CategorySelection(
+//            modifier = Modifier.weight(1f),
+//            enabled = !isLoading,
+//            onCategoriesSelected = { categories ->
+//                selectedCategories = categories
+//            }
+//        )
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.End
+//        ) {
+//            GradientButton(
+//                text = if (isLoading) "Saving..." else "Next",
+//                enabled = !isLoading,
+//            ) {
+//                Log.d("Selected-categories", "CategorySelectionStep: " + selectedCategories)
+//                // Convert categories to JSON array format
+//                val categoriesList = selectedCategories.toList()
+//                if (!isLoading) {
+//                    onNext(categoriesList)
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//
+//@Composable
+//fun PersonalInformationStep(
+//    userViewModel: UserViewModel,
+//    isLoading: Boolean = false,
+//    onDismiss: () -> Unit,
+//    onBack: () -> Unit,
+//    onNext: (String, Int) -> Unit
+//) {
+//    var fullName by remember { mutableStateOf("") }
+//    var age by remember { mutableStateOf(0) }
+//    var ageText by remember { mutableStateOf("") }
+//
+//    val isFormValid = fullName.isNotBlank() || age != 0
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp)
+//
+//    ) {
+//        // Top bar with skip button
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.End
+//        ) {
+//            Text(
+//                text = "Skip",
+//                color = Color(0xFFE91E63),
+//                fontSize = 14.sp,
+//                fontWeight = FontWeight.Medium,
+//                modifier = Modifier.clickable {
+//                    if (!isLoading) {
+//                        userViewModel.updateUser(onboardingStatus = false)
+//                        onDismiss()
+//                    }
+//                }
+//            )
+//        }
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // Title and description
+//        Text(
+//            text = "Step 2: Personal Information",
+//            fontSize = 18.sp,
+//            fontWeight = FontWeight.SemiBold,
+//            color = Color.Black
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        Text(
+//            text = "Tell us a bit about yourself to Personalize your experience",
+//            fontSize = 14.sp,
+//            color = Color(0xFF666666),
+//            lineHeight = 20.sp
+//        )
+//
+//        Spacer(modifier = Modifier.height(32.dp))
+//
+//        // Form fields
+//        Column(
+//            modifier = Modifier
+//                .weight(1f),
+//            verticalArrangement = Arrangement.spacedBy(16.dp)
+//        ) {
+//            // Full Name field
+//            Column {
+//                Text(
+//                    text = "Full Name",
+//                    fontSize = 16.sp,
+//                    fontWeight = FontWeight.Medium,
+//                    color = Color.Black
+//                )
+//                Spacer(modifier = Modifier.height(8.dp))
+//                CustomTextField(
+//                    value = fullName,
+//                    onValueChange = { fullName = it },
+//                    placeholder = "Enter your Name",
+//                    enabled = !isLoading
+//                )
+//            }
+//
+//            // Age field
+//            Column {
+//                Text(
+//                    text = "Age",
+//                    fontSize = 16.sp,
+//                    fontWeight = FontWeight.Medium,
+//                    color = Color.Black
+//                )
+//                Spacer(modifier = Modifier.height(8.dp))
+//                CustomTextField(
+//                    value = ageText,
+//                    onValueChange = { newAgeText ->
+//                        // Only allow numeric input and limit to 3 digits
+//                        if (newAgeText.all { it.isDigit() } && newAgeText.length <= 3) {
+//                            ageText = newAgeText
+//                            age = newAgeText.toIntOrNull() ?: 0
+//                        }
+//                    },
+//                    placeholder = "Enter your Age",
+//                    keyboardType = KeyboardType.Number,
+//                    enabled = !isLoading
+//                )
+//            }
+//        }
+//
+//        // Note section
+//        if (!isFormValid) {
+//            Card(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(vertical = 16.dp),
+//                colors = CardDefaults.cardColors(
+//                    containerColor = Color(0xFFF5F5F5)
+//                ),
+//                shape = RoundedCornerShape(8.dp)
+//            ) {
+//                Text(
+//                    text = "Note: Please fill in either your full name or age to continue to the next step",
+//                    fontSize = 12.sp,
+//                    color = Color(0xFF666666),
+//                    modifier = Modifier.padding(12.dp)
+//                )
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        // Bottom buttons
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
+//        ) {
+//            // Back button
+//            TextButton(
+//                onClick = onBack,
+//                enabled = !isLoading,
+//                colors = ButtonDefaults.textButtonColors(
+//                    contentColor = Color(0xFF666666)
+//                )
+//            ) {
+//                Text("Back")
+//            }
+//
+//            // Next button - Only calls onNext
+//            GradientButton(
+//                text = if (isLoading) "Loading..." else "Next",
+//                enabled = isFormValid && !isLoading
+//            ) {
+//                if (isFormValid && !isLoading) {
+//                    onNext(fullName, age)
+//                }
+//            }
+//        }
+//    }
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //@Composable

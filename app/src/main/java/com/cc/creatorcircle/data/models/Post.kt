@@ -10,6 +10,13 @@ data class PostsResponse(
     @SerializedName("data") val data: List<Post>
 )
 
+// Response for single post fetch
+data class SinglePostResponse(
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: Post
+)
+
 data class Post(
     @SerializedName("id") val id: String,
     @SerializedName("author") val author: Author,

@@ -48,7 +48,13 @@ sealed class Screen(val route: String) {
 
 
 
-    object NotificationsWeb : Screen("notifications")
+//    object NotificationsWeb : Screen("notifications")
+
+
+    object Notifications : Screen("notifications")
+
+
+
 
     object CreatorCoin : Screen("creatorcoin")
 
@@ -63,6 +69,11 @@ sealed class Screen(val route: String) {
     object UserProfile : Screen("userprofile/{userId}") {
         fun createRoute(userId: Int) = "userprofile/$userId"
     }
+
+    object UserProfileScreen : Screen("userprofilescreen/{InfluencerId}") {
+        fun createRoute(InfluencerId: Int) = "userprofilescreen/$InfluencerId"
+    }
+
 
 //    object BookingSlot : Screen("booking_slot/{userId}") {
 //        fun createRoute(userId: Int) = "booking_slot/$userId"
@@ -84,12 +95,25 @@ sealed class Screen(val route: String) {
 
 //    object MessageScreen : Screen("message_screen")
 
+//    object MessageScreen : Screen("message_screen/{userId}/{userName}/{profilePic}") {
+//        fun createRoute(userId: Int, userName: String, profilePic: String?) =
+//            "message_screen/$userId/${Uri.encode(userName)}/${Uri.encode(profilePic ?: "")}"
+//    }
+
+
     object MessageScreen : Screen("message_screen/{userId}/{userName}/{profilePic}") {
+        // Original route with all parameters
         fun createRoute(userId: Int, userName: String, profilePic: String?) =
             "message_screen/$userId/${Uri.encode(userName)}/${Uri.encode(profilePic ?: "")}"
+
+        // New route with only userId
+        fun createRouteWithUserId(userId: Int) = "message_screen/$userId"
     }
 
 
+    object PostScreen : Screen("postscreen/{postId}") {
+        fun createRoute(postId: String) = "postscreen/$postId"
+    }
 
 
 }

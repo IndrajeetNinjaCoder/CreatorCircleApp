@@ -1,77 +1,55 @@
 package com.cc.creatorcircle.ui.screens.onboarding
 
-
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
-//import com.example.creatorcircleapp.ui.theme.CreatorCircleAppTheme
-
-
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.platform.LocalConfiguration
-import kotlinx.coroutines.launch
 import com.cc.creatorcircle.R
+import com.cc.creatorcircle.utils.FirebaseAnalyticsHelper
+import kotlinx.coroutines.launch
 
 @Composable
 fun FirstScreen(pagerState: PagerState) {
-
     val scope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Determine if device is a tablet (width >= 600dp is common tablet threshold)
     val isTablet = screenWidth >= 600.dp
 
-//    // Responsive font sizes
-//    val titleFontSize = if (isTablet) 56.sp else 28.sp // Doubled for tablet
-//    val titleLineHeight = if (isTablet) 64.sp else 32.sp
-//    val buttonFontSize = if (isTablet) 28.sp else 14.sp
-
-    // Responsive font sizes
-    val titleFontSize = if (isTablet) 42.sp else 28.sp // Doubled for tablet
+    val titleFontSize = if (isTablet) 42.sp else 28.sp
     val titleLineHeight = if (isTablet) 48.sp else 32.sp
     val buttonFontSize = if (isTablet) 21.sp else 14.sp
 
-
-    // Calculate responsive image dimensions
     val imageWidth = (screenWidth * 0.4f).coerceAtLeast(170.dp)
     val imageHeight = (screenHeight * 0.32f).coerceAtLeast(260.dp)
 
-    // Calculate responsive offsets based on screen size
     val leftImageOffsetX = (-screenWidth * 0.08f).coerceAtMost((-40).dp)
     val leftImageOffsetY = screenHeight * 0.05f
     val rightImageOffsetX = screenWidth * 0.15f
     val rightImageOffsetY = screenHeight * 0.2f
     val centerImageOffsetY = screenHeight * 0.12f
+
+    // Track screen view
+    LaunchedEffect(Unit) {
+        FirebaseAnalyticsHelper.logScreenView("FirstOnboardingScreen", "FirstScreen")
+        FirebaseAnalyticsHelper.logEvent("onboarding_carousel_page_viewed", mapOf(
+            "page_number" to "1",
+            "page_name" to "intro"
+        ))
+    }
 
     Box(
         modifier = Modifier
@@ -79,13 +57,13 @@ fun FirstScreen(pagerState: PagerState) {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xE5893BCF), // Purple
-                        Color(0x00FFFFFF), // Transparent White
-                        Color(0x00FFFFFF), // Transparent White
-                        Color(0xFFEA3BA1)  // Pink
+                        Color(0xE5893BCF),
+                        Color(0x00FFFFFF),
+                        Color(0x00FFFFFF),
+                        Color(0xFFEA3BA1)
                     ),
-                    start = Offset(0f, 0f), // Top-left corner
-                    end = Offset.Infinite   // Bottom-right corner
+                    start = Offset(0f, 0f),
+                    end = Offset.Infinite
                 )
             )
     ) {
@@ -98,12 +76,10 @@ fun FirstScreen(pagerState: PagerState) {
             Image(
                 painter = painterResource(id = R.drawable.onboarding_first),
                 contentDescription = "First Image",
-                modifier = Modifier.fillMaxSize() // set size as needed
+                modifier = Modifier.fillMaxSize()
             )
         }
 
-
-        // Next → Button
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -111,6 +87,10 @@ fun FirstScreen(pagerState: PagerState) {
         ) {
             Button(
                 onClick = {
+                    FirebaseAnalyticsHelper.logEvent("onboarding_carousel_next_clicked", mapOf(
+                        "from_page" to "1",
+                        "to_page" to "2"
+                    ))
                     scope.launch {
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     }
@@ -131,9 +111,154 @@ fun FirstScreen(pagerState: PagerState) {
                 )
             }
         }
-
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//package com.cc.creatorcircle.ui.screens.onboarding
+//
+//
+//import androidx.compose.foundation.layout.fillMaxSize
+//import androidx.compose.foundation.layout.padding
+//import androidx.compose.material3.Text
+//import androidx.compose.runtime.Composable
+//import androidx.compose.ui.Modifier
+//
+//
+//import androidx.compose.foundation.Image
+//import androidx.compose.foundation.background
+//import androidx.compose.foundation.border
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.shape.CircleShape
+//import androidx.compose.material3.*
+//import androidx.compose.runtime.*
+//import androidx.compose.ui.draw.clip
+//import androidx.compose.ui.graphics.graphicsLayer
+//import androidx.compose.ui.res.painterResource
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.unit.sp
+//
+//
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.graphics.Brush
+//import androidx.compose.ui.graphics.Color
+//import androidx.compose.ui.layout.ContentScale
+//import androidx.compose.ui.text.style.TextAlign
+////import com.example.creatorcircleapp.ui.theme.CreatorCircleAppTheme
+//
+//
+//import androidx.compose.foundation.pager.PagerState
+//import androidx.compose.runtime.rememberCoroutineScope
+//import androidx.compose.ui.geometry.Offset
+//import androidx.compose.ui.text.font.Font
+//import androidx.compose.ui.text.font.FontFamily
+//import androidx.compose.ui.platform.LocalConfiguration
+//import kotlinx.coroutines.launch
+//import com.cc.creatorcircle.R
+//
+//@Composable
+//fun FirstScreen(pagerState: PagerState) {
+//
+//    val scope = rememberCoroutineScope()
+//    val configuration = LocalConfiguration.current
+//    val screenWidth = configuration.screenWidthDp.dp
+//    val screenHeight = configuration.screenHeightDp.dp
+//
+//    // Determine if device is a tablet (width >= 600dp is common tablet threshold)
+//    val isTablet = screenWidth >= 600.dp
+//
+//    // Responsive font sizes
+//    val titleFontSize = if (isTablet) 42.sp else 28.sp // Doubled for tablet
+//    val titleLineHeight = if (isTablet) 48.sp else 32.sp
+//    val buttonFontSize = if (isTablet) 21.sp else 14.sp
+//
+//
+//    // Calculate responsive image dimensions
+//    val imageWidth = (screenWidth * 0.4f).coerceAtLeast(170.dp)
+//    val imageHeight = (screenHeight * 0.32f).coerceAtLeast(260.dp)
+//
+//    // Calculate responsive offsets based on screen size
+//    val leftImageOffsetX = (-screenWidth * 0.08f).coerceAtMost((-40).dp)
+//    val leftImageOffsetY = screenHeight * 0.05f
+//    val rightImageOffsetX = screenWidth * 0.15f
+//    val rightImageOffsetY = screenHeight * 0.2f
+//    val centerImageOffsetY = screenHeight * 0.12f
+//
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(
+//                Brush.linearGradient(
+//                    colors = listOf(
+//                        Color(0xE5893BCF), // Purple
+//                        Color(0x00FFFFFF), // Transparent White
+//                        Color(0x00FFFFFF), // Transparent White
+//                        Color(0xFFEA3BA1)  // Pink
+//                    ),
+//                    start = Offset(0f, 0f), // Top-left corner
+//                    end = Offset.Infinite   // Bottom-right corner
+//                )
+//            )
+//    ) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(12.dp),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Image(
+//                painter = painterResource(id = R.drawable.onboarding_first),
+//                contentDescription = "First Image",
+//                modifier = Modifier.fillMaxSize() // set size as needed
+//            )
+//        }
+//
+//
+//        // Next → Button
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(if (isTablet) 32.dp else 20.dp)
+//        ) {
+//            Button(
+//                onClick = {
+//                    scope.launch {
+//                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+//                    }
+//                },
+//                modifier = Modifier
+//                    .align(Alignment.BottomEnd)
+//                    .height(if (isTablet) 64.dp else 44.dp),
+//                shape = RoundedCornerShape(50),
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = Color(0xFFE749A0),
+//                    contentColor = Color.White
+//                ),
+//                elevation = ButtonDefaults.buttonElevation(if (isTablet) 8.dp else 6.dp)
+//            ) {
+//                Text(
+//                    text = "Next",
+//                    fontSize = buttonFontSize,
+//                )
+//            }
+//        }
+//
+//    }
+//}
 
 
 //package com.cc.creatorcircle.ui.screens.onboarding

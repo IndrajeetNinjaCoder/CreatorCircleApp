@@ -33,9 +33,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -64,10 +62,8 @@ import com.cc.creatorcircle.ui.components.CustomOutlinedButton
 import com.cc.creatorcircle.ui.components.GradientButton
 import com.cc.creatorcircle.ui.components.GradientIconButton
 import com.cc.creatorcircle.ui.navigation.Screen
-import com.cc.creatorcircle.ui.screens.livesession.MentorTabBar
+import com.cc.creatorcircle.ui.screens.mentor_circle.MentorTabBar
 import com.cc.creatorcircle.utils.FirebaseAnalyticsHelper
-import com.cc.creatorcircle.utils.UserData
-import com.cc.creatorcircle.utils.UserDataManager
 import com.cc.creatorcircle.viewModel.InfluencerViewModel
 import com.cc.creatorcircle.viewModel.LiveSessionAvailabilityViewModel
 import com.cc.creatorcircle.viewModel.MentorConfigViewModel
@@ -75,7 +71,6 @@ import com.cc.creatorcircle.viewModel.PostsViewModel
 import com.cc.creatorcircle.viewModel.PostsViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.analytics
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -854,7 +849,7 @@ fun MentorSection(
                             // Only show Copy Link button when configuration is valid
                             if (showCopyLink) {
                                 CustomOutlinedButton("Copy Link", modifier = Modifier.weight(1f)) {
-                                    val link = "http://localhost:5173/book/${profile.username}"
+                                    val link = "https://creatorcircle.in/book/${profile.username}"
                                     val clip = ClipData.newPlainText("Mentor Link", link)
                                     clipboardManager.setPrimaryClip(clip)
 
@@ -1324,7 +1319,9 @@ fun InfluencerCard(
                         username = influencer.username,
                         from = "influencer_card"
                     )
-                    navController.navigate("userprofile/${influencer.userId}")
+//                    navController.navigate("userprofile/${influencer.userId}")
+                    navController.navigate("userprofilescreen/${influencer.userId}")
+
                 }
             }
         }

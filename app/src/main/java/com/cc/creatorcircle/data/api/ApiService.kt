@@ -32,7 +32,10 @@ import com.cc.creatorcircle.data.models.LikeResponse
 import com.cc.creatorcircle.data.models.LiveSessionAvailabilityResponse
 import com.cc.creatorcircle.data.models.LoginResponse
 import com.cc.creatorcircle.data.models.LogoutResponse
+import com.cc.creatorcircle.data.models.MarkAllReadResponse
+import com.cc.creatorcircle.data.models.MarkNotificationReadResponse
 import com.cc.creatorcircle.data.models.MentorConfigurationResponse
+import com.cc.creatorcircle.data.models.NotificationResponse
 import com.cc.creatorcircle.data.models.PostResponse
 import com.cc.creatorcircle.data.models.PostsResponse
 import com.cc.creatorcircle.data.models.RemoveConnectionResponse
@@ -45,7 +48,9 @@ import com.cc.creatorcircle.data.models.SetProfileActiveRequest
 import com.cc.creatorcircle.data.models.SetProfileActiveResponse
 import com.cc.creatorcircle.data.models.SignUpRequest
 import com.cc.creatorcircle.data.models.SignUpResponse
+import com.cc.creatorcircle.data.models.SinglePostResponse
 import com.cc.creatorcircle.data.models.SocialMediaResponse
+import com.cc.creatorcircle.data.models.UnreadCountResponse
 import com.cc.creatorcircle.data.models.UpdateMentorConfigurationRequest
 import com.cc.creatorcircle.data.models.UpdateMentorConfigurationResponse
 import com.cc.creatorcircle.data.models.UpdatePostResponse
@@ -109,6 +114,13 @@ interface ApiService {
         @Query("limit") limit: Int = 10000000,
         @Query("offset") offset: Int = 0
     ): Response<PostsResponse>
+
+    // Fetch a specific post by ID
+    @GET("posts/{post_id}")
+    suspend fun getPostById(
+        @Header("Authorization") token: String,
+        @Path("post_id") postId: String
+    ): Response<SinglePostResponse>
 
     @GET("posts")
     suspend fun getAllPosts(
@@ -537,4 +549,31 @@ interface ApiService {
         @Body body: MultipartBody
     ): Response<UpdatePostResponse>
 
+    @GET("notifications")
+    suspend fun getNotifications(
+        @Query("unread_only") unreadOnly: Boolean = false,
+        @Header("Authorization") token: String
+    ): Response<NotificationResponse>
+
+
+    @PATCH("notifications/read-all")
+    suspend fun markAllNotificationsAsRead(
+        @Header("Authorization") token: String
+    ): Response<MarkAllReadResponse>
+
+    @GET("notifications/unread-count")
+    suspend fun getUnreadNotificationCount(
+        @Header("Authorization") token: String
+    ): Response<UnreadCountResponse>
+
+
+    @PATCH("notifications/{notificationId}/read")
+    suspend fun markNotificationAsRead(
+        @Path("notificationId") notificationId: Int,
+        @Header("Authorization") token: String
+    ): Response<MarkNotificationReadResponse>
+
+
+
 }
+

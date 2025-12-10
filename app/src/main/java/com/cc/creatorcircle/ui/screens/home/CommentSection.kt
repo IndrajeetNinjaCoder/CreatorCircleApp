@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +53,7 @@ import com.cc.creatorcircle.R
 import com.cc.creatorcircle.data.models.Comment
 import com.cc.creatorcircle.data.models.Post
 import com.cc.creatorcircle.utils.FirebaseAnalyticsHelper
+import com.cc.creatorcircle.utils.UserDataManager
 import com.cc.creatorcircle.viewModel.PostsViewModel
 
 @Composable
@@ -67,6 +69,11 @@ fun CommentBottomSheetContent(
     var commentText by remember { mutableStateOf("") }
     var expandedComments by remember { mutableStateOf(setOf<Int>()) }
     var replyingToComment by remember { mutableStateOf<Comment?>(null) }
+
+    // Get user data
+    val context = LocalContext.current
+    val userDataManager = remember { UserDataManager(context) }
+    val userData = remember { userDataManager.getUserData() }
 
     // Track comment section opened
     LaunchedEffect(Unit) {
@@ -92,14 +99,27 @@ fun CommentBottomSheetContent(
             )
             {
                 // Profile Image
-                Image(
-                    painter = painterResource(id = R.drawable.ic_profile1),
-                    contentDescription = "Your Profile",
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
+                if (userData.profilePic != null) {
+                    AsyncImage(
+                        model = userData.profilePic,
+                        contentDescription = "Your Profile",
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(id = R.drawable.ic_profile),
+                        error = painterResource(id = R.drawable.ic_profile)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_profile),
+                        contentDescription = "Your Profile",
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(10.dp))
 
@@ -508,6 +528,10 @@ fun CommentItem(
 
 
 
+
+
+
+
 //package com.cc.creatorcircle.ui.screens.home
 //
 //import androidx.compose.foundation.Image
@@ -542,6 +566,7 @@ fun CommentItem(
 //import androidx.compose.material3.Text
 //import androidx.compose.material3.TextButton
 //import androidx.compose.runtime.Composable
+//import androidx.compose.runtime.LaunchedEffect
 //import androidx.compose.runtime.getValue
 //import androidx.compose.runtime.mutableStateOf
 //import androidx.compose.runtime.remember
@@ -560,6 +585,7 @@ fun CommentItem(
 //import com.cc.creatorcircle.R
 //import com.cc.creatorcircle.data.models.Comment
 //import com.cc.creatorcircle.data.models.Post
+//import com.cc.creatorcircle.utils.FirebaseAnalyticsHelper
 //import com.cc.creatorcircle.viewModel.PostsViewModel
 //
 //@Composable
@@ -576,6 +602,11 @@ fun CommentItem(
 //    var expandedComments by remember { mutableStateOf(setOf<Int>()) }
 //    var replyingToComment by remember { mutableStateOf<Comment?>(null) }
 //
+//    // Track comment section opened
+//    LaunchedEffect(Unit) {
+//        FirebaseAnalyticsHelper.logDialogOpened("comment_section", post.id)
+//    }
+//
 //    Box(
 //        modifier = Modifier
 //            .fillMaxSize()
@@ -586,7 +617,7 @@ fun CommentItem(
 //                .fillMaxSize()
 //        ) {
 //
-//            // ✅ Input Section fixed at bottom
+//            // Input Section fixed at bottom
 //            Row(
 //                modifier = Modifier
 //                    .fillMaxWidth()
@@ -596,7 +627,7 @@ fun CommentItem(
 //            {
 //                // Profile Image
 //                Image(
-//                    painter = painterResource(id = R.drawable.ic_profile1),
+//                    painter = painterResource(id = R.drawable.ic_profile),
 //                    contentDescription = "Your Profile",
 //                    modifier = Modifier
 //                        .size(34.dp)
@@ -615,7 +646,10 @@ fun CommentItem(
 //                            color = Color.LightGray.copy(alpha = 0.6f),
 //                            shape = RoundedCornerShape(8.dp)
 //                        )
-//                        .padding(horizontal = 8.dp, vertical = 8.dp),
+//                        .padding(horizontal = 8.dp, vertical = 8.dp)
+//                        .clickable {
+//                            FirebaseAnalyticsHelper.logFeatureUsed("comment_input_focused", "comment_section")
+//                        },
 //                    contentAlignment = Alignment.CenterStart
 //                ) {
 //                    if (commentText.isEmpty()) {
@@ -623,7 +657,6 @@ fun CommentItem(
 //                            text = if (replyingToComment != null) {
 //                                "Reply to ${replyingToComment!!.authorName}..."
 //                            } else {
-////                                "Add a comment for ${post.author.name ?: "user"}..."
 //                                "Add a comment..."
 //                            },
 //                            fontSize = 14.sp,
@@ -633,7 +666,12 @@ fun CommentItem(
 //
 //                    BasicTextField(
 //                        value = commentText,
-//                        onValueChange = { commentText = it },
+//                        onValueChange = { newText ->
+//                            commentText = newText
+//                            if (newText.length == 1) {
+//                                FirebaseAnalyticsHelper.logFeatureUsed("comment_text_started", "comment_section")
+//                            }
+//                        },
 //                        modifier = Modifier.fillMaxWidth(),
 //                        textStyle = TextStyle(
 //                            color = Color.Black,
@@ -655,14 +693,22 @@ fun CommentItem(
 //                        .clickable {
 //                            if (commentText.isNotBlank()) {
 //                                if (replyingToComment != null) {
-//                                    // Add reply with parent_id
+//                                    FirebaseAnalyticsHelper.logFeatureUsed("reply_submitted", "comment_section")
+//                                    FirebaseAnalyticsHelper.logReplyAdded(
+//                                        postId = post.id,
+//                                        parentCommentId = replyingToComment!!.id
+//                                    )
 //                                    viewModel.addReply(
 //                                        postId = post.id,
 //                                        content = commentText,
 //                                        parentId = replyingToComment!!.id
 //                                    )
 //                                } else {
-//                                    // Add regular comment
+//                                    FirebaseAnalyticsHelper.logFeatureUsed("comment_submitted", "comment_section")
+//                                    FirebaseAnalyticsHelper.logCommentAdded(
+//                                        postId = post.id,
+//                                        commentLength = commentText.length
+//                                    )
 //                                    viewModel.addComment(post.id, commentText)
 //                                }
 //                                commentText = ""
@@ -686,7 +732,10 @@ fun CommentItem(
 //                )
 //
 //                if (error != null) {
-//                    TextButton(onClick = onRefresh) {
+//                    TextButton(onClick = {
+//                        FirebaseAnalyticsHelper.logFeatureUsed("comments_retry", "comment_section")
+//                        onRefresh()
+//                    }) {
 //                        Text("Retry", color = Color(0xFF8B5CF6))
 //                    }
 //                }
@@ -719,6 +768,7 @@ fun CommentItem(
 //                            modifier = Modifier
 //                                .size(20.dp)
 //                                .clickable {
+//                                    FirebaseAnalyticsHelper.logFeatureUsed("reply_cancelled", "comment_section")
 //                                    replyingToComment = null
 //                                }
 //                        )
@@ -746,6 +796,11 @@ fun CommentItem(
 //                            .weight(1f),
 //                        contentAlignment = Alignment.Center
 //                    ) {
+//                        FirebaseAnalyticsHelper.logError(
+//                            errorType = "comments_load_error",
+//                            errorMessage = error,
+//                            context = "CommentBottomSheet"
+//                        )
 //                        Text(text = error, color = Color.Red)
 //                    }
 //                }
@@ -754,7 +809,7 @@ fun CommentItem(
 //                    LazyColumn(
 //                        modifier = Modifier
 //                            .weight(1f)
-//                            .padding(bottom = 80.dp), // Padding to avoid overlap with input
+//                            .padding(bottom = 80.dp),
 //                        verticalArrangement = Arrangement.spacedBy(16.dp)
 //                    ) {
 //                        items(comments) { comment ->
@@ -762,16 +817,24 @@ fun CommentItem(
 //                                comment = comment,
 //                                expandedComments = expandedComments,
 //                                onExpandToggle = { commentId ->
-//                                    expandedComments = if (expandedComments.contains(commentId)) {
+//                                    val newState = if (expandedComments.contains(commentId)) {
+//                                        FirebaseAnalyticsHelper.logFeatureUsed("replies_collapsed", "comment_item")
 //                                        expandedComments - commentId
 //                                    } else {
+//                                        FirebaseAnalyticsHelper.logFeatureUsed("replies_expanded", "comment_item")
 //                                        expandedComments + commentId
 //                                    }
+//                                    expandedComments = newState
 //                                },
 //                                onLikeClick = { commentId ->
+//                                    FirebaseAnalyticsHelper.logCommentLiked(
+//                                        postId = post.id,
+//                                        commentId = commentId
+//                                    )
 //                                    viewModel.toggleCommentLike(commentId)
 //                                },
 //                                onReplyClick = { comment ->
+//                                    FirebaseAnalyticsHelper.logFeatureUsed("reply_initiated", "comment_item")
 //                                    replyingToComment = comment
 //                                },
 //                                nestingLevel = 0
@@ -792,12 +855,9 @@ fun CommentItem(
 //                }
 //            }
 //        }
-//
-//
 //    }
 //}
 //
-//// Updated CommentItem - Now properly handles nested replies with individual expand states
 //@Composable
 //fun CommentItem(
 //    comment: Comment,
@@ -807,11 +867,8 @@ fun CommentItem(
 //    onReplyClick: (Comment) -> Unit,
 //    nestingLevel: Int = 0
 //) {
-//    // Safe access to replies list
 //    val repliesList = comment.replies ?: emptyList()
 //    val isExpanded = expandedComments.contains(comment.id)
-//
-//    // Calculate indentation based on nesting level (max 5 levels to prevent excessive indentation)
 //    val indentation = (minOf(nestingLevel, 5) * 24).dp
 //
 //    Column(
@@ -823,7 +880,6 @@ fun CommentItem(
 //            modifier = Modifier.fillMaxWidth(),
 //            verticalAlignment = Alignment.Top
 //        ) {
-//            // Profile Image - smaller for nested replies
 //            val profileSize = if (nestingLevel > 0) 32.dp else 40.dp
 //
 //            if (comment.authorAvatar != null) {
@@ -832,7 +888,13 @@ fun CommentItem(
 //                    contentDescription = "Profile",
 //                    modifier = Modifier
 //                        .size(profileSize)
-//                        .clip(CircleShape),
+//                        .clip(CircleShape)
+//                        .clickable {
+//                            FirebaseAnalyticsHelper.logProfileClicked(
+//                                userId = comment.userId ?: -1,
+//                                source = "comment_author"
+//                            )
+//                        },
 //                    contentScale = ContentScale.Crop,
 //                    placeholder = painterResource(id = R.drawable.ic_profile1),
 //                    error = painterResource(id = R.drawable.ic_profile1)
@@ -842,6 +904,12 @@ fun CommentItem(
 //                    modifier = Modifier
 //                        .size(profileSize)
 //                        .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
+//                        .clickable {
+//                            FirebaseAnalyticsHelper.logProfileClicked(
+//                                userId = comment.userId ?: -1,
+//                                source = "comment_author"
+//                            )
+//                        }
 //                ) {
 //                    Image(
 //                        painter = painterResource(id = R.drawable.ic_profile1),
@@ -857,7 +925,6 @@ fun CommentItem(
 //            Spacer(modifier = Modifier.width(12.dp))
 //
 //            Column(modifier = Modifier.weight(1f)) {
-//                // Author name and timestamp
 //                Row(
 //                    verticalAlignment = Alignment.CenterVertically
 //                ) {
@@ -877,7 +944,6 @@ fun CommentItem(
 //
 //                Spacer(modifier = Modifier.height(4.dp))
 //
-//                // Comment content
 //                Text(
 //                    text = comment.content,
 //                    fontSize = 14.sp,
@@ -887,11 +953,9 @@ fun CommentItem(
 //
 //                Spacer(modifier = Modifier.height(8.dp))
 //
-//                // Comment actions
 //                Row(
 //                    verticalAlignment = Alignment.CenterVertically
 //                ) {
-//                    // Reply button - Available for all comments including nested replies
 //                    Text(
 //                        text = "Reply",
 //                        fontSize = 13.sp,
@@ -901,7 +965,6 @@ fun CommentItem(
 //                        }
 //                    )
 //
-//                    // Show replies toggle for any comment that has replies
 //                    if (repliesList.isNotEmpty()) {
 //                        Spacer(modifier = Modifier.width(24.dp))
 //                        Text(
@@ -925,7 +988,6 @@ fun CommentItem(
 //                }
 //            }
 //
-//            // Heart icon with like count below it
 //            Column(
 //                horizontalAlignment = Alignment.CenterHorizontally
 //            ) {
@@ -940,7 +1002,6 @@ fun CommentItem(
 //                        }
 //                )
 //
-//                // Like count below the heart icon
 //                if (comment.likes > 0) {
 //                    Spacer(modifier = Modifier.height(2.dp))
 //                    Text(
@@ -952,7 +1013,6 @@ fun CommentItem(
 //            }
 //        }
 //
-//        // Show replies if expanded - recursively render nested replies
 //        if (isExpanded && repliesList.isNotEmpty()) {
 //            Spacer(modifier = Modifier.height(12.dp))
 //            Column(
@@ -961,11 +1021,11 @@ fun CommentItem(
 //                repliesList.forEach { reply ->
 //                    CommentItem(
 //                        comment = reply,
-//                        expandedComments = expandedComments, // Pass the same expanded state
-//                        onExpandToggle = onExpandToggle, // Pass through the toggle function
-//                        onLikeClick = onLikeClick, // Pass the like function to replies too
-//                        onReplyClick = onReplyClick, // Allows replying to replies
-//                        nestingLevel = nestingLevel + 1 // Increase nesting level
+//                        expandedComments = expandedComments,
+//                        onExpandToggle = onExpandToggle,
+//                        onLikeClick = onLikeClick,
+//                        onReplyClick = onReplyClick,
+//                        nestingLevel = nestingLevel + 1
 //                    )
 //                }
 //            }

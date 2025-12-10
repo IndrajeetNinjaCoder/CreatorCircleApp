@@ -1,4 +1,4 @@
-package com.cc.creatorcircle.ui.screens.livesession
+package com.cc.creatorcircle.ui.screens.mentor_circle
 
 
 import androidx.compose.foundation.background

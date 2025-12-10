@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import com.cc.creatorcircle.data.models.ChatUserProfile
+import com.cc.creatorcircle.viewModel.NotificationViewModel
 
 // Data class for notification state
 data class NotificationState(
@@ -52,37 +53,229 @@ data class NotificationState(
 )
 
 
+
+//@Composable
+//fun TopBar(
+//    title: String,
+//    navController: NavController,
+//    selectedTab: String = title,
+//    onTabSelected: (String) -> Unit = {},
+//    notificationState: NotificationState = NotificationState(),
+//    onNotificationClick: () -> Unit = {},
+//    notificationViewModel: NotificationViewModel? = null // Add this parameter
+//) {
+//    val tabs = listOf(title)
+//    val context = LocalContext.current
+//
+//    // Observe unread count from ViewModel
+//    val unreadCount by notificationViewModel?.unreadCount?.collectAsState() ?: remember { mutableStateOf(0) }
+//
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(Color.White)
+//            .padding(horizontal = 12.dp, vertical = 2.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        // Logo with accessibility - reduced size slightly
+//        Image(
+//            painter = painterResource(id = R.drawable.ic_cc_logo),
+//            contentDescription = "Creator Circle Logo",
+//            modifier = Modifier
+//                .size(36.dp)
+//                .semantics {
+//                    contentDescription = "Creator Circle application logo"
+//                }
+//        )
+//
+//        Spacer(modifier = Modifier.width(12.dp))
+//
+//        // Tab section
+//        tabs.forEachIndexed { index, tab ->
+//            val isSelected = tab == selectedTab
+//
+//            if (isSelected) {
+//                Box(
+//                    modifier = Modifier
+//                        .background(
+//                            brush = Brush.horizontalGradient(
+//                                listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+//                            ),
+//                            shape = RoundedCornerShape(6.dp)
+//                        )
+//                        .clip(RoundedCornerShape(6.dp))
+//                        .clickable(
+//                            role = Role.Tab,
+//                            onClickLabel = "Select $tab tab"
+//                        ) {
+//                            onTabSelected(tab)
+//                        }
+//                        .semantics {
+//                            role = Role.Tab
+//                            contentDescription = "$tab tab, currently selected"
+//                        }
+//                ) {
+//                    Text(
+//                        text = tab,
+//                        color = Color.White,
+//                        fontWeight = FontWeight.SemiBold,
+//                        fontSize = 12.sp,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis,
+//                        modifier = Modifier.padding(
+//                            horizontal = 10.dp,
+//                            vertical = 2.dp
+//                        )
+//                    )
+//                }
+//            } else {
+//                Text(
+//                    text = tab,
+//                    color = Color(0xFFB388FF),
+//                    fontWeight = FontWeight.Medium,
+//                    fontSize = 12.sp,
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis,
+//                    modifier = Modifier
+//                        .clip(RoundedCornerShape(4.dp))
+//                        .clickable(
+//                            role = Role.Tab,
+//                            onClickLabel = "Select $tab tab"
+//                        ) {
+//                            onTabSelected(tab)
+//                        }
+//                        .padding(horizontal = 6.dp, vertical = 2.dp)
+//                        .semantics {
+//                            role = Role.Tab
+//                            contentDescription = "$tab tab"
+//                        }
+//                )
+//            }
+//
+//            if (index != tabs.lastIndex) {
+//                Spacer(modifier = Modifier.width(6.dp))
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.weight(1f))
+//
+//        // Professional notification button with badge
+//        Box(
+//            contentAlignment = Alignment.Center
+//        ) {
+//            IconButton(
+//                onClick = {
+//                    try {
+//                        onNotificationClick()
+//                        navController.navigate("notifications")
+//                    } catch (e: Exception) {
+//                        // Handle navigation error gracefully
+//                    }
+//                },
+//                modifier = Modifier
+//                    .size(44.dp)
+//                    .semantics {
+//                        contentDescription = if (unreadCount > 0) {
+//                            "Notifications, $unreadCount unread"
+//                        } else {
+//                            "Notifications"
+//                        }
+//                    }
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.ic_bell),
+//                    contentDescription = null,
+//                    tint = if (unreadCount > 0) {
+//                        Color(0xFFB726FF)
+//                    } else {
+//                        Color(0xFFB0A9A9)
+//                    },
+//                    modifier = Modifier.size(22.dp)
+//                )
+//            }
+//
+//            // Notification badge - shows unread count
+//            if (unreadCount > 0) {
+//                Box(
+//                    modifier = Modifier
+//                        .offset(x = 7.dp, y = (-7).dp)
+//                        .size(
+//                            if (unreadCount > 99) 22.dp
+//                            else if (unreadCount > 9) 18.dp
+//                            else 15.dp
+//                        )
+//                        .background(
+//                            Color(0xFFFF4444),
+//                            CircleShape
+//                        )
+//                        .semantics {
+//                            contentDescription = "$unreadCount unread notifications"
+//                        },
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = when {
+//                            unreadCount > 99 -> "99+"
+//                            else -> unreadCount.toString()
+//                        },
+//                        color = Color.White,
+//                        fontSize = when {
+//                            unreadCount > 99 -> 7.sp
+//                            unreadCount > 9 -> 8.sp
+//                            else -> 9.sp
+//                        },
+//                        fontWeight = FontWeight.Bold,
+//                        maxLines = 1
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
+
+
+
 @Composable
 fun TopBar(
     title: String,
     navController: NavController,
     selectedTab: String = title,
     onTabSelected: (String) -> Unit = {},
-    notificationState: NotificationState = NotificationState(),
     onNotificationClick: () -> Unit = {}
 ) {
     val tabs = listOf(title)
     val context = LocalContext.current
 
+    // Create ViewModel directly in TopBar
+    val notificationViewModel = remember { NotificationViewModel(context) }
+
+    // Fetch unread count when TopBar is first composed
+    LaunchedEffect(Unit) {
+        notificationViewModel.fetchUnreadCount()
+    }
+
+    // Observe unread count from ViewModel
+    val unreadCount by notificationViewModel.unreadCount.collectAsState()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White)
-            .padding(horizontal = 12.dp, vertical = 2.dp), // Reduced from 4dp to 8dp total
+            .padding(horizontal = 12.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Logo with accessibility - reduced size slightly
+        // Logo with accessibility
         Image(
             painter = painterResource(id = R.drawable.ic_cc_logo),
             contentDescription = "Creator Circle Logo",
             modifier = Modifier
-                .size(36.dp) // Reduced from 40dp to 36dp
+                .size(36.dp)
                 .semantics {
                     contentDescription = "Creator Circle application logo"
                 }
         )
 
-        Spacer(modifier = Modifier.width(12.dp)) // Reduced from 14dp to 12dp
+        Spacer(modifier = Modifier.width(12.dp))
 
         // Tab section
         tabs.forEachIndexed { index, tab ->
@@ -119,7 +312,7 @@ fun TopBar(
                         modifier = Modifier.padding(
                             horizontal = 10.dp,
                             vertical = 2.dp
-                        ) // Reduced padding
+                        )
                     )
                 }
             } else {
@@ -138,7 +331,7 @@ fun TopBar(
                         ) {
                             onTabSelected(tab)
                         }
-                        .padding(horizontal = 6.dp, vertical = 2.dp) // Adjusted padding
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                         .semantics {
                             role = Role.Tab
                             contentDescription = "$tab tab"
@@ -153,7 +346,7 @@ fun TopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Professional notification button with badge - optimized size
+        // Professional notification button with badge
         Box(
             contentAlignment = Alignment.Center
         ) {
@@ -164,47 +357,38 @@ fun TopBar(
                         navController.navigate("notifications")
                     } catch (e: Exception) {
                         // Handle navigation error gracefully
-                        // You might want to log this or show a snackbar
                     }
                 },
                 modifier = Modifier
-                    .size(44.dp) // Reduced from 48dp to 44dp
+                    .size(44.dp)
                     .semantics {
-                        contentDescription = if (notificationState.hasUnreadNotifications) {
-                            "Notifications, ${notificationState.unreadCount} unread"
+                        contentDescription = if (unreadCount > 0) {
+                            "Notifications, $unreadCount unread"
                         } else {
                             "Notifications"
                         }
                     }
             ) {
-                if (notificationState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = Color(0xFFB0A9A9)
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_bell),
-                        contentDescription = null, // Handled by IconButton
-                        tint = if (notificationState.hasUnreadNotifications) {
-                            Color(0xFFB726FF)
-                        } else {
-                            Color(0xFFB0A9A9)
-                        },
-                        modifier = Modifier.size(22.dp) // Reduced from 24dp to 22dp
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_bell),
+                    contentDescription = null,
+                    tint = if (unreadCount > 0) {
+                        Color(0xFFB726FF)
+                    } else {
+                        Color(0xFFB0A9A9)
+                    },
+                    modifier = Modifier.size(22.dp)
+                )
             }
 
-            // Notification badge
-            if (notificationState.hasUnreadNotifications && !notificationState.isLoading) {
+            // Notification badge - shows unread count
+            if (unreadCount > 0) {
                 Box(
                     modifier = Modifier
-                        .offset(x = 7.dp, y = (-7).dp) // Slightly adjusted offset
+                        .offset(x = 7.dp, y = (-7).dp)
                         .size(
-                            if (notificationState.unreadCount > 99) 22.dp
-                            else if (notificationState.unreadCount > 9) 18.dp
+                            if (unreadCount > 99) 22.dp
+                            else if (unreadCount > 9) 18.dp
                             else 15.dp
                         )
                         .background(
@@ -212,20 +396,19 @@ fun TopBar(
                             CircleShape
                         )
                         .semantics {
-                            contentDescription =
-                                "${notificationState.unreadCount} unread notifications"
+                            contentDescription = "$unreadCount unread notifications"
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = when {
-                            notificationState.unreadCount > 99 -> "99+"
-                            else -> notificationState.unreadCount.toString()
+                            unreadCount > 99 -> "99+"
+                            else -> unreadCount.toString()
                         },
                         color = Color.White,
                         fontSize = when {
-                            notificationState.unreadCount > 99 -> 7.sp
-                            notificationState.unreadCount > 9 -> 8.sp
+                            unreadCount > 99 -> 7.sp
+                            unreadCount > 9 -> 8.sp
                             else -> 9.sp
                         },
                         fontWeight = FontWeight.Bold,
@@ -236,6 +419,7 @@ fun TopBar(
         }
     }
 }
+
 
 
 @Composable
@@ -588,17 +772,222 @@ fun TopBarProfile(
 }
 
 
+
+
+
+
+
+
+
+//@Composable
+//fun TopBarHome(
+//    tabs: List<String>,
+//    selectedTab: String,
+//    navController: NavController,
+//    onTabSelected: (String) -> Unit = {},
+//    onNotificationClick: () -> Unit = {},
+//    modifier: Modifier = Modifier,
+//    notificationViewModel: NotificationViewModel? = null // Add this parameter
+//) {
+//    val context = LocalContext.current
+//
+//    // Observe unread count from ViewModel
+//    val unreadCount by notificationViewModel?.unreadCount?.collectAsState() ?: remember { mutableStateOf(0) }
+//
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .height(40.dp)
+//            .background(Color.White)
+//            .padding(horizontal = 16.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        // Logo with accessibility
+//        Image(
+//            painter = painterResource(id = R.drawable.ic_cc_logo),
+//            contentDescription = "Creator Circle Logo",
+//            modifier = Modifier
+//                .size(36.dp)
+//                .semantics {
+//                    contentDescription = "Creator Circle application logo"
+//                }
+//        )
+//
+//        // Centered tabs section
+//        Box(
+//            modifier = Modifier
+//                .weight(1f)
+//                .padding(horizontal = 16.dp),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Row(
+//                horizontalArrangement = Arrangement.spacedBy(12.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                tabs.forEach { tab ->
+//                    val isSelected = tab == selectedTab
+//
+//                    if (isSelected) {
+//                        Box(
+//                            modifier = Modifier
+//                                .background(
+//                                    brush = Brush.horizontalGradient(
+//                                        listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+//                                    ),
+//                                    shape = RoundedCornerShape(8.dp)
+//                                )
+//                                .clip(RoundedCornerShape(8.dp))
+//                                .clickable(
+//                                    role = Role.Tab,
+//                                    onClickLabel = "Select $tab tab"
+//                                ) {
+//                                    handleTabNavigation(tab, navController)
+//                                    onTabSelected(tab)
+//                                }
+//                                .semantics {
+//                                    role = Role.Tab
+//                                    contentDescription = "$tab tab, currently selected"
+//                                }
+//                        ) {
+//                            Text(
+//                                text = tab,
+//                                color = Color.White,
+//                                fontWeight = FontWeight.SemiBold,
+//                                fontSize = 12.sp,
+//                                maxLines = 1,
+//                                overflow = TextOverflow.Ellipsis,
+//                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+//                            )
+//                        }
+//                    } else {
+//                        Box(
+//                            modifier = Modifier
+//                                .clip(RoundedCornerShape(8.dp))
+//                                .clickable(
+//                                    role = Role.Tab,
+//                                    onClickLabel = "Select $tab tab"
+//                                ) {
+//                                    handleTabNavigation(tab, navController)
+//                                    onTabSelected(tab)
+//                                }
+//                                .semantics {
+//                                    role = Role.Tab
+//                                    contentDescription = "$tab tab"
+//                                }
+//                        ) {
+//                            Text(
+//                                text = tab,
+//                                color = Color(0xFFB388FF),
+//                                fontWeight = FontWeight.Medium,
+//                                fontSize = 12.sp,
+//                                maxLines = 1,
+//                                overflow = TextOverflow.Ellipsis,
+//                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Professional notification button with badge
+//        Box(
+//            contentAlignment = Alignment.Center
+//        ) {
+//            IconButton(
+//                onClick = {
+//                    try {
+//                        onNotificationClick()
+//                        navController.navigate("notifications")
+//                    } catch (e: Exception) {
+//                        // Handle navigation error gracefully
+//                    }
+//                },
+//                modifier = Modifier
+//                    .size(48.dp)
+//                    .semantics {
+//                        contentDescription = if (unreadCount > 0) {
+//                            "Notifications, $unreadCount unread"
+//                        } else {
+//                            "Notifications"
+//                        }
+//                    }
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.ic_bell),
+//                    contentDescription = null,
+//                    tint = if (unreadCount > 0) {
+//                        Color(0xFFB726FF)
+//                    } else {
+//                        Color(0xFFB0A9A9)
+//                    },
+//                    modifier = Modifier.size(24.dp)
+//                )
+//            }
+//
+//            // Notification badge - shows unread count
+//            if (unreadCount > 0) {
+//                Box(
+//                    modifier = Modifier
+//                        .offset(x = 8.dp, y = (-8).dp)
+//                        .size(
+//                            if (unreadCount > 99) 24.dp
+//                            else if (unreadCount > 9) 20.dp
+//                            else 16.dp
+//                        )
+//                        .background(
+//                            Color(0xFFFF4444),
+//                            CircleShape
+//                        )
+//                        .semantics {
+//                            contentDescription = "$unreadCount unread notifications"
+//                        },
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = when {
+//                            unreadCount > 99 -> "99+"
+//                            else -> unreadCount.toString()
+//                        },
+//                        color = Color.White,
+//                        fontSize = when {
+//                            unreadCount > 99 -> 8.sp
+//                            unreadCount > 9 -> 9.sp
+//                            else -> 12.sp
+//                        },
+//                        fontWeight = FontWeight.Bold,
+//                        maxLines = 1
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
+//
+
+
+
 @Composable
 fun TopBarHome(
     tabs: List<String>,
     selectedTab: String,
     navController: NavController,
     onTabSelected: (String) -> Unit = {},
-    notificationState: NotificationState = NotificationState(),
     onNotificationClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    // Create ViewModel directly in TopBarHome
+    val notificationViewModel = remember { NotificationViewModel(context) }
+
+    // Fetch unread count when TopBarHome is first composed
+    LaunchedEffect(Unit) {
+        notificationViewModel.fetchUnreadCount()
+    }
+
+    // Observe unread count from ViewModel
+    val unreadCount by notificationViewModel.unreadCount.collectAsState()
 
     Row(
         modifier = Modifier
@@ -647,7 +1036,6 @@ fun TopBarHome(
                                     role = Role.Tab,
                                     onClickLabel = "Select $tab tab"
                                 ) {
-                                    // Handle navigation for specific tabs
                                     handleTabNavigation(tab, navController)
                                     onTabSelected(tab)
                                 }
@@ -674,7 +1062,6 @@ fun TopBarHome(
                                     role = Role.Tab,
                                     onClickLabel = "Select $tab tab"
                                 ) {
-                                    // Handle navigation for specific tabs
                                     handleTabNavigation(tab, navController)
                                     onTabSelected(tab)
                                 }
@@ -709,47 +1096,38 @@ fun TopBarHome(
                         navController.navigate("notifications")
                     } catch (e: Exception) {
                         // Handle navigation error gracefully
-                        // You might want to log this or show a snackbar
                     }
                 },
                 modifier = Modifier
                     .size(48.dp)
                     .semantics {
-                        contentDescription = if (notificationState.hasUnreadNotifications) {
-                            "Notifications, ${notificationState.unreadCount} unread"
+                        contentDescription = if (unreadCount > 0) {
+                            "Notifications, $unreadCount unread"
                         } else {
                             "Notifications"
                         }
                     }
             ) {
-                if (notificationState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = Color(0xFFB0A9A9)
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_bell),
-                        contentDescription = null, // Handled by IconButton
-                        tint = if (notificationState.hasUnreadNotifications) {
-                            Color(0xFFB726FF)
-                        } else {
-                            Color(0xFFB0A9A9)
-                        },
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_bell),
+                    contentDescription = null,
+                    tint = if (unreadCount > 0) {
+                        Color(0xFFB726FF)
+                    } else {
+                        Color(0xFFB0A9A9)
+                    },
+                    modifier = Modifier.size(24.dp)
+                )
             }
 
-            // Notification badge
-            if (notificationState.hasUnreadNotifications && !notificationState.isLoading) {
+            // Notification badge - shows unread count
+            if (unreadCount > 0) {
                 Box(
                     modifier = Modifier
                         .offset(x = 8.dp, y = (-8).dp)
                         .size(
-                            if (notificationState.unreadCount > 99) 24.dp
-                            else if (notificationState.unreadCount > 9) 20.dp
+                            if (unreadCount > 99) 24.dp
+                            else if (unreadCount > 9) 20.dp
                             else 16.dp
                         )
                         .background(
@@ -757,20 +1135,19 @@ fun TopBarHome(
                             CircleShape
                         )
                         .semantics {
-                            contentDescription =
-                                "${notificationState.unreadCount} unread notifications"
+                            contentDescription = "$unreadCount unread notifications"
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = when {
-                            notificationState.unreadCount > 99 -> "99+"
-                            else -> notificationState.unreadCount.toString()
+                            unreadCount > 99 -> "99+"
+                            else -> unreadCount.toString()
                         },
                         color = Color.White,
                         fontSize = when {
-                            notificationState.unreadCount > 99 -> 8.sp
-                            notificationState.unreadCount > 9 -> 9.sp
+                            unreadCount > 99 -> 8.sp
+                            unreadCount > 9 -> 9.sp
                             else -> 12.sp
                         },
                         fontWeight = FontWeight.Bold,
@@ -781,6 +1158,9 @@ fun TopBarHome(
         }
     }
 }
+
+
+
 
 
 // Helper function to handle tab navigation
@@ -815,3 +1195,392 @@ private fun handleTabNavigation(tab: String, navController: NavController) {
         Log.e("TopBarHome", "Navigation error for tab: $tab", e)
     }
 }
+
+
+
+
+//@Composable
+//fun TopBar(
+//    title: String,
+//    navController: NavController,
+//    selectedTab: String = title,
+//    onTabSelected: (String) -> Unit = {},
+//    notificationState: NotificationState = NotificationState(),
+//    onNotificationClick: () -> Unit = {}
+//) {
+//    val tabs = listOf(title)
+//    val context = LocalContext.current
+//
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(Color.White)
+//            .padding(horizontal = 12.dp, vertical = 2.dp), // Reduced from 4dp to 8dp total
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        // Logo with accessibility - reduced size slightly
+//        Image(
+//            painter = painterResource(id = R.drawable.ic_cc_logo),
+//            contentDescription = "Creator Circle Logo",
+//            modifier = Modifier
+//                .size(36.dp) // Reduced from 40dp to 36dp
+//                .semantics {
+//                    contentDescription = "Creator Circle application logo"
+//                }
+//        )
+//
+//        Spacer(modifier = Modifier.width(12.dp)) // Reduced from 14dp to 12dp
+//
+//        // Tab section
+//        tabs.forEachIndexed { index, tab ->
+//            val isSelected = tab == selectedTab
+//
+//            if (isSelected) {
+//                Box(
+//                    modifier = Modifier
+//                        .background(
+//                            brush = Brush.horizontalGradient(
+//                                listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+//                            ),
+//                            shape = RoundedCornerShape(6.dp)
+//                        )
+//                        .clip(RoundedCornerShape(6.dp))
+//                        .clickable(
+//                            role = Role.Tab,
+//                            onClickLabel = "Select $tab tab"
+//                        ) {
+//                            onTabSelected(tab)
+//                        }
+//                        .semantics {
+//                            role = Role.Tab
+//                            contentDescription = "$tab tab, currently selected"
+//                        }
+//                ) {
+//                    Text(
+//                        text = tab,
+//                        color = Color.White,
+//                        fontWeight = FontWeight.SemiBold,
+//                        fontSize = 12.sp,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis,
+//                        modifier = Modifier.padding(
+//                            horizontal = 10.dp,
+//                            vertical = 2.dp
+//                        ) // Reduced padding
+//                    )
+//                }
+//            } else {
+//                Text(
+//                    text = tab,
+//                    color = Color(0xFFB388FF),
+//                    fontWeight = FontWeight.Medium,
+//                    fontSize = 12.sp,
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis,
+//                    modifier = Modifier
+//                        .clip(RoundedCornerShape(4.dp))
+//                        .clickable(
+//                            role = Role.Tab,
+//                            onClickLabel = "Select $tab tab"
+//                        ) {
+//                            onTabSelected(tab)
+//                        }
+//                        .padding(horizontal = 6.dp, vertical = 2.dp) // Adjusted padding
+//                        .semantics {
+//                            role = Role.Tab
+//                            contentDescription = "$tab tab"
+//                        }
+//                )
+//            }
+//
+//            if (index != tabs.lastIndex) {
+//                Spacer(modifier = Modifier.width(6.dp))
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.weight(1f))
+//
+//        // Professional notification button with badge - optimized size
+//        Box(
+//            contentAlignment = Alignment.Center
+//        ) {
+//            IconButton(
+//                onClick = {
+//                    try {
+//                        onNotificationClick()
+//                        navController.navigate("notifications")
+//                    } catch (e: Exception) {
+//                        // Handle navigation error gracefully
+//                        // You might want to log this or show a snackbar
+//                    }
+//                },
+//                modifier = Modifier
+//                    .size(44.dp) // Reduced from 48dp to 44dp
+//                    .semantics {
+//                        contentDescription = if (notificationState.hasUnreadNotifications) {
+//                            "Notifications, ${notificationState.unreadCount} unread"
+//                        } else {
+//                            "Notifications"
+//                        }
+//                    }
+//            ) {
+//                if (notificationState.isLoading) {
+//                    CircularProgressIndicator(
+//                        modifier = Modifier.size(16.dp),
+//                        strokeWidth = 2.dp,
+//                        color = Color(0xFFB0A9A9)
+//                    )
+//                } else {
+//                    Icon(
+//                        painter = painterResource(id = R.drawable.ic_bell),
+//                        contentDescription = null, // Handled by IconButton
+//                        tint = if (notificationState.hasUnreadNotifications) {
+//                            Color(0xFFB726FF)
+//                        } else {
+//                            Color(0xFFB0A9A9)
+//                        },
+//                        modifier = Modifier.size(22.dp) // Reduced from 24dp to 22dp
+//                    )
+//                }
+//            }
+//
+//            // Notification badge
+//            if (notificationState.hasUnreadNotifications && !notificationState.isLoading) {
+//                Box(
+//                    modifier = Modifier
+//                        .offset(x = 7.dp, y = (-7).dp) // Slightly adjusted offset
+//                        .size(
+//                            if (notificationState.unreadCount > 99) 22.dp
+//                            else if (notificationState.unreadCount > 9) 18.dp
+//                            else 15.dp
+//                        )
+//                        .background(
+//                            Color(0xFFFF4444),
+//                            CircleShape
+//                        )
+//                        .semantics {
+//                            contentDescription =
+//                                "${notificationState.unreadCount} unread notifications"
+//                        },
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = when {
+//                            notificationState.unreadCount > 99 -> "99+"
+//                            else -> notificationState.unreadCount.toString()
+//                        },
+//                        color = Color.White,
+//                        fontSize = when {
+//                            notificationState.unreadCount > 99 -> 7.sp
+//                            notificationState.unreadCount > 9 -> 8.sp
+//                            else -> 9.sp
+//                        },
+//                        fontWeight = FontWeight.Bold,
+//                        maxLines = 1
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
+
+
+
+
+
+
+//@Composable
+//fun TopBarHome(
+//    tabs: List<String>,
+//    selectedTab: String,
+//    navController: NavController,
+//    onTabSelected: (String) -> Unit = {},
+//    notificationState: NotificationState = NotificationState(),
+//    onNotificationClick: () -> Unit = {},
+//    modifier: Modifier = Modifier
+//) {
+//    val context = LocalContext.current
+//
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .height(40.dp)
+//            .background(Color.White)
+//            .padding(horizontal = 16.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        // Logo with accessibility
+//        Image(
+//            painter = painterResource(id = R.drawable.ic_cc_logo),
+//            contentDescription = "Creator Circle Logo",
+//            modifier = Modifier
+//                .size(36.dp)
+//                .semantics {
+//                    contentDescription = "Creator Circle application logo"
+//                }
+//        )
+//
+//        // Centered tabs section
+//        Box(
+//            modifier = Modifier
+//                .weight(1f)
+//                .padding(horizontal = 16.dp),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Row(
+//                horizontalArrangement = Arrangement.spacedBy(12.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                tabs.forEach { tab ->
+//                    val isSelected = tab == selectedTab
+//
+//                    if (isSelected) {
+//                        Box(
+//                            modifier = Modifier
+//                                .background(
+//                                    brush = Brush.horizontalGradient(
+//                                        listOf(Color(0xFFB726FF), Color(0xFFFB3D91))
+//                                    ),
+//                                    shape = RoundedCornerShape(8.dp)
+//                                )
+//                                .clip(RoundedCornerShape(8.dp))
+//                                .clickable(
+//                                    role = Role.Tab,
+//                                    onClickLabel = "Select $tab tab"
+//                                ) {
+//                                    // Handle navigation for specific tabs
+//                                    handleTabNavigation(tab, navController)
+//                                    onTabSelected(tab)
+//                                }
+//                                .semantics {
+//                                    role = Role.Tab
+//                                    contentDescription = "$tab tab, currently selected"
+//                                }
+//                        ) {
+//                            Text(
+//                                text = tab,
+//                                color = Color.White,
+//                                fontWeight = FontWeight.SemiBold,
+//                                fontSize = 12.sp,
+//                                maxLines = 1,
+//                                overflow = TextOverflow.Ellipsis,
+//                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+//                            )
+//                        }
+//                    } else {
+//                        Box(
+//                            modifier = Modifier
+//                                .clip(RoundedCornerShape(8.dp))
+//                                .clickable(
+//                                    role = Role.Tab,
+//                                    onClickLabel = "Select $tab tab"
+//                                ) {
+//                                    // Handle navigation for specific tabs
+//                                    handleTabNavigation(tab, navController)
+//                                    onTabSelected(tab)
+//                                }
+//                                .semantics {
+//                                    role = Role.Tab
+//                                    contentDescription = "$tab tab"
+//                                }
+//                        ) {
+//                            Text(
+//                                text = tab,
+//                                color = Color(0xFFB388FF),
+//                                fontWeight = FontWeight.Medium,
+//                                fontSize = 12.sp,
+//                                maxLines = 1,
+//                                overflow = TextOverflow.Ellipsis,
+//                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Professional notification button with badge
+//        Box(
+//            contentAlignment = Alignment.Center
+//        ) {
+//            IconButton(
+//                onClick = {
+//                    try {
+//                        onNotificationClick()
+//                        navController.navigate("notifications")
+//                    } catch (e: Exception) {
+//                        // Handle navigation error gracefully
+//                        // You might want to log this or show a snackbar
+//                    }
+//                },
+//                modifier = Modifier
+//                    .size(48.dp)
+//                    .semantics {
+//                        contentDescription = if (notificationState.hasUnreadNotifications) {
+//                            "Notifications, ${notificationState.unreadCount} unread"
+//                        } else {
+//                            "Notifications"
+//                        }
+//                    }
+//            ) {
+//                if (notificationState.isLoading) {
+//                    CircularProgressIndicator(
+//                        modifier = Modifier.size(16.dp),
+//                        strokeWidth = 2.dp,
+//                        color = Color(0xFFB0A9A9)
+//                    )
+//                } else {
+//                    Icon(
+//                        painter = painterResource(id = R.drawable.ic_bell),
+//                        contentDescription = null, // Handled by IconButton
+//                        tint = if (notificationState.hasUnreadNotifications) {
+//                            Color(0xFFB726FF)
+//                        } else {
+//                            Color(0xFFB0A9A9)
+//                        },
+//                        modifier = Modifier.size(24.dp)
+//                    )
+//                }
+//            }
+//
+//            // Notification badge
+//            if (notificationState.hasUnreadNotifications && !notificationState.isLoading) {
+//                Box(
+//                    modifier = Modifier
+//                        .offset(x = 8.dp, y = (-8).dp)
+//                        .size(
+//                            if (notificationState.unreadCount > 99) 24.dp
+//                            else if (notificationState.unreadCount > 9) 20.dp
+//                            else 16.dp
+//                        )
+//                        .background(
+//                            Color(0xFFFF4444),
+//                            CircleShape
+//                        )
+//                        .semantics {
+//                            contentDescription =
+//                                "${notificationState.unreadCount} unread notifications"
+//                        },
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = when {
+//                            notificationState.unreadCount > 99 -> "99+"
+//                            else -> notificationState.unreadCount.toString()
+//                        },
+//                        color = Color.White,
+//                        fontSize = when {
+//                            notificationState.unreadCount > 99 -> 8.sp
+//                            notificationState.unreadCount > 9 -> 9.sp
+//                            else -> 12.sp
+//                        },
+//                        fontWeight = FontWeight.Bold,
+//                        maxLines = 1
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
+
+

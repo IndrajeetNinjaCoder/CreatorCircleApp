@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.cc.creatorcircle.R
@@ -33,6 +34,7 @@ import com.cc.creatorcircle.data.models.ConversationMessage
 import com.cc.creatorcircle.utils.FirebaseAnalyticsHelper
 import com.cc.creatorcircle.utils.TokenManager
 import com.cc.creatorcircle.viewModel.MessageViewModel
+import com.cc.creatorcircle.viewModel.PostsViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.analytics
 import kotlinx.coroutines.launch
@@ -42,13 +44,22 @@ import kotlinx.coroutines.launch
 fun MessageScreen(
     navController: NavController,
     otherUserId: Int,
-    userName: String,
+    userName: String?,
     profilePic: String?
 ) {
     val context = LocalContext.current
     val firebaseAnalytics = remember { Firebase.analytics }
     val viewModel = remember { MessageViewModel(context) }
     val tokenManager = remember { TokenManager(context) }
+
+    // Add PostsViewModel to fetch user profile
+    val postsViewModel: PostsViewModel = viewModel(
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                return PostsViewModel(context) as T
+            }
+        }
+    )
 
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -69,8 +80,30 @@ fun MessageScreen(
     val messageDeleteSuccess by viewModel.messageDeleteSuccess.collectAsState()
     val messageDeleteError by viewModel.messageDeleteError.collectAsState()
 
+    // User profile states
+    val otherUserProfiles by postsViewModel.otherUserProfiles.collectAsState()
+    val otherUserProfile = otherUserProfiles[otherUserId]
+
     // Get current user ID from token
     val currentotherUserId = remember { tokenManager.getUserId() }
+
+    // Determine the actual userName and profilePic to use
+    val displayUserName = userName ?: otherUserProfile?.full_name ?: otherUserProfile?.username ?: "User"
+    val displayProfilePic = profilePic ?: otherUserProfile?.profile_pic
+
+//    // Track screen view
+//    LaunchedEffect(Unit) {
+//        FirebaseAnalyticsHelper.logScreenView("MessageScreen", "MessageScreen")
+//        FirebaseAnalyticsHelper.logEvent(
+//            "message_screen_opened",
+//            mapOf(
+//                "other_user_id" to otherUserId.toString(),
+//                "other_user_name" to userName,
+//                "has_profile_pic" to (profilePic != null).toString()
+//            )
+//        )
+//    }
+
 
     // Track screen view
     LaunchedEffect(Unit) {
@@ -79,10 +112,17 @@ fun MessageScreen(
             "message_screen_opened",
             mapOf(
                 "other_user_id" to otherUserId.toString(),
-                "other_user_name" to userName,
-                "has_profile_pic" to (profilePic != null).toString()
+                "other_user_name" to displayUserName,
+                "has_profile_pic" to (displayProfilePic != null).toString()
             )
         )
+    }
+
+    // Fetch user profile if userName is null
+    LaunchedEffect(otherUserId) {
+        if (userName == null) {
+            postsViewModel.fetchUserProfileById(otherUserId)
+        }
     }
 
     // Fetch conversation on initial load
@@ -281,9 +321,26 @@ fun MessageScreen(
             .background(Color.White)
     ) {
         // Custom header without gap
+//        MessageHeader(
+//            userName = userName,
+//            profilePic = profilePic,
+//            onBackClick = {
+//                FirebaseAnalyticsHelper.logFeatureUsed("message_screen_back_button")
+//                FirebaseAnalyticsHelper.logEvent(
+//                    "message_screen_closed",
+//                    mapOf(
+//                        "other_user_id" to otherUserId.toString(),
+//                        "messages_sent" to conversationMessages.count { it.receiver_id == otherUserId }.toString()
+//                    )
+//                )
+//                navController.navigateUp()
+//            }
+//        )
+
+
         MessageHeader(
-            userName = userName,
-            profilePic = profilePic,
+            userName = displayUserName,
+            profilePic = displayProfilePic,
             onBackClick = {
                 FirebaseAnalyticsHelper.logFeatureUsed("message_screen_back_button")
                 FirebaseAnalyticsHelper.logEvent(

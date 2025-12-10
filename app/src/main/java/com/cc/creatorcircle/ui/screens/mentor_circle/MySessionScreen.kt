@@ -1,4 +1,4 @@
-package com.cc.creatorcircle.ui.screens.livesession
+package com.cc.creatorcircle.ui.screens.mentor_circle
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -50,7 +50,6 @@ import com.cc.creatorcircle.utils.UserDataManager
 import com.cc.creatorcircle.viewModel.MentorConfigViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.analytics
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -239,11 +238,11 @@ fun ServiceConfigurationContent(
                     model = userData.profilePic,
                     contentDescription = "Profile",
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(48.dp)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.ic_profile1),
-                    error = painterResource(id = R.drawable.ic_profile1)
+                    placeholder = painterResource(id = R.drawable.ic_profile),
+                    error = painterResource(id = R.drawable.ic_profile)
                 )
             } else {
                 Box(
