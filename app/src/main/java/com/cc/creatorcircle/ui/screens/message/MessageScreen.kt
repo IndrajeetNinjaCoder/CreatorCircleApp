@@ -88,9 +88,22 @@ fun MessageScreen(
     val currentotherUserId = remember { tokenManager.getUserId() }
 
     // Determine the actual userName and profilePic to use
-    val displayUserName = userName ?: otherUserProfile?.full_name ?: otherUserProfile?.username ?: "User"
-    val displayProfilePic = profilePic ?: otherUserProfile?.profile_pic
+//    val displayUserName = userName ?: otherUserProfile?.full_name ?: otherUserProfile?.username ?: "User"
+//    val displayProfilePic = profilePic ?: otherUserProfile?.profile_pic
 
+
+    // Replace the existing val declarations with this:
+    val displayUserName by remember(userName, otherUserProfile) {
+        derivedStateOf {
+            userName ?: otherUserProfile?.full_name ?: otherUserProfile?.username ?: "User"
+        }
+    }
+
+    val displayProfilePic by remember(profilePic, otherUserProfile) {
+        derivedStateOf {
+            profilePic ?: otherUserProfile?.profile_pic
+        }
+    }
 //    // Track screen view
 //    LaunchedEffect(Unit) {
 //        FirebaseAnalyticsHelper.logScreenView("MessageScreen", "MessageScreen")
@@ -616,8 +629,8 @@ fun MessageHeader(
                         .size(36.dp)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.ic_profile1),
-                    error = painterResource(id = R.drawable.ic_profile1)
+                    placeholder = painterResource(id = R.drawable.ic_profile),
+                    error = painterResource(id = R.drawable.ic_profile)
                 )
             } else {
                 Box(

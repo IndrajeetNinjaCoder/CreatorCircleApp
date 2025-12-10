@@ -70,9 +70,14 @@ sealed class Screen(val route: String) {
         fun createRoute(userId: Int) = "userprofile/$userId"
     }
 
-    object UserProfileScreen : Screen("userprofilescreen/{InfluencerId}") {
-        fun createRoute(InfluencerId: Int) = "userprofilescreen/$InfluencerId"
+//    object UserProfileScreen : Screen("userprofilescreen/{userId}") {
+//        fun createRoute(userId: Int) = "userprofilescreen/$userId"
+//    }
+
+    object UserProfileScreen : Screen("userprofilescreen/{userId}/{userType}") {
+        fun createRoute(userId: Int, userType: String = "User") = "userprofilescreen/$userId/$userType"
     }
+
 
 
 //    object BookingSlot : Screen("booking_slot/{userId}") {
@@ -106,7 +111,7 @@ sealed class Screen(val route: String) {
         fun createRoute(userId: Int, userName: String, profilePic: String?) =
             "message_screen/$userId/${Uri.encode(userName)}/${Uri.encode(profilePic ?: "")}"
 
-        // New route with only userId
+//        // New route with only userId
         fun createRouteWithUserId(userId: Int) = "message_screen/$userId"
     }
 

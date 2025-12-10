@@ -1320,7 +1320,11 @@ fun InfluencerCard(
                         from = "influencer_card"
                     )
 //                    navController.navigate("userprofile/${influencer.userId}")
-                    navController.navigate("userprofilescreen/${influencer.userId}")
+//                    navController.navigate("userprofilescreen/${influencer.userId}")
+
+                    navController.navigate(
+                        Screen.UserProfileScreen.createRoute(userId = influencer.userId, userType = "Mentor")
+                    )
 
                 }
             }

@@ -218,14 +218,29 @@ fun NavigationHost(navController: NavHostController) {
             UserProfile(navController, userId = userId)
         }
 
+//        composable(
+//            route = "userprofilescreen/{userId}",
+//            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+//            UserProfileScreen(navController, userId = userId)
+//        }
+
+
         composable(
-            route = "userprofilescreen/{userId}",
-            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+            route = "userprofilescreen/{userId}/{userType}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("userType") {
+                    type = NavType.StringType
+                    defaultValue = "User" // Default value if not provided
+                }
+            )
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getInt("userId") ?: 0
-            UserProfileScreen(navController, InfluencerId = userId)
+            val userType = backStackEntry.arguments?.getString("userType") ?: "User"
+            UserProfileScreen(navController, userId = userId, userType = userType)
         }
-
 
 
 //        composable(

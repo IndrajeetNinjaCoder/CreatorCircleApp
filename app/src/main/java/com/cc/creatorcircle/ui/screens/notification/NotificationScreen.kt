@@ -353,73 +353,6 @@ fun MarkAllReadErrorBanner(
     }
 }
 
-//@Composable
-//fun NotificationsList(
-//    notifications: List<Notification>,
-//    navController: NavController,
-//    notificationViewModel: NotificationViewModel
-//) {
-//    if (notifications.isEmpty()) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(32.dp),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            Column(
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Default.Notifications,
-//                    contentDescription = "No notifications",
-//                    modifier = Modifier.size(64.dp),
-//                    tint = Color.Gray.copy(alpha = 0.5f)
-//                )
-//                Spacer(modifier = Modifier.height(16.dp))
-//                Text(
-//                    text = "No notifications",
-//                    color = Color.Gray,
-//                    fontSize = 16.sp,
-//                    fontWeight = FontWeight.Medium
-//                )
-//            }
-//        }
-//    } else {
-//        LazyColumn(
-//            modifier = Modifier.fillMaxSize(),
-//            contentPadding = PaddingValues(vertical = 8.dp)
-//        ) {
-//            items(
-//                count = notifications.size,
-//                key = { index -> notifications[index].id }
-//            ) { index ->
-//                val notification = notifications[index]
-//                NotificationItem(
-//                    notification = notification,
-//                    onClick = {
-//                        FirebaseAnalyticsHelper.logEvent(
-//                            "notification_clicked",
-//                            mapOf(
-//                                "notification_id" to notification.id.toString(),
-//                                "notification_type" to notification.type,
-//                                "notification_subtype" to (notification.subtype ?: "none")
-//                            )
-//                        )
-//                        // Mark as read locally for immediate UI update
-//                        notificationViewModel.markNotificationAsReadLocally(notification.id)
-//
-//                        // Handle navigation based on notification type
-//                        handleNotificationClick(navController, notification)
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
-
-
-// Replace the NotificationsList composable with this updated version
-
 @Composable
 fun NotificationsList(
     notifications: List<Notification>,
@@ -562,12 +495,14 @@ fun NotificationIcon(type: String, subtype: String?) {
             "cancelled" -> Pair(Icons.Default.Cancel, Color(0xFFF44336))
             else -> Pair(Icons.Default.Event, Color(0xFFB388FF))
         }
+
         "message" -> Pair(Icons.Default.Message, Color(0xFF2196F3))
         "friend_request" -> when (subtype) {
             "sent" -> Pair(Icons.Default.PersonAdd, Color(0xFFFF9800))
             "accepted" -> Pair(Icons.Default.CheckCircle, Color(0xFF4CAF50))
             else -> Pair(Icons.Default.Person, Color(0xFFB388FF))
         }
+
         "post_interaction" -> when (subtype) {
             "like" -> Pair(Icons.Default.Favorite, Color(0xFFE91E63))
             "comment" -> Pair(Icons.Default.ChatBubble, Color(0xFF9C27B0))
@@ -575,6 +510,7 @@ fun NotificationIcon(type: String, subtype: String?) {
             "unlike" -> Pair(Icons.Outlined.FavoriteBorder, Color(0xFF9E9E9E))
             else -> Pair(Icons.Default.Notifications, Color(0xFFB388FF))
         }
+
         "mutual_friend" -> Pair(Icons.Default.Group, Color(0xFFFFB300))
         else -> Pair(Icons.Default.Notifications, Color(0xFFB388FF))
     }
@@ -622,6 +558,13 @@ fun handleNotificationClick(navController: NavController, notification: Notifica
             navController.navigate(
                 Screen.MessageScreen.createRouteWithUserId(userId = notification.senderId)
             )
+//            navController.navigate(
+//                Screen.MessageScreen.createRoute(
+//                    userId = notification.senderId,
+//                    userName = "",
+//                    profilePic = ""
+//                )
+//            )
 //            when (notification.subtype) {
 //                "direct_message" -> {
 //                    // Navigate to message screen with sender ID
@@ -641,11 +584,19 @@ fun handleNotificationClick(navController: NavController, notification: Notifica
         }
 
         "friend_request" -> {
-            navController.navigate("userProfile/${notification.senderId}")
+//            navController.navigate("userProfile/${notification.senderId}")
+//            navController.navigate("userprofilescreen/${notification.senderId}")
+
+            navController.navigate(
+                Screen.UserProfileScreen.createRoute(
+                    userId = notification.senderId,
+                    userType = "User"
+                )
+            )
 
 //            when (notification.subtype) {
 //                "sent" -> {
-//                    // Navigate to sender's profile to accept/reject request
+//                    // Navigate to sender's profile to accept/reject requests
 //                    navController.navigate("userProfile/${notification.senderId}")
 //                }
 //                "accepted" -> {
@@ -667,7 +618,14 @@ fun handleNotificationClick(navController: NavController, notification: Notifica
 
         "mutual_friend" -> {
             // Navigate to the mutual friend's profile
-            navController.navigate("userProfile/${notification.senderId}")
+//            navController.navigate("userProfile/${notification.senderId}")
+//            navController.navigate("userprofilescreen/${notification.senderId}"
+            navController.navigate(
+                Screen.UserProfileScreen.createRoute(
+                    userId = notification.senderId,
+                    userType = "User"
+                )
+            )
         }
 
         else -> {
@@ -714,6 +672,75 @@ fun formatNotificationTime(createdAt: String): String {
 
 
 
+
+
+
+//@Composable
+//fun NotificationsList(
+//    notifications: List<Notification>,
+//    navController: NavController,
+//    notificationViewModel: NotificationViewModel
+//) {
+//    if (notifications.isEmpty()) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(32.dp),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Notifications,
+//                    contentDescription = "No notifications",
+//                    modifier = Modifier.size(64.dp),
+//                    tint = Color.Gray.copy(alpha = 0.5f)
+//                )
+//                Spacer(modifier = Modifier.height(16.dp))
+//                Text(
+//                    text = "No notifications",
+//                    color = Color.Gray,
+//                    fontSize = 16.sp,
+//                    fontWeight = FontWeight.Medium
+//                )
+//            }
+//        }
+//    } else {
+//        LazyColumn(
+//            modifier = Modifier.fillMaxSize(),
+//            contentPadding = PaddingValues(vertical = 8.dp)
+//        ) {
+//            items(
+//                count = notifications.size,
+//                key = { index -> notifications[index].id }
+//            ) { index ->
+//                val notification = notifications[index]
+//                NotificationItem(
+//                    notification = notification,
+//                    onClick = {
+//                        FirebaseAnalyticsHelper.logEvent(
+//                            "notification_clicked",
+//                            mapOf(
+//                                "notification_id" to notification.id.toString(),
+//                                "notification_type" to notification.type,
+//                                "notification_subtype" to (notification.subtype ?: "none")
+//                            )
+//                        )
+//                        // Mark as read locally for immediate UI update
+//                        notificationViewModel.markNotificationAsReadLocally(notification.id)
+//
+//                        // Handle navigation based on notification type
+//                        handleNotificationClick(navController, notification)
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
+
+
+// Replace the NotificationsList composable with this updated version
 
 
 
@@ -1302,13 +1329,6 @@ fun formatNotificationTime(createdAt: String): String {
 */
 
 
-
-
-
-
-
-
-
 //package com.cc.creatorcircle.ui.screens.notification
 //
 //import android.annotation.SuppressLint
@@ -1769,12 +1789,6 @@ fun formatNotificationTime(createdAt: String): String {
 //}
 
 
-
-
-
-
-
-
 //
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
@@ -1824,9 +1838,6 @@ fun formatNotificationTime(createdAt: String): String {
 //        modifier = Modifier.height(64.dp)
 //    )
 //}
-
-
-
 
 
 /*
