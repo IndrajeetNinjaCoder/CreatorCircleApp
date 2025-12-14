@@ -30,7 +30,10 @@ import com.cc.creatorcircle.viewModel.UserViewModel
 import com.cc.creatorcircle.viewModel.UserUpdateState
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.analytics
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PersonalInfoScreen(
     navController: NavController,

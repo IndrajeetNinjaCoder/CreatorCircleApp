@@ -183,7 +183,87 @@ fun ServiceConfigurationContent(
     // Date and Time Slots
     var selectedMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
-    var selectedTimeSlots by remember { mutableStateOf<MutableList<SelectedTimeSlot>>(mutableListOf()) }
+//    var selectedTimeSlots by remember { mutableStateOf<MutableList<SelectedTimeSlot>>(mutableListOf()) }
+
+//    var selectedTimeSlots by remember(configuration.selectedTimeSlots) {
+//        mutableStateOf(configuration.selectedTimeSlots.toMutableList())
+//    }
+
+//    var selectedTimeSlots by remember {
+//        mutableStateOf(configuration.selectedTimeSlots.map {
+//            SelectedTimeSlot(
+//                date = it.date,
+//                slots = it.slots.toList()
+//            )
+//        }.toMutableList())
+//    }
+
+    // Replace the selectedTimeSlots initialization with:
+//    var selectedTimeSlots by remember {
+//        mutableStateOf(
+//            configuration.selectedTimeSlots.map { slot ->
+//                when (slot) {
+//                    is Map<*, *> -> {
+//                        SelectedTimeSlot(
+//                            date = slot["date"] as? String ?: "",
+//                            slots = (slot["slots"] as? List<*>)?.mapNotNull { timeSlot ->
+//                                when (timeSlot) {
+//                                    is Map<*, *> -> TimeSlot(
+//                                        id = (timeSlot["id"] as? Number)?.toInt() ?: 0,
+//                                        startTime = timeSlot["startTime"] as? String ?: timeSlot["start_time"] as? String ?: "",
+//                                        endTime = timeSlot["endTime"] as? String ?: timeSlot["end_time"] as? String ?: "",
+//                                        isRecurring = timeSlot["isRecurring"] as? Boolean ?: timeSlot["is_recurring"] as? Boolean ?: false,
+//                                        recurringPattern = timeSlot["recurringPattern"] as? Map<String, Any> ?: timeSlot["recurring_pattern"] as? Map<String, Any>,
+//                                        recurringEndDate = timeSlot["recurringEndDate"] as? String ?: timeSlot["recurring_end_date"] as? String
+//                                    )
+//                                    else -> null
+//                                }
+//                            } ?: emptyList()
+//                        )
+//                    }
+//                    else -> null
+//                }
+//            }.filterNotNull().toMutableList()
+//        )
+//    }
+//
+//
+
+
+    // Replace the selectedTimeSlots declaration:
+    var selectedTimeSlots by remember {
+        mutableStateOf(
+            configuration.selectedTimeSlots.map { slot ->
+                when (slot) {
+                    is Map<*, *> -> {
+                        SelectedTimeSlot(
+                            date = slot["date"] as? String ?: "",
+                            slots = (slot["slots"] as? List<*>)?.mapNotNull { timeSlot ->
+                                when (timeSlot) {
+                                    is Map<*, *> -> TimeSlot(
+                                        id = (timeSlot["id"] as? Number)?.toInt() ?: 0,
+                                        startTime = timeSlot["startTime"] as? String ?: timeSlot["start_time"] as? String ?: "",
+                                        endTime = timeSlot["endTime"] as? String ?: timeSlot["end_time"] as? String ?: "",
+                                        isRecurring = timeSlot["isRecurring"] as? Boolean ?: timeSlot["is_recurring"] as? Boolean ?: false,
+                                        recurringPattern = timeSlot["recurringPattern"] as? Map<String, Any> ?: timeSlot["recurring_pattern"] as? Map<String, Any>,
+                                        recurringEndDate = timeSlot["recurringEndDate"] as? String ?: timeSlot["recurring_end_date"] as? String
+                                    )
+                                    else -> null
+                                }
+                            } ?: emptyList()
+                        )
+                    }
+                    else -> null
+                }
+            }.filterNotNull().toMutableList()
+        )
+    }
+
+
+
+
+
+
     var isEditingDateSlots by remember { mutableStateOf(false) }
 
     // Time slot dialog
@@ -398,12 +478,20 @@ fun ServiceConfigurationContent(
                 selectedDate = null
                 isEditingDateSlots = false
             },
+//            onRemoveTimeSlot = { date ->
+//                FirebaseAnalyticsHelper.logEvent(
+//                    "time_slot_removed",
+//                    mapOf("date" to date)
+//                )
+//                selectedTimeSlots.removeAll { it.date == date }
+//            }
+
             onRemoveTimeSlot = { date ->
                 FirebaseAnalyticsHelper.logEvent(
                     "time_slot_removed",
                     mapOf("date" to date)
                 )
-                selectedTimeSlots.removeAll { it.date == date }
+                selectedTimeSlots = selectedTimeSlots.filter { it.date != date }.toMutableList()
             }
         )
 
@@ -1089,37 +1177,80 @@ fun EditableDateTimeSlotSection(
             highlightedDates = selectedTimeSlots.map { it.date }
         )
 
-        if (selectedTimeSlots.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Selected Time Slots", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            Spacer(modifier = Modifier.height(8.dp))
+//        if (selectedTimeSlots.isNotEmpty()) {
+//            Spacer(modifier = Modifier.height(16.dp))
+//            Text("Selected Time Slots", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+//            Spacer(modifier = Modifier.height(8.dp))
+//
+//            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+////                items(selectedTimeSlots.size) { index ->
+////                    TimeSlotCard(
+////                        timeSlot = selectedTimeSlots[index],
+////                        onRemove = if (isEditing) {
+////                            {
+////                                FirebaseAnalyticsHelper.logFeatureUsed("time_slot_remove_clicked")
+////                                FirebaseAnalyticsHelper.logEvent(
+////                                    "time_slot_removed_from_card",
+////                                    mapOf(
+////                                        "date" to selectedTimeSlots[index].date,
+////                                        "slots_count" to selectedTimeSlots[index].slots.size.toString()
+////                                    )
+////                                )
+////                                onRemoveTimeSlot(selectedTimeSlots[index].date)
+////                            }
+////                        } else null
+////                    )
+////                }
+//
+//                // Replace the TimeSlotCard call in LazyRow:
+//                items(selectedTimeSlots.size) { index ->
+//                    TimeSlotCard(
+//                        timeSlot = selectedTimeSlots[index],
+//                        onRemove = if (isEditing) {
+//                            {
+//                                FirebaseAnalyticsHelper.logFeatureUsed("time_slot_remove_clicked")
+//                                FirebaseAnalyticsHelper.logEvent(
+//                                    "time_slot_removed_from_card",
+//                                    mapOf(
+//                                        "date" to selectedTimeSlots[index].date,
+//                                        "slots_count" to selectedTimeSlots[index].slots.size.toString()
+//                                    )
+//                                )
+//                                selectedTimeSlots.removeAt(index)
+//                                selectedTimeSlots = selectedTimeSlots.toMutableList() // Trigger recomposition
+//                            }
+//                        } else null
+//                    )
+//                }
+//            }
+//        }
 
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(selectedTimeSlots.size) { index ->
-                    TimeSlotCard(
-                        timeSlot = selectedTimeSlots[index],
-                        onRemove = if (isEditing) {
-                            {
-                                FirebaseAnalyticsHelper.logFeatureUsed("time_slot_remove_clicked")
-                                FirebaseAnalyticsHelper.logEvent(
-                                    "time_slot_removed_from_card",
-                                    mapOf(
-                                        "date" to selectedTimeSlots[index].date,
-                                        "slots_count" to selectedTimeSlots[index].slots.size.toString()
-                                    )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(selectedTimeSlots.size) { index ->
+                TimeSlotCard(
+                    timeSlot = selectedTimeSlots[index],
+                    onRemove = if (isEditing) {
+                        {
+                            FirebaseAnalyticsHelper.logFeatureUsed("time_slot_remove_clicked")
+                            FirebaseAnalyticsHelper.logEvent(
+                                "time_slot_removed_from_card",
+                                mapOf(
+                                    "date" to selectedTimeSlots[index].date,
+                                    "slots_count" to selectedTimeSlots[index].slots.size.toString()
                                 )
-                                onRemoveTimeSlot(selectedTimeSlots[index].date)
-                            }
-                        } else null
-                    )
-                }
-            }
-        } else {
-            // Track when no slots are present
-            LaunchedEffect(Unit) {
-                FirebaseAnalyticsHelper.logEvent("date_time_slots_empty_state_shown")
+                            )
+                            onRemoveTimeSlot(selectedTimeSlots[index].date)
+                        }
+                    } else null
+                )
             }
         }
+//        else {
+//            // Track when no slots are present
+//            LaunchedEffect(Unit) {
+//                FirebaseAnalyticsHelper.logEvent("date_time_slots_empty_state_shown")
+//            }
+//        }
 
         if (isEditing) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -1943,6 +2074,38 @@ fun TimeSlotCard(
                 }
             }
 
+//            if (onRemove != null) {
+//                IconButton(
+//                    onClick = {
+//                        FirebaseAnalyticsHelper.logFeatureUsed("time_slot_card_remove_clicked")
+//                        FirebaseAnalyticsHelper.logEvent(
+//                            "time_slot_card_remove_button_clicked",
+//                            mapOf(
+//                                "date" to timeSlot.date,
+//                                "slot_count" to timeSlot.slots.size.toString(),
+//                                "time_slots" to timeSlot.slots.joinToString(",") {
+//                                    "${it.startTime}-${it.endTime}"
+//                                }
+//                            )
+//                        )
+//                        onRemove()
+//                    },
+//                    modifier = Modifier
+//                        .size(20.dp)
+//                        .align(Alignment.TopEnd)
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Close,
+//                        contentDescription = "Remove",
+//                        tint = Color.Red,
+//                        modifier = Modifier.size(16.dp)
+//                    )
+//                }
+//            }
+//
+
+            // In TimeSlotCard composable, replace the IconButton onClick:
+
             if (onRemove != null) {
                 IconButton(
                     onClick = {
@@ -1971,6 +2134,9 @@ fun TimeSlotCard(
                     )
                 }
             }
+
+
+
         }
     }
 }

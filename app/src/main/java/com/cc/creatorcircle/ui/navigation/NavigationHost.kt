@@ -54,8 +54,8 @@ fun NavigationHost(navController: NavHostController) {
     val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
 
     // Decide start destination
-//    val startDestination = if (isLoggedIn) Screen.Webhome.route else Screen.Login.route
-    val startDestination = if (isLoggedIn) Screen.Home.route else Screen.Login.route
+    val startDestination = if (isLoggedIn) Screen.Webhome.route else Screen.Login.route
+//    val startDestination = if (isLoggedIn) Screen.Home.route else Screen.Login.route
 
 
 

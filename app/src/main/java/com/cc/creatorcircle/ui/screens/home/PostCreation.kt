@@ -157,12 +157,35 @@ fun PostInputSection(
         }
     }
 
+//    LaunchedEffect(postCreationState) {
+//        when (postCreationState) {
+//            is PostCreationState.Success -> {
+//                FirebaseAnalyticsHelper.logFeatureUsed("post_created_success", "post_input_section")
+//                text = ""
+//                showPopup = false
+//            }
+//            is PostCreationState.Error -> {
+//                (postCreationState as? PostCreationState.Error)?.let { errorState ->
+//                    FirebaseAnalyticsHelper.logError(
+//                        errorType = "post_creation_error",
+//                        errorMessage = errorState.message,
+//                        context = "PostInputSection"
+//                    )
+//                }
+//            }
+//            else -> {}
+//        }
+//    }
+//
+//
+
     LaunchedEffect(postCreationState) {
         when (postCreationState) {
             is PostCreationState.Success -> {
                 FirebaseAnalyticsHelper.logFeatureUsed("post_created_success", "post_input_section")
                 text = ""
                 showPopup = false
+                viewModel.fetchPosts(postType = "feed") // Add this line
             }
             is PostCreationState.Error -> {
                 (postCreationState as? PostCreationState.Error)?.let { errorState ->
@@ -176,6 +199,8 @@ fun PostInputSection(
             else -> {}
         }
     }
+
+
 
     Column(
         modifier = Modifier
@@ -415,11 +440,33 @@ fun PostInputPopup(
         }
     }
 
+//    LaunchedEffect(postCreationState) {
+//        when (postCreationState) {
+//            is PostCreationState.Success -> {
+//                FirebaseAnalyticsHelper.logFeatureUsed("post_created_success", "popup")
+//                text = ""
+//            }
+//            is PostCreationState.Error -> {
+//                (postCreationState as? PostCreationState.Error)?.let { errorState ->
+//                    FirebaseAnalyticsHelper.logError(
+//                        errorType = "post_creation_error",
+//                        errorMessage = errorState.message,
+//                        context = "PostInputPopup"
+//                    )
+//                }
+//            }
+//            else -> {}
+//        }
+//    }
+
+
+
     LaunchedEffect(postCreationState) {
         when (postCreationState) {
             is PostCreationState.Success -> {
                 FirebaseAnalyticsHelper.logFeatureUsed("post_created_success", "popup")
                 text = ""
+                viewModel.fetchPosts(postType = "feed") // Add this line
             }
             is PostCreationState.Error -> {
                 (postCreationState as? PostCreationState.Error)?.let { errorState ->
@@ -433,6 +480,9 @@ fun PostInputPopup(
             else -> {}
         }
     }
+
+
+
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -877,6 +927,11 @@ fun PostInputPopupDialog(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // Use the updated PostInputPopup composable
+
+//                PostInputPopup(
+//                    viewModel = viewModel,
+//                    modifier = Modifier.weight(1f)
+//                )
 
                 PostInputPopup(
                     viewModel = viewModel,
